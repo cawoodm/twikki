@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "*** DEV",
+      "windows": {
+        "command": "${workspaceFolder}/ci/dev.cmd"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/ci/dev.sh"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "*** PUBLISH",
+      "windows": {
+        "command": "${workspaceFolder}/ci/publish.cmd"
+      },
+      "linux": {
+        "command": "${workspaceFolder}/ci/publish.sh"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "*** COMPILE",
+      "type": "shell",
+      "args": [
+        "${workspaceFolder}/src/packages/compile-packages.ps1"
+      ],
+      "windows": {
+        "command": "pwsh.exe"
+      },
+      "linux": {
+        "command": "pwsh"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

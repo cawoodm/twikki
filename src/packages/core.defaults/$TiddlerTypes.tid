@@ -1,0 +1,14 @@
+type: keyval
+
+* x-twiki: TWiki Data
+* plain: Plain Text
+* html: HTML
+* html/template: HTML Template
+* css: StyleSheet
+* script/js: JavaScript
+* markdown: Markdown
+* macro: Macro
+* list: List
+* keyval: Key Values
+* table: Tabular Data
+* json: JSON Data

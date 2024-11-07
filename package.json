@@ -1,0 +1,33 @@
+{
+  "name": "twikki",
+  "version": "0.0.1",
+  "description": "TiddlyWiki-Inspired Information Platform",
+  "scripts": {
+    "dev": "vite",
+    "test": "node --test --watch ./tests/unit/*.test.js",
+    "compile": "pwsh ci/Compile-Packages.ps1",
+    "watch": "npm-watch",
+    "build": "vite build --emptyOutDir && cd dist && vite",
+    "build-test": "vite build --emptyOutDir && cd dist && vite --open --host",
+    "build-publish": "pwsh publish.ps1"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.9.1",
+    "eslint-config-strongloop": "^2.1.0",
+    "globals": "^15.9.0",
+    "vite": "^5.4.2"
+  },
+  "author": "Marc Cawood",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cawoodm/twikki/issues"
+  },
+  "homepage": "https://cawoodm.github.io/twikki",
+  "main": "boot.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cawoodm/twikki.git"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DEBUG UNIT",
+      "args": [
+        "--test",
+        ".\\tests\\unit\\wikiParser.test.js"
+      ],
+      "type": "node",
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "compile-packages",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ci/compile-packages.ps1",
+      "cwd": "${cwd}"
+    },
+    {
+      "name": "DEBUG (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3001",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+type: html/template
+tags: $Template
+
+<div class="tiddler" data-tiddler-id="{{=id}}" data-tiddler-title="{{=title}}" tabindex="0">
+  <div class="title" title="{{=type}}">
+    {{=title}}
+    <button class="icon" title="close" data-msg="tiddler.preview.close" data-param="$currentTiddler">{{$IconCancel}}</button>
+    <button class="icon" title="delete" data-msg="tiddler.trashed.destroy" data-param="$currentTiddler">{{$IconDelete}}</button>
+    <button class="icon" title="restore" data-msg="tiddler.trashed.restore" data-param="$currentTiddler">{{$IconRefresh}}</button>
+  </div>
+  <div class="modified">{{=modified}}</div>
+  <div class="text">{{=fullText}}</div>
+  <div class="tags">{{=tagLinks}}</div>
+</div>

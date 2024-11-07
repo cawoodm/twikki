@@ -1,0 +1,7 @@
+{
+  "triggerTaskOnSave.tasks": {
+    "*** COMPILE": [
+      "src/packages/*/*.*"
+    ]
+  }
+}

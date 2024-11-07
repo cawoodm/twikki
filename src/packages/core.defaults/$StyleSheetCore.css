@@ -1,0 +1,194 @@
+/* CSS Reset */
+html {
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body,
+p,
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a[data-msg]:hover {
+  cursor: pointer;
+}
+
+/* Responsive */
+.flex {
+  display: flex;
+  align-content: flex-start;
+}
+
+#header.flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+#header .col1 div {
+  width: 100%;
+}
+
+#titlebar.flex {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+#body.flex {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+div#visible-tiddlers {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0.3rem;
+}
+
+div#sidebar {
+  margin: 0.3rem;
+  padding: 0.5rem;
+  background-color: var(--colbg3);
+  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
+  outline: 1px solid var(--col1);
+  box-shadow: 1px 1px 0.5rem var(--col0);
+}
+
+#header .col1 {
+  flex-wrap: wrap;
+}
+
+#header .col2 {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#header .col3 input {
+  width: 100%;
+  border: solid 1px var(--col1)
+}
+
+@media (min-width: 0px) {
+  html {
+    font-size: 10px;
+  }
+
+  #header .col1,
+  #header .col2,
+  #header .col3 {
+    flex-grow: 1;
+  }
+
+  #site-title,
+  #site-subtitle {
+    text-align: center;
+  }
+
+  #site-title h1,
+  #site-subtitle div {
+    margin: 2px;
+    padding: 2px;
+  }
+
+  #body.flex {
+    flex-wrap: wrap;
+  }
+
+  #sidebar {
+    flex-grow: 1;
+  }
+
+  div#visible-tiddlers {
+    flex-grow: 1;
+  }
+
+  h1 {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 600px) {
+  html {
+    font-size: 16px;
+  }
+
+  #header .col1 {
+    flex-grow: 1;
+  }
+
+  #header .col2 {
+    flex-grow: 3;
+  }
+
+  #header .col3 {
+    flex-grow: 2F<<F;
+  }
+
+  #body.flex {
+    flex-wrap: nowrap;
+    flex-direction: row;
+  }
+
+  #sidebar {
+    flex-grow: 1;
+  }
+
+  div#visible-tiddlers {
+    flex-grow: 4;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+  }
+}
+
+/* Fallback Colors in case Themes forget them */
+:root {
+  --colbg1: #fdeeee;
+  --colbg2: #efefef;
+  --colbg3: #dfdfdf;
+  --colbgi: #efefef;
+  --colfgi: #373737;
+  --colfg: #323232;
+  --col0: #323232;
+  --col1: #6e6e6e;
+  --col3: #8fbfdf;
+  --col4: #8d8d8d;
+  --col6: #6db193;
+  --notify-rgba: 210, 180, 90;
+  --rad1: 0.3rem;
+  --rad2: 0.3rem;
+  --rad3: 0.3rem;
+  --rad4: 0.3rem;
+}

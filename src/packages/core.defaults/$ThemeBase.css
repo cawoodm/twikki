@@ -1,0 +1,348 @@
+/* https://coolors.co/image-picker */
+
+
+* {
+  font-family:
+    system-ui,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  padding: 0px;
+}
+
+.line-clamp {
+  white-space: nowrap
+}
+
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+  font-weight: bolder;
+  color: var(--col6);
+}
+
+body {
+  background-color: var(--colbg1);
+  color: var(--colfg);
+}
+
+div#header {
+  position: sticky;
+  top: 0px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+  border: 1px solid var(--col4);
+  background-color: var(--colbg3);
+  padding: 5px;
+  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
+  box-shadow: 1px 1px 5px var(--col0);
+}
+
+div#body {
+  padding: 5px;
+  height: 100%;
+}
+
+dialog::backdrop {
+  background-image: linear-gradient(45deg, #000, #888);
+  opacity: 0.85;
+}
+
+ul {
+  margin-left: 0px;
+  padding: auto;
+}
+
+ul {
+  margin-left: 10px;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 1;
+}
+
+th {
+  font-weight: bold;
+  background-color: var(--col3);
+}
+
+th,
+td {
+  padding: 5px;
+  border: 1px solid black;
+}
+
+
+ul li::marker {
+  font-family: FontAwesome;
+  content: "🗲";
+  color: var(--col0);
+}
+
+li li {
+  margin-left: 20px;
+}
+
+dialog#preview-dialog {
+  border: 0px;
+  overflow-y: hidden;
+  background-color: #00000000;
+  width: 90%;
+  height: 90%;
+  min-height: 500px;
+}
+
+dialog#preview-dialog div.tiddler {
+  height: 100%;
+}
+
+dialog#preview-dialog div.text {
+  height: 100%;
+  max-height: 1000px;
+}
+
+dialog#new-dialog {
+  background-color: var(--colbg2);
+  width: 75%;
+  height: 75%;
+}
+
+dialog#new-dialog form {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+dialog#new-dialog form div {
+  margin-bottom: 4px;
+}
+
+dialog#new-dialog form div.text {
+  flex-grow: 1;
+  min-height: 300px;
+}
+
+/* Forms */
+
+dialog#new-dialog div input {
+  font-size: large;
+  font-weight: bold;
+  border-radius: var(--rad1) var(--rad2);
+  border: 1px;
+}
+
+input#search {
+  width: 30%;
+}
+
+input,
+textarea,
+select {
+  background-color: var(--colbgi);
+  color: var(--colfgi);
+}
+
+textarea {
+  scrollbar-color: var(--col1) var(--colbg2);
+}
+
+dialog#new-dialog form input,
+dialog#new-dialog form textarea {
+  font-size: 1rem;
+  padding: 4px;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--rad1) var(--rad2);
+}
+
+dialog#new-dialog div.toolbar {
+  text-align: right;
+}
+
+blockquote {
+  background-color: var(--col4);
+  border-left: 10px solid var(--col3);
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+#notify {
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  transform: translate(-50%);
+  bottom: 10px;
+  min-width: 250px;
+  background-color: rgba(var(--notify-rgba), 0.9);
+  color: var(--col1);
+  text-align: left;
+  border: 1px solid var(--col0);
+  box-shadow: 1px 1px 5px var(--col0);
+  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
+  padding: 16px;
+  line-height: 1.2rem;
+}
+
+div.notifyHidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+}
+
+div.notifyShow {
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  visibility: show;
+  opacity: 1;
+}
+
+h1 {
+  font-size: 1.8rem;
+  padding: 5px;
+}
+
+h2 {
+  font-size: 1.4rem;
+  padding: 4px;
+}
+
+h3 {
+  font-size: 1.4rem;
+  padding: 3px;
+}
+
+h4 {
+  font-size: 1.2rem;
+  padding: 2px;
+}
+
+div.tiddler pre {
+  white-space: pre-wrap;
+}
+
+code {
+  background-color: var(--col4);
+  font-family: Consolas, 'Courier New', Courier, monospace;
+}
+
+pre code {
+  border: 1px solid var(--col0);
+}
+
+/* Tiddlers */
+div.tiddler {
+  margin-bottom: 20px;
+  padding: 2rem;
+  background-color: var(--colbg2);
+  outline: 1px solid var(--col1);
+  box-shadow: 1px 1px 5px var(--col0);
+  background-color: var(--colbg2);
+  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
+}
+
+div.tiddler-nosave {
+  outline: 4px dotted green;
+}
+
+div.tiddler-readonly {
+  border-left: 5px solid gray;
+  outline: 2px dotted gray;
+}
+
+div.shadowtrue div.title {
+  font-style: italic;
+}
+
+div.shadowtrue {
+  border-left: 5px solid var(--colbg3);
+  outline: 2px dashed gray;
+}
+
+
+div.tiddler div.modified {
+  text-align: right;
+  font-style: italic;
+  color: var(--col1)
+}
+
+div.tiddler div.title {
+  padding: 5px;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: bold;
+  background-color: var(--colbg2);
+}
+
+button:hover svg {
+  fill: var(--col6);
+}
+
+button:yellow svg {
+  fill: yellow;
+}
+
+button.icon {
+  fill: var(--col1);
+  border: 1px solid var(--col4);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+button {
+  fill: var(--col1);
+  border: 1px solid var(--col4);
+  background-color: var(--col3);
+  cursor: pointer;
+}
+
+div.tiddler div.title button {
+  border: none;
+  background-color: transparent;
+  float: right;
+}
+
+div.tiddler div.meta {
+  text-align: right;
+  font-size: small;
+  color: var(--col3);
+}
+
+div.tiddler div.text {
+  margin: 2px;
+  padding: 2px;
+  overflow-y: auto;
+  scrollbar-color: var(--col1) var(--colbg2);
+  scrollbar-width: thin;
+  max-height: 9000px;
+}
+
+div.tiddler div.tags {
+  font-size: small;
+  color: gray;
+  float: right
+}
+
+div.tiddler p {
+  margin: 16px 0px;
+}
+
+span.error {
+  color: white;
+  background-color: red;
+}

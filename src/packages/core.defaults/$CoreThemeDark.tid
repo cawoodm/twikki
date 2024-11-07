@@ -1,0 +1,6 @@
+tags: $Theme,$ThemeDark
+
+* [[$StyleSheetCore]]
+* [[$StyleSheetCoreDark]]
+* [[$ThemeBase]]
+* [[$StyleSheetUser]]

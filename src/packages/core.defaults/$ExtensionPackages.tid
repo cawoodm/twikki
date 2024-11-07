@@ -1,0 +1,5 @@
+type: list
+
+* https://cawoodm.github.io/twiki/packages/icons.json save,force
+* https://cawoodm.github.io/twiki/packages/demo.json save,force
+* https://cawoodm.github.io/twiki/packages/website.json nooverwrite

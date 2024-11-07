@@ -1,0 +1,19 @@
+type: html/template
+tags: $Template
+
+<div class="tiddler shadow{{=isRawShadow}}" data-tiddler-id="{{=id}}" data-tiddler-title="$currentTiddler" tabindex="0">
+  <div class="title" title="{{=type}}">
+    {{=title}}
+    <button class="icon" title="close" data-msg="tiddler.close" data-param="$currentTiddler">{{$IconCancel}}</button>
+    {{!editDisabled}}
+    <button class="icon" title="edit" {{=editDisabled}} data-msg="tiddler.edit" data-param="$currentTiddler">{{$IconEdit}}</button>
+    <button class="icon" title="delete"{{=editDisabled}} data-msg="tiddler.delete" data-param="$currentTiddler">{{$IconDelete}}</button>
+    {{/!editDisabled}}
+    <<favorites.toggle>>
+    <!--<button class="icon" title="favorite" data-msg="favorites.toggle" data-param="$currentTiddler">{{$IconFavorite}}</button>-->
+  </div>
+  <div class="modified">{{=modified}}</div>
+  <div class="text">{{=fullText}}</div>
+  <div class="tags">{{=tagLinks}}</div>
+  <div class="meta">{{=metaInfo}}</div>
+</div>

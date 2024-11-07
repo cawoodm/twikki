@@ -1,0 +1,47 @@
+type: html/template
+tags: $Template
+
+<div>
+  <div style="position:absolute; top: 0px; right: 0px; z-index: 1" tiddler-include="$Namespaces"></div>
+  <div style="position:absolute; top: 0px; right: 150px; z-index: 1" tiddler-include="$Themes"></div>
+  <div id="header" class="flex">
+    <div id="header-col1" class="flex col1">
+      <div id="site-title" tiddler-include="$SiteTitle"><h1>TWIKI</h1></div>
+      <div id="site-title" tiddler-include="$SiteSubTitle">...</h1></div>
+  </div>
+  <div id="header-col2" class="flex col2" tiddler-include="$TitleBar">
+  </div>
+  <div id="header-col3" class="flex col3">
+      <input id="search" type="search" placeholder="search" />
+    </div>
+  </div>
+  <div id="body" class="flex">
+    <div id="sidebar">
+      <div>
+        <ul id="all-tiddlers"></ul>
+      </div>
+    </div>
+    <div id="visible-tiddlers">
+    </div>
+  </div>
+  <dialog id="preview-dialog">
+  </dialog>
+  <dialog id="new-dialog">
+    <form id="new-form">
+      <div class="toolbar">
+        <button class="icon" data-msg="form.done" tiddler-include="$IconDone" title="Done"></button>
+        <button class="icon" data-msg="form.cancel" tiddler-include="$IconCancel" title="Cancel"></button>
+      </div>
+      <input id="old-title" type="hidden" />
+      <div class="title"><input id="new-title" placeholder="Title" size /></div>
+      <div class="text"><textarea row="10" id="new-body" placeholder="Text"></textarea></div>
+      <div><input id="new-type" list="new-types" onfocus="this.value=null;" onchange="this.blur();" />
+        <datalist id="new-types">
+        </datalist>
+      </div>
+      <div><input id="new-tags" placeholder="Tags" size /></div>
+      <div><button id="new-save">OK</button><button id="new-cancel">Cancel</button></div>
+    </form>
+  </dialog>
+  <div id="notify" class="notifyHidden"></div>
+</div>

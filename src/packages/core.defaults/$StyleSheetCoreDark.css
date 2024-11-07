@@ -1,0 +1,18 @@
+:root {
+  --colbg1: #101f1f;
+  --colbg2: #101f1f;
+  --colbg3: #2a2a2a;
+  --colbgi: #3f3f3f;
+  --colfgi: #d7d7d7;
+  --colfg: rgb(205, 205, 205);
+  --col0: #cdcdcd;
+  --col1: #6e6e6e;
+  --col3: #8fbfdf;
+  --col4: #8d8d8d;
+  --col6: #6db193;
+  --notify-rgba: 210, 180, 90;
+  --rad1: 0.3rem;
+  --rad2: 0.3rem;
+  --rad3: 0.3rem;
+  --rad4: 0.3rem;
+}
