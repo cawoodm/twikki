@@ -81,10 +81,7 @@
         '/core.markdown.js',
       ];
       let packagesLoaded = await Promise.all(packagesToLoad.map(loadCorePackage));
-      packagesToLoad.forEach((p, i) => {
-        writeObject(packagesToLoad[i], packagesLoaded[i]);
-        tw.packages[i] = {name: packagesToLoad[i], res: packagesLoaded[i]};
-      });
+      tw.packages = packagesToLoad.map((p, i) => ({name: p, res: packagesLoaded[i]}));
 
       os.write('/base.url', baseUrl);
 
@@ -92,13 +89,6 @@
     // eslint-disable-next-line require-await
     async start() {
       const errMsgs = [];
-
-      // TODO: Cleanup calls to ui.notify - legacy support:
-      tw.ui = {
-        notify: function (a, b, c) {
-          tw.core.notifications.notify(a, b, c);
-        },
-      };
 
       tw.packages
         .forEach(pck => {
@@ -137,6 +127,7 @@
             console.warn(`Skipping unknown package type '${pck.res.type}' in package '${pck.name}'!`);
           }
         });
+      tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
       tw.shadowTiddlers = Array.from(tw.tiddlers.all);
       tw.shadowTiddlers.forEach(t => {
         // HACK: Load packages locally for development
@@ -146,7 +137,6 @@
       Object.freeze(tw.shadowTiddlers);
       console.debug(`${tw.packages.length} packages loaded. Running packages...`);
 
-      // TODO: wireUpEvents or delegate to core packages
       tw.packages
         .filter(pck => pck.meta?.run)
         .forEach(pck => {
@@ -170,6 +160,8 @@
 
       wireUpEvents();
       loadStore();
+
+      document.title = renderTiddler('$SiteTitle');
       tw.extend = {tiddlerDetails: {
         metaInfo(t) {
           return tw.core.markdown.render([
@@ -282,7 +274,6 @@
   // rebootSoft is called when the local store changes - i.e. after restoring a backup
   //   it reloads CorePackages packages, runs tiddlers, does span includes, themes and renders all tiddlers
   async function rebootSoft() {
-  // TODO: Clear events.clearAll()
     await loadCorePackages();
     if (!qs.safemode) await loadExtensionPackages();
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
@@ -292,6 +283,7 @@
     window.location.reload();
   }
   function reload(time) {
+    // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
     if (!qs.safemode) runExtensionTiddlers();
@@ -355,7 +347,7 @@
     wireUp('reboot.soft', rebootSoft);
     wireUp('reboot.hard', rebootHard);
     wireUp('search', searchQuery);
-    wireUp('ui.reload', reload); // E.g. if styles are deleted
+    wireUp('ui.reload', reload);
 
     wireUp('tiddler.new', formNewTiddler);
     wireUp('tiddler.edit', formEditTiddler);
@@ -364,7 +356,7 @@
     wireUp('tiddler.preview', previewTiddler);
     wireUp('tiddler.preview.close', closePreview);
     wireUp('tiddler.delete', deleteTiddler);
-    wireUp('tiddler.deleted', reload); // E.g. if styles are deleted
+    wireUp('tiddler.deleted', tiddlerDeleted);
     wireUp('tiddler.refresh', rerenderTiddler);
     wireUp('tiddler.text', getTiddlerTextRaw);
     wireUp('tiddler.content', renderTiddler);
@@ -400,7 +392,7 @@
 
   function validateTiddlerText(t) {
     if (t.type === 'json') return jsonValidator(t.text);
-    if (isCodeTiddler(t)) executeText(t.text);
+    if (isActiveCodeTiddler(t)) executeText(t.text);
     if (isCodeTiddler(t) && t.tags.includes('$CodeDisabled')) alert('This code tiddler is disabled and will not run. Remove the $CodeDisabled tag to activate.');
   }
   function tiddlerValidation(t) {
@@ -819,9 +811,13 @@
     Object.assign(t, {title, text: `The tiddler '${title}' does not exist`, doesNotExist: true});
     return t;
   }
+  function tiddlerDeleted(t) {
+    if (isActiveCodeTiddler(t))
+      if (confirm('Code tiddler deleted - would you like to reload?')) rebootHard();
+  }
   function tiddlerUpdated(title) {
     let t = getTiddler(title);
-    if (isCodeTiddler(t))
+    if (isActiveCodeTiddler(t))
     // TODO: Try, catch, return error <span class="error">
       return executeCodeTiddler(t.text, title);
     if (['$SiteTitle', '$SiteSubTitle', '$TitleBar'].includes(title))
@@ -1051,7 +1047,10 @@
   /* Store */
   function loadStore(store) {
     if (!store) store = tw.store;
-    tw.tiddlers.all = tw.shadowTiddlers.concat(storeLoadTiddlers('tiddlers'));
+    tw.tiddlers.all = storeLoadTiddlers('tiddlers');
+    tw.shadowTiddlers
+      .filter(t => !tiddlerExists(t.title))
+      .forEach(addTiddlerHard);
     if (!tw.tiddlers.all.length) {
       tw.tiddlers.all = [];
       store.set('tiddlers', []);
@@ -1079,12 +1078,12 @@
     scrollToTiddler(link);
     location.hash = '';
   }
-  function sendCommand(cmd, param, currentTiddlerTitle) {
+  function sendCommand(cmd, param, params, currentTiddlerTitle) {
   // "foo.bar:etc etc" => events.send('foo.bar', ['etc', 'etc'])
     let cmds = cmd.match(reCommand);
     if (!cmds) throw new Error(`Invalid command '${cmd}' does not match ${reCommand}/!`);
     let msg = cmds[1];
-    let params = cmds.length > 2 ? cmds[2] : null;
+    if (!params) params = cmds.length > 2 ? cmds[2] : null;
     if (typeof param === 'undefined' || param === null) {
       params = tw.events.decode(params);
       if (params) params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
@@ -1149,12 +1148,13 @@
       if (!src) return;
       let msg = src.getAttribute('data-msg');
       let param = src.getAttribute('data-param');
+      let params = src.getAttribute('data-params');
       if (!msg && isCommand(link)) msg = isCommand(link);
       if (!msg) return;
       if (src.getAttribute('data-default') !== 'true') event.preventDefault();
       let currentTiddlerTitle = tw.core.dom.nearestAttribute(el, 'data-tiddler-title', '.tiddler');
       if (msg) {
-        let result = sendCommand(msg, param, currentTiddlerTitle);
+        let result = sendCommand(msg, param, params, currentTiddlerTitle);
         let targetId = src.getAttribute('data-target');
         if (!targetId) return result;
         // Display results
@@ -1201,6 +1201,7 @@
   async function loadCorePackage(packageName) {
     let res = readObject('/packages' + packageName);
     if (!res?.code || qs.reload) res = await fetchPackage(packageName);
+    writeObject('/packages' + packageName, res);
     return res;
   }
   async function fetchPackage(packageName) {

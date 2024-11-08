@@ -15,11 +15,8 @@ const compat = new FlatCompat({
 export default [...compat.extends('strongloop'), {
   languageOptions: {
     globals: {
-      boot: 'readonly',
       dp: 'readonly',
-      dd: 'readonly',
-      de: 'readonly',
-      dw: 'readonly',
+      tw: 'readonly',
       ...globals.browser,
     },
     ecmaVersion: 2020,

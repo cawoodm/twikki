@@ -36,7 +36,13 @@
       text = tw.core.common.escapeHtml(text);
     let className = '';
     if (text.match(/<svg/)) className = 'icon';
-    return `<button${id ? ' id="' + id + '"' : ''} class="${className}" data-msg="${message}" data-param="---enc:${tw.core.common.encoder(payload || '')}" ${attr}>${text}</button>`;
+    let paramAttribute = '';
+    if (payload) {
+      if (typeof payload === 'object') paramAttribute = ` data-params="---enc:${tw.core.common.encoder(JSON.stringify(payload))}"`;
+      else if (typeof payload === 'string') paramAttribute = ` data-param="---enc:${tw.core.common.encoder(payload)}"`;
+      else return '<span class="error">ERROR: Button Payload is not a string!</span>';
+    }
+    return `<button${id ? ' id="' + id + '"' : ''} class="${className}" data-msg="${message}" ${paramAttribute} ${attr}>${text}</button>`;
   }
   // Block-style expander
   function section({name, content, id, attr = ''}) {
