@@ -1,0 +1,3 @@
+Welcome to Twiki.
+
+<button onclick="tw.macros.welcome.Step1()">Begin</button>

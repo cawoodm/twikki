@@ -1,0 +1,36 @@
+{
+  "tiddlers": [
+    {
+      "title": "$TestFrameworkPlugin",
+      "text": "/* eslint-disable complexity */\n/**\n * TestFramework\n * Provides some macros and functions to run UI/E2E tests\n * Tests are typically instructions to click and element, wait, and then check if other elements appear\n * The macro <<tests.clear>> prepares a new run\n *  whilst <<tests.queue>> adds tests to be run sequentially\n * The macro <<tests.run>> provides a button to start the tests\n * While a test is running the macros clear and queue are disabled (see isRunning)\n *  because the tests may open the same tiddler which contains them and thus interfere\n */\n\n// TODO: tw.extensions.registerPlugin(...code..., meta{version, etc...})\n\n(function() {\n  const WAIT = 300;\n  const queue = [];\n  const results = [];\n  let isRunning = false;\n  tw.tmp.tests = {queue, results};\n  Object.freeze(tw.tmp.tests);\n  tw.extensions.registerMacro('tests', 'queue', (options) => {\n    if (isRunning) return;\n    // TODO: Save currentTiddler and visibleTiddlers\n    let id = randstr();\n    let name = options.name;\n    if (options.expect) options.expect = options.expect.split(/,\\s?/);\n    if (options.expectSome) options.expectSome = options.expectSome.split(/,\\s?/);\n    if (options.click) queueTest(name, () => clickTest({id, ...options}));\n    else if (options.type) queueTest(name, () => typingTest({id, ...options}));\n    else if (options.comment) queueTest(name, () => '');\n    else throw new Error('Unknown test type');\n    if (!name) return `<i>// ${options.comment}</i>`; // Comment\n    return `<div id=\"${id}\">Preparing test '${name}'...</div>`;\n  });\n  function queueTest(name, test) {\n    queue.push({name, test});\n  }\n\n  async function clickTest({name, click, find, expect, expectNone, expectSome}) {\n    await sleep(WAIT);\n    doClick({click});\n    checkExpectations({find, expect, expectNone, expectSome});\n    return name;\n  }\n  function doClick({click}) {\n    if (!click) return;\n    let src = document.querySelector(click);\n    if (!src?.click) throw new Error(`Failed to find clickable element matching '${click}!`);\n    src.click();\n  }\n  async function typingTest({name, type, input, find, expect, expectNone, expectSome}) {\n    await sleep(WAIT);\n    doTyping({type, input});\n    checkExpectations({find, expect, expectNone, expectSome});\n    return name;\n  }\n  function doTyping({type, input}) {\n    if (!type) return;\n    let src = document.querySelector(type);\n    if (!src || typeof src.value === 'undefined') throw new Error(`Failed to find input element matching '${type}!`);\n    src.value = input;\n    src.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': 13}));\n  }\n  function checkExpectations({find, expect, expectNone, expectSome}) {\n    if (!find) return;\n    let target = document.querySelectorAll(find);\n    let targetIds = target?.length ? Array.from(target).map(t => t.getAttribute('data-tiddler-title')) : [];\n    if (!target?.length && !expectNone) throw new Error(`Failed to find target element matching selector '${find}!`);\n    else if (expect && expect?.length && target?.length !== expect.length) throw new Error(`Failed to find correct number of elements (got ${target?.length || 0} expected ${expect.length})!`);\n    else if (expectSome && expectSome.every(t => targetIds.indexOf(t) > 0)) throw new Error(`Failed to find some elements (expected ${expectSome.join(', ')} missing ${expectSome.find(t => targetIds.indexOf(t) < 0)})!`);\n    // TODO: expect.all(id => target.find\n  }\n\n  tw.extensions.registerMacro('tests', 'clear', () => {\n    if (isRunning) return;\n    queue.length = 0;\n    return 'Tests Cleared';\n  });\n  tw.extensions.registerMacro('tests', 'run', ({suite}) => {\n    let id = randstr();\n    return `<div id=\"${id}\">${tw.ui.button(`Run ${suite}`, 'tests.run', {suite, id})}</div>`;\n  });\n  tw.extensions.registerMacro('tests', 'results', () => {\n    let tests = results.filter(t => !!t.name);\n    let success = tests.filter(t => t.success).length;\n    let error = tests.filter(t => t.error).length;\n    let res = `## ${success} passed, ${error} failed: \n* ${tests.map(t => `${t.success ? '✅' : '❌'} ${t.name} ${t.success || t.error}`).join('\\n* ')}\n    `;\n    return res;\n  });\n\n  tw.events.subscribe('tests.run', async({suite}) => {\n    results.length = 0;\n    isRunning = true;\n    for (let t of queue.filter(t => !!t.name)) {\n      try {\n        let res = await t.test();\n        results.push({suite, name: t.name, success: res});\n      } catch (e) {\n        results.push({suite, name: t.name, error: e.message});\n      }\n    }\n    tw.events.send('tiddler.preview', {title: `TestResults: ${suite} (${new Date().toLocaleString()})`, text: '<<tests.results>>', type: 'x-twiki', tags: []});\n  }, 'tests.run');\n\n  function sleep(ms) {return new Promise(r => setTimeout(r, ms));}\n  function randstr() {return Math.random().toString(36).replace('0.', '');}\n\n})();\n",
+      "tags": [],
+      "type": "script/js",
+      "created": "2024-11-08T10:20:43.5887195Z",
+      "updated": "2024-10-29T14:42:11.1152581Z"
+    },
+    {
+      "title": "TestLinks",
+      "text": "* <<tests.clear>>\n* <<tests.queue name:\"Close All Tiddlers\" click:#close-all find:[data-tiddler-title] expectNone:1>>\n* <<tests.queue name:\"Open All Tiddlers\" click:#open-all find:[data-tiddler-title] expectSome:\"Welcome,Help\">>\n* <<tests.queue comment:\"Done\" click:#close-all>>\n\n<<tests.run suite:\"Links\">>\n\n## To Test \n\n* Link to search results: [😎Shadows](#msg:search:$tag:$Shadow)\n* Open all tagged with `Favorite`: [⭐Favorties](#msg:ui.open.all:{tag:'Favorite'})\n* [Favorite](#msg:ui.open.all:tag:Favorite)\n",
+      "tags": [],
+      "type": "x-twiki",
+      "created": "2024-11-08T10:20:43.5897196Z",
+      "updated": "2024-10-29T14:31:30.8213844Z"
+    },
+    {
+      "title": "Tests",
+      "text": "* [[TestLinks]]\n* [[TestSearch]]",
+      "tags": [],
+      "type": "x-twiki",
+      "created": "2024-11-08T10:20:43.5907199Z",
+      "updated": "2024-10-29T12:28:54.4168863Z"
+    },
+    {
+      "title": "TestSearch",
+      "text": "* <<tests.clear>>\n* <<tests.queue name:\"Close All Tiddlers\" click:#close-all find:[data-tiddler-title] expectNone:1>>\n* <<tests.queue name:\"Search Welcome\" type:#search input:welcome find:\"#all-tiddlers [data-param=Welcome]\">>\n* <<tests.queue comment:\"Done\">>\n\n<<tests.run suite:\"Search\">>\n",
+      "tags": [],
+      "type": "x-twiki",
+      "created": "2024-11-08T10:20:43.5925660Z",
+      "updated": "2024-10-29T12:56:15.3726126Z"
+    }
+  ]
+}

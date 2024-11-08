@@ -2,11 +2,11 @@
   "tiddlers": [
     {
       "title": "$CorePackages",
-      "text": "* https://cawoodm.github.io/twiki/packages/core.json save,force",
+      "text": "* https://cawoodm.github.io/twiki/packages/base.json save,force",
       "tags": [],
       "type": "list",
       "created": "2024-11-03T20:36:53.2910798Z",
-      "updated": "2024-11-03T20:45:17.3799005Z"
+      "updated": "2024-11-08T10:21:10.2269272Z"
     },
     {
       "title": "$CoreThemeDark",
@@ -191,21 +191,13 @@
     },
     {
       "title": "$MainLayout",
-      "text": "<div>\n  <div style=\"position:absolute; top: 0px; right: 0px; z-index: 1\" tiddler-include=\"$Namespaces\"></div>\n  <div style=\"position:absolute; top: 0px; right: 150px; z-index: 1\" tiddler-include=\"$Themes\"></div>\n  <div id=\"header\" class=\"flex\">\n    <div id=\"header-col1\" class=\"flex col1\">\n      <div id=\"site-title\" tiddler-include=\"$SiteTitle\"><h1>TWIKI</h1></div>\n      <div id=\"site-title\" tiddler-include=\"$SiteSubTitle\">...</h1></div>\n  </div>\n  <div id=\"header-col2\" class=\"flex col2\" tiddler-include=\"$TitleBar\">\n  </div>\n  <div id=\"header-col3\" class=\"flex col3\">\n      <input id=\"search\" type=\"search\" placeholder=\"search\" />\n    </div>\n  </div>\n  <div id=\"body\" class=\"flex\">\n    <div id=\"sidebar\">\n      <div>\n        <ul id=\"all-tiddlers\"></ul>\n      </div>\n    </div>\n    <div id=\"visible-tiddlers\">\n    </div>\n  </div>\n  <dialog id=\"preview-dialog\">\n  </dialog>\n  <dialog id=\"new-dialog\">\n    <form id=\"new-form\">\n      <div class=\"toolbar\">\n        <button class=\"icon\" data-msg=\"form.done\" tiddler-include=\"$IconDone\" title=\"Done\"></button>\n        <button class=\"icon\" data-msg=\"form.cancel\" tiddler-include=\"$IconCancel\" title=\"Cancel\"></button>\n      </div>\n      <input id=\"old-title\" type=\"hidden\" />\n      <div class=\"title\"><input id=\"new-title\" placeholder=\"Title\" size /></div>\n      <div class=\"text\"><textarea row=\"10\" id=\"new-body\" placeholder=\"Text\"></textarea></div>\n      <div><input id=\"new-type\" list=\"new-types\" onfocus=\"this.value=null;\" onchange=\"this.blur();\" />\n        <datalist id=\"new-types\">\n        </datalist>\n      </div>\n      <div><input id=\"new-tags\" placeholder=\"Tags\" size /></div>\n      <div><button id=\"new-save\">OK</button><button id=\"new-cancel\">Cancel</button></div>\n    </form>\n  </dialog>\n  <div id=\"notify\" class=\"notifyHidden\"></div>\n</div>",
+      "text": "<div>\n  <div style=\"position:absolute; top: 0px; right: 0px; z-index: 1\" tiddler-include=\"$Workspaces\"></div>\n  <div style=\"position:absolute; top: 0px; right: 150px; z-index: 1\" tiddler-include=\"$Themes\"></div>\n  <div id=\"header\" class=\"flex\">\n    <div id=\"header-col1\" class=\"flex col1\">\n      <div id=\"site-title\" tiddler-include=\"$SiteTitle\"><h1>TWIKI</h1></div>\n      <div id=\"site-title\" tiddler-include=\"$SiteSubTitle\">...</h1></div>\n  </div>\n  <div id=\"header-col2\" class=\"flex col2\" tiddler-include=\"$TitleBar\">\n  </div>\n  <div id=\"header-col3\" class=\"flex col3\">\n      <input id=\"search\" type=\"search\" placeholder=\"search\" />\n    </div>\n  </div>\n  <div id=\"body\" class=\"flex\">\n    <div id=\"sidebar\">\n      <div>\n        <ul id=\"all-tiddlers\"></ul>\n      </div>\n    </div>\n    <div id=\"visible-tiddlers\">\n    </div>\n  </div>\n  <dialog id=\"preview-dialog\">\n  </dialog>\n  <dialog id=\"new-dialog\">\n    <form id=\"new-form\">\n      <div class=\"toolbar\">\n        <button class=\"icon\" data-msg=\"form.done\" tiddler-include=\"$IconDone\" title=\"Done\"></button>\n        <button class=\"icon\" data-msg=\"form.cancel\" tiddler-include=\"$IconCancel\" title=\"Cancel\"></button>\n      </div>\n      <input id=\"old-title\" type=\"hidden\" />\n      <div class=\"title\"><input id=\"new-title\" placeholder=\"Title\" size /></div>\n      <div class=\"text\"><textarea row=\"10\" id=\"new-body\" placeholder=\"Text\"></textarea></div>\n      <div><input id=\"new-type\" list=\"new-types\" onfocus=\"this.value=null;\" onchange=\"this.blur();\" />\n        <datalist id=\"new-types\">\n        </datalist>\n      </div>\n      <div><input id=\"new-tags\" placeholder=\"Tags\" size /></div>\n      <div><button id=\"new-save\">OK</button><button id=\"new-cancel\">Cancel</button></div>\n    </form>\n  </dialog>\n  <div id=\"notify\" class=\"notifyHidden\"></div>\n</div>",
       "tags": [
         "$Template"
       ],
       "type": "html/template",
       "created": "2024-11-07T17:05:57.9455610Z",
-      "updated": "2024-11-07T17:11:32.0095694Z"
-    },
-    {
-      "title": "$Namespaces",
-      "text": "<<WorkspaceSelect>>",
-      "tags": [],
-      "type": "x-twiki",
-      "created": "2024-11-03T20:36:53.3393484Z",
-      "updated": "2024-11-07T15:13:14.8565303Z"
+      "updated": "2024-11-08T11:47:43.2641572Z"
     },
     {
       "title": "$Settings",
@@ -342,6 +334,14 @@
       "type": "text",
       "created": "2024-11-03T20:36:53.3722371Z",
       "updated": "2024-10-30T10:58:17.5535228Z"
+    },
+    {
+      "title": "$Workspaces",
+      "text": "<<WorkspaceSelect>>",
+      "tags": [],
+      "type": "x-twiki",
+      "created": "2024-11-03T20:36:53.3393484Z",
+      "updated": "2024-11-07T15:13:14.8565303Z"
     }
   ]
 }

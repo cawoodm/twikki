@@ -1,0 +1,12 @@
+## Expandable Sections
+
+<<Section name:"Click here" content:"For more content here...">>
+<<Section name:WebsitePackage message:tiddlers.list payload:"$pck=website">>
+
+## Expose: Render on Expand
+<<Expose name:Theme message:tiddler.content payload:$TestLinks>>
+
+## Inline Expandable Section
+TODO: Style these as clickable/expandable
+* <<Expand name:Theme message:tiddler.text payload:$Theme>>
+* <<Expand name:Theme message:tiddler.text payload:$Theme>>

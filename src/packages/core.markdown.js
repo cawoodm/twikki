@@ -8,13 +8,19 @@
   const name = 'core.markdown';
   const version = '0.0.1';
 
+  // Init
+  const md = markdownit({
+    html: true,
+    linkify: true,
+    typographer: true,
+  });
+  const render = md.render.bind(md);
+
   // Exports
   const exports = {
-    markdown: markdownit,
+    render,
   };
 
-  const run = () => {};
-
-  return {name, version, exports, run};
+  return {name, version, exports};
 
 });

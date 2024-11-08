@@ -38,7 +38,8 @@
           if (window.devMode) throw new Error(`No handlerName provided in events.subscribe(${event})!`);
         }
         // Prevent same handler function for same event
-        if (handlers.find(h => h.event === event && h.handler.name === handlerName)) return console.warn('Ignoring duplicate event handler', event, handlerName); // debugger;
+        if (handlers.find(h => h.event === event && h.handler.name === handlerName))
+          return console.warn('Ignoring duplicate event handler', event, handlerName); // debugger;
         // dp('subscribe', event, handlerName);
         handlers.push({event, handler});
       },

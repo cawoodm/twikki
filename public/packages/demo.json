@@ -1,0 +1,20 @@
+{
+  "tiddlers": [
+    {
+      "title": "$FavoritesPlugin",
+      "text": "/**\n * ## Description\n * Provide <<favorites.toggle>> widget\n *   Toggles tag 'Favorite' on current tiddler\n *   for use on $TiddlerDisplay template\n */\n/**\n * ## Data\n * ```json\n * {\n *   \"version\": 1.0.0\n * }\n * ```\n */\n(function(){\n  tw.macros.favorites = {\n    toggle() {\n      // TODO: How to find the current tiddler/element?\n      // let el = tw.core.dom.nearestAttribute\n      return tw.ui.button('{{$IconFavorite}}', 'favorites.toggle', '$currentTiddler', 'favoriteAdd');\n    },\n  };\n  tw.events.subscribe('favorites.toggle', favoriteToggle);\n  function favoriteToggle(title) {\n    const t = tw.call('getTiddler', title);\n    if (!t) throw new Error(`Unknown tiddler '${title}'!`);\n    // if (t.tags.includes('$NoEdit')) return tw.ui.notify('Tiddler is readonly!', 'E');\n    if (t.doNotSave) tw.ui.notify('Tiddler will not be saved!', 'W');\n    tw.call('tiddlerToggleTag', t.title, 'Favorite');\n    let btn = tw.call('getTiddlerElement', title)?.querySelector('button[title=favorite]');\n    // dp(t.tags.includes('Favorite'), btn);\n    if (btn) {\n      if (!t.tags.includes('Favorite'))\n        btn.className += ' yellow';\n    }\n    // dp(btn.className);\n    tw.events.send('save.silent');\n  }\n  // Add {{=favoriteClass}} to your $TiddlerDisplay\n  tw.extend.tiddlerDetails.favoriteClass = function(t) {\n    return t.tags.includes('Favorite') ? 'favorite' : '';\n  };\n})();\n// TODO: How to add button:yellow svg {fill: yellow;} to theme?\n",
+      "tags": [],
+      "type": "script/js",
+      "created": "2024-11-08T10:20:43.4987515Z",
+      "updated": "2024-11-08T11:29:43.3127018Z"
+    },
+    {
+      "title": "$MassDeletePlugin",
+      "text": "/**\n * ## Description\n * Provide <<favorites.toggle>> widget\n *   Toggles tag 'Favorite' on current tiddler\n *   for use on $TiddlerDisplay template\n */\n/**\n * ## Data\n * ```json\n * {\n *   \"version\": 1.0.0\n * }\n * ```\n */\n(function(){\n  tw.macros.mass = {\n    delete() {\n      return `<form>\n      <input name=title placeholder=title>\n      <input name=tag placeholder=tag>\n      <input name=package placeholder=package>\n      ${tw.ui.button('Show', null, null, 'btnMassDelete', 'onclick=\"pck=this.form.elements[2].value; tw.run.sendCommand(\\'ui.open.all:pck:\\' + pck)\"')}\n      ${tw.ui.button('Delete', 'tiddlers.delete.mass', 'this', 'btnMassDelete')}\n      </form>`;\n    },\n  };\n  tw.events.subscribe('tiddlers.delete.mass', massDelete);\n  function massDelete({title, tag, pck}) {\n    let list = tw.call('tiddlerSearch')({title, tag, pck})\n      .map(t => t.title);\n    if (!confirm(`Sure you want to deleted these ${list.length} tiddlers?`)) return;\n    list.forEach(title => (tw.run.deleteTiddler(title, true)));\n  }\n})();\n",
+      "tags": [],
+      "type": "script/js",
+      "created": "2024-11-08T10:20:43.4997526Z",
+      "updated": "2024-10-26T10:53:54.7665589Z"
+    }
+  ]
+}

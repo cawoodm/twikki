@@ -1,0 +1,5 @@
+Synchronization replicates local changes to a remote defined in [[$GeneralSettings]]:
+* <<synch.test>>: Simulate a Synch
+* <<synch.full>>: Run full synch (pull+push)
+* <<synch.push>>: Push changes to remote
+* <<synch.pull>>: Pull changes from remote

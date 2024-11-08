@@ -1,0 +1,9 @@
+By clicking the "Begin" button you have created your first Tiddler!
+
+A Tiddler is just a block of text, like the one you are reading now.
+
+Each tiddler can however do more than just store text, it can run code!
+
+Click the following button to see how code can change your twiki:
+
+<<welcome.Step2Button>>

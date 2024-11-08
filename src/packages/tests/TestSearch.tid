@@ -1,0 +1,6 @@
+* <<tests.clear>>
+* <<tests.queue name:"Close All Tiddlers" click:#close-all find:[data-tiddler-title] expectNone:1>>
+* <<tests.queue name:"Search Welcome" type:#search input:welcome find:"#all-tiddlers [data-param=Welcome]">>
+* <<tests.queue comment:"Done">>
+
+<<tests.run suite:"Search">>

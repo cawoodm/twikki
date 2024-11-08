@@ -44,7 +44,7 @@
         get(key) {
           if (key[0] !== '/') key = '/' + key;
           let res = os.read(key);
-          if (res?.match(/^\[\{/)) return JSON.parse(res);
+          if (res?.match(/^[\[\{]/)) return JSON.parse(res);
           return res;
         },
         set(key, value) {
@@ -150,7 +150,6 @@
       tw.packages
         .filter(pck => pck.meta?.run)
         .forEach(pck => {
-          dp('running', pck.name);
           if (!qs.trace) {
             // Normally we try/catch packages to provide user-friendly feedback...
             try {
@@ -173,7 +172,7 @@
       loadStore();
       tw.extend = {tiddlerDetails: {
         metaInfo(t) {
-          return tw.core.markdown.markdown([
+          return tw.core.markdown.render([
             `${t.package ? '[pck:' + t.package + '](#msg:search:pck:' + t.package + ')' : ''}`,
             `${t.doNotSave ? 'doNotSave ✅' : ''}`,
             `${t.isRawShadow ? 'isRawShadow ✅' : ''}`,
@@ -215,7 +214,29 @@
           updateText: updateTiddlerText,
         },
       };
+      // ----------
+      // Legacy Aliases
       tw.util = {tagMatch, titleMatch, titleIs, tiddlerValidation, tiddlerExists};
+      tw.lib = {markdown: tw.core.markdown.render};
+      Object.assign(tw.ui, tw.core.ui);
+      tw.ui.notify = tw.core.notifications.notify;
+      tw.call = call;
+      tw.extensions = {
+        registerMacro(namespace, name, fcn, options) {
+          if (!tw.macros[namespace]) tw.macros[namespace] = {};
+          tw.macros[namespace][name] = fcn;
+          if (options) Object.assign(tw.macros[namespace][name], options);
+        },
+      };
+      window.markdown = tw.lib.markdown;
+      // ----------
+      tw.macros = {
+        core: {
+          showTiddlerList,
+          disabled: (...rest) => ('This macro is disabled!' + JSON.stringify(rest)),
+        },
+      };
+      tw.plugins = {};
 
       // tw.core.notifications.notify('OK');
       console.debug(`*** TWikki v${VERSION}`);
@@ -263,7 +284,7 @@
   async function rebootSoft() {
   // TODO: Clear events.clearAll()
     await loadCorePackages();
-    if (!qs.safeMode) await loadExtensionPackages();
+    if (!qs.safemode) await loadExtensionPackages();
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
     reload(1);
   }
@@ -273,7 +294,7 @@
   function reload(time) {
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
-    runExtensionTiddlers();
+    if (!qs.safemode) runExtensionTiddlers();
     loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
     if (time === 1) tw.events.send('ui.loaded');
@@ -338,12 +359,12 @@
 
     wireUp('tiddler.new', formNewTiddler);
     wireUp('tiddler.edit', formEditTiddler);
-    wireUp('tiddler.show', tw.run.showTiddler);
+    wireUp('tiddler.show', showTiddler);
     wireUp('tiddler.close', closeTiddler);
     wireUp('tiddler.preview', previewTiddler);
     wireUp('tiddler.preview.close', closePreview);
     wireUp('tiddler.delete', deleteTiddler);
-    wireUp('tiddler.deleted', tw.run.reload); // E.g. if styles are deleted
+    wireUp('tiddler.deleted', reload); // E.g. if styles are deleted
     wireUp('tiddler.refresh', rerenderTiddler);
     wireUp('tiddler.text', getTiddlerTextRaw);
     wireUp('tiddler.content', renderTiddler);
@@ -407,6 +428,7 @@
       .filter(isActiveCodeTiddler)
       .filter(t => !isCoreTiddler(t))
       .forEach(t => {
+        if (qs.trace) return executeCodeTiddler(t.text, t.title);
         try {
           executeCodeTiddler(t.text, t.title);
         } catch (e) {
@@ -419,6 +441,7 @@
       });
   }
   function executeCodeTiddler(text, title) {
+    if (qs.trace) return executeText(text, title);
     try {
       return executeText(text, title);
     } catch (e) {
@@ -427,16 +450,16 @@
     }
   }
   function executeText(text, title, context) {
-    let result;
+    if (qs.trace) return (1, eval)(text);
     try {
-      result = (1, eval)(text);
+      return (1, eval)(text);
     } catch (e){
       let msg = `executeText "${title}" ${context ? ' in tiddler \'' + context + '\'' : ''}`;
       // tw.ui.notify(msg, 'E');
       console.error(`${msg}: ${e.message}`, e.stack);
       throw e; // new Error(`${msg}: ${e.message}`);
     }
-    return result;
+
   }
   function renderAllTiddlers() {
     tw.core.dom.divVisibleTiddlers.innerHTML = '';
@@ -448,7 +471,7 @@
     searchNow();
   }
   function searchNow() {
-    renderTiddlerList(tw.core.search(tw.core.dom.$('search').value, tw.tiddlers.all));
+    renderTiddlerList(tw.core.search.search(tw.core.dom.$('search').value, tw.tiddlers.all));
   }
   function renderTiddlerList(list) {
     if (!list) return searchNow();
@@ -506,19 +529,19 @@
     const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
     const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
     if (type === 'x-twiki') {
-      return markdown(renderTwiki({text, title}));
+      return tw.core.markdown.render(renderTwiki({text, title}));
     } else if (markdownTypes.includes(type)) {
-      return markdown(text);
+      return tw.core.markdown.render(text);
     } else if (codeTypes.includes(type)) {
-      return `<pre><code>${escapeHtml(text)}</code></pre>`;
+      return `<pre><code>${tw.core.common.escapeHtml(text)}</code></pre>`;
     } else if (type === 'html') {
       return text;
     } else {
-      return `<pre>${escapeHtml(text)}</pre>`;
+      return `<pre>${tw.core.common.escapeHtml(text)}</pre>`;
     }
   }
   function makeTiddlerTagLinks(tags) {
-    return markdown(tags.map(t => {
+    return tw.core.markdown.render(tags.map(t => {
       return `[${t}](#msg:ui.open.all:{tag:'${t}',title:'*'})`;
     /* let link = `msg:ui.open.all:{tag:'${t}'}`;
     return `<a href="#${escapeHtml(link)}">${escapeHtml(t)}</a>`;*/
@@ -561,6 +584,11 @@
         // TODO: Inclusions (pass {{DataTiddler}} as string/array/object) would be cool
         macroParams = tw.core.params.parseParams(macroParams);
         if (dbg) {dp({macroName, macroParams}); }
+        if (qs.trace) {
+          let newText = Array.isArray(macroParams) ? macroFunction(...macroParams) : macroFunction(macroParams);
+          result = replaceFrom(result, indexOfMacro, m[0], newText);
+          return;
+        }
         try {
         /* *** Run Macro *** */
         // TODO: Support async macros
@@ -762,7 +790,7 @@
   }
   function jsonValidator(text) {
     try {
-      dp(JSON.parse(text));
+      JSON.parse(text);
       return true;
     } catch (e) {
       throw e;
@@ -826,7 +854,6 @@
   /* TODO: Move to $GeneralCoreMacros.js */
   function showAllTiddlers({tag, title, pck}) {
     if (!title) title = '!^\\$';
-    // dp('showAllTiddlers', {tag, title});
     tiddlerSearch({title, tag, pck})
       .map(t => t.title)
       .forEach(showTiddler);
@@ -1133,7 +1160,7 @@
         // Display results
         let target = tw.core.dom.$(targetId);
         if (!target) {
-          dp(`No target '${targetId}' found`);
+          console.warn(`No target '${targetId}' found`);
           tw.events.send('tiddler.preview', {title: 'Results', text: result[0], type: 'x-twiki', tags: []});
           return result;
         }
@@ -1165,6 +1192,10 @@
   }
 
   function notEmpty(v){return !!v;}
+
+  function call(functionName, ...args) {
+    return eval(functionName)(...args);
+  }
 
   /* END TWIKI */
   async function loadCorePackage(packageName) {

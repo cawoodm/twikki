@@ -13,19 +13,19 @@
   return {name, version, exports};
 
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
-    console.debug('Loading package', name, url);
+    console.debug('Loading tiddler package', name, url);
     try {
       let obj = await httpGetJSON(url, name, {});
       return loadList(obj.tiddlers, {name, overWrite, filter, doNotSave, noOverWrite}); // tw.events.send('package.loaded');
     } catch (e) {
       // TODO: Replace notify with throw new Error()
-      tw.ui.notify(`Failed to load package '${name}' from ${url} (see log)`, 'E', e.stack);
+      tw.ui.notify(`Failed to load tiddler package '${name}' from ${url} (see log)`, 'E', e.stack);
       return 0;
     }
   }
 
   async function loadPackageFromJSONBin({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
-    console.debug('Loading package from JSONBin', name, url, overWrite);
+    console.debug('Loading tiddler package from JSONBin', name, url, overWrite);
     let settings = tw.call('getJSONObject', '$GeneralSettings');
     if (!settings?.JSONBin?.accessKey) return tw.ui.notify('No JSONBin accessKey found in $GeneralSettings!', 'W');
     try {
@@ -33,7 +33,7 @@
       if (obj.record.all) throw new Error('You are trying to load a backup! This is for packages!');
       return loadList(obj.record.tiddlers, {name, filter, overWrite, doNotSave, noOverWrite});
     } catch (e) {
-      tw.ui.notify(`Failed to load package '${name}' from JSONBin ${url} (see log)`, 'E', e.stack);
+      tw.ui.notify(`Failed to load tiddler package '${name}' from JSONBin ${url} (see log)`, 'E', e.stack);
       return 0;
     }
   }

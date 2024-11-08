@@ -1,0 +1,71 @@
+This ExamplePlugin is not really a plugin but a proof of concept in packaging plugins.
+The idea is that we can have a single tiddler with multiple named sections which can then be handled as if they were individual tiddlers.
+
+For example referencing or linking to [[ExamplePlugin/Settings]] would link to that section or "sub-tiddler".
+
+Each subtiddler has it's own content type and can thus be JS, CSS, JSON, DataList and can be used as if it were an individual tiddler.
+
+A developer may work with these sections as individual files (for intellisense and code formatting in their IDE) but the published result is a single tiddler. Strictly speaking we don't need this to be a single tiddler since we can include separate tiddlers into one and just add all separate tiddlers to a single package. However, it's neat for end-users to be able to delete or update a single tiddler and thus delete/update the plugin.
+
+This plugin will do provide some examples of widgets and extensible functions.
+
+Feel free to customize it's [settings](#ExamplePluginSettings) or look at the [code](#ExamplePluginCode).
+
+# Examples
+type: x-twiki
+{{ExamplePluginExamples}}
+
+# Settings
+* someSetting: hello
+* someValue: 42
+* someOption: true
+
+Some description of the settings here.
+
+# Config
+```json
+{
+  "maxResults": 100,
+  "pageSize": 20,
+  "showRanking": false
+}
+```
+
+# Data
+```json
+[
+  {"code": "de", "language": "German"},
+  {"code": "en", "language": "English"}
+]
+```
+# Code
+```javascript
+tw.extensions.registerMacro('example', 'hello', (name) => {
+  return `Hello ${name}`;
+}, {version: '1.0.0'});
+
+// <<example.hello Marc>>
+
+```
+
+# StyleSheet
+```css
+div.example {
+  color: red
+}
+```
+# Theme
+* [[$StyleSheetCore]]
+* [[$StyleSheetCoreDark]]
+* [[$ExampleTheme]]
+* [[$StyleSheetUser]]
+
+# Tests
+```javascript
+// ...
+```
+
+# Meta
+* Author: Marc Cawood
+* Version: 1.0.1
+* URL: https://cawodm.github.io/packages/example-plugin.json

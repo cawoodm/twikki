@@ -1,0 +1,5 @@
+Backup will push all data (including trashed tiddlers and the visible state) to a remote.
+* <<backup.backupButton>>: Backup data
+* <<backup.restoreButton>>: Restore all data (!will overwrite everything)
+
+Note: In case you mess up we routinely make a local backup - press F12 and check under Application - Local Data

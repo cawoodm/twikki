@@ -1,0 +1,12 @@
+* <<tests.clear>>
+* <<tests.queue name:"Close All Tiddlers" click:#close-all find:[data-tiddler-title] expectNone:1>>
+* <<tests.queue name:"Open All Tiddlers" click:#open-all find:[data-tiddler-title] expectSome:"Welcome,Help">>
+* <<tests.queue comment:"Done" click:#close-all>>
+
+<<tests.run suite:"Links">>
+
+## To Test 
+
+* Link to search results: [😎Shadows](#msg:search:$tag:$Shadow)
+* Open all tagged with `Favorite`: [⭐Favorties](#msg:ui.open.all:{tag:'Favorite'})
+* [Favorite](#msg:ui.open.all:tag:Favorite)

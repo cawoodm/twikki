@@ -1,0 +1,42 @@
+{
+  "tiddlers": [
+    {
+      "title": "$KhakiStyleSheet",
+      "text": ":root {\n  --col0: #465f70;\n  --col1: #feffdf;\n  --colbg2: #d1d2d3;\n  --col3: #97cba9;\n  --col4: #668ba4;\n  --colbg3: #bdbe98;\n  --col6: #4d9e4d;\n}",
+      "tags": [
+        "$StyleSheet"
+      ],
+      "type": "css",
+      "created": "2024-11-08T10:20:43.5969489Z",
+      "updated": "2024-10-04T19:45:16.2179505Z"
+    },
+    {
+      "title": "$KhakiTheme",
+      "text": "* [[$StyleSheetCore]]\n* [[$KhakiStyleSheet]]\n* [[$ThemeBase]]\n* [[$StyleSheetUser]]",
+      "tags": [
+        "$Theme"
+      ],
+      "type": "x-twiki",
+      "created": "2024-11-08T10:20:43.5979488Z",
+      "updated": "2024-10-04T19:45:16.2189510Z"
+    },
+    {
+      "title": "DemoStyleSheet",
+      "text": "* {\n  color: green\n}",
+      "tags": [
+        "$StyleSheet"
+      ],
+      "type": "css",
+      "created": "2024-11-08T10:20:43.5989489Z",
+      "updated": "2024-10-04T19:45:16.2189510Z"
+    },
+    {
+      "title": "DemoTiddler",
+      "text": "This demo will import a [[DemoStyleSheet]] and apply it to the [[$Theme]].\n\nA whole lotta text should now be green!",
+      "tags": [],
+      "type": "x-twiki",
+      "created": "2024-11-08T10:20:43.5999500Z",
+      "updated": "2024-10-04T19:45:16.2189510Z"
+    }
+  ]
+}

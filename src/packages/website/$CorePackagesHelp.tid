@@ -1,0 +1,30 @@
+The [[$CorePackages]] tiddler contains a [[DataList]] of packages to import when TWiki first loads.
+
+Core Packages are a select few packages which form the base of twiki i.e. necessary functionality.
+These should be distinguished from [[$ExtensionPackages]] which provided additional functionality.
+
+## What is a Package?
+
+A package, at it's most basic is just a URL which returns a list of tiddlers. Technically a package is an object with at least one property `tiddlers` of type Array.
+
+These tiddlers:
+* may contain functionality or data
+* once loaded, all code tiddlers are executed
+* can encapsulate things like themes or plugins
+* may or may not be stored depending on flags applied when importing them
+
+## Import Flags
+In addition to URLs you can specify options as to how tiddlers are auto-imported:
+
+* `save`: Set the `save` flag to ensure imported tiddlers are stored locally when you save. The default is off so imported tiddlers are nor persisted. By default the `core` and `icons` packages are set to `save` so that you have basic functionality offline
+* `force`: Set the `overwrite` flag to ensure the entire package is always imported even if this means overwriting tiddlers you may have changed. The default is off which means the auto-importer will prompt you about overwriting tiddlers you may have changed.
+* `nooverwrite`: Set the `nooverwrite` flag if you plan to change imported tiddlers and don't want them overwritten. The auto-importer will just skip importing them if the tiddler exists
+
+## Road Map
+Currently Packages are just URLs, later we will introduce the concept of Repos which store a list of uniquely named packages and their URLs.
+At that time we can simply refer to packages by their unique name (e.g. `core` or `backup-plugin`).
+
+- In future a package will contain more metadata e.g. name, version, author etc.
+- You will also be able to define update policies for packages e.g. if you want automatic updating of core patches or minor updates to extensions
+
+

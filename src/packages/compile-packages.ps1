@@ -20,12 +20,12 @@ function main() {
       [psobject]@{
         tiddlers = @($tiddlers)
       } | ConvertTo-Json -Depth 5 > "$OutDir/$repo.json"
-      if ($repo -eq 'shadow') {
-        $template = Get-Content -raw ../shadowTiddlersTemplate.js
-        $json = @($tiddlers) | ConvertTo-Json -Depth 3
-        $template = $template.replace('["DynamicallyImportShadowPackageHere"]', $json)
-        $template > ../shadowTiddlers.js
-      }
+      # if ($repo -eq 'shadow') {
+      #   $template = Get-Content -raw ../shadowTiddlersTemplate.js
+      #   $json = @($tiddlers) | ConvertTo-Json -Depth 3
+      #   $template = $template.replace('["DynamicallyImportShadowPackageHere"]', $json)
+      #   $template > ../shadowTiddlers.js
+      # }
       $repos++
     }
     "$repos compiled"

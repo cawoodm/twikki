@@ -1,0 +1,11 @@
+A DataList tiddler is a tiddler of type `list`.
+
+Such tiddlers are intended to store a list of data which could be a list of strings or more structured data.
+
+Some basic examples are the [[$TiddlerTypes]] tiddler which stores a list of all the different tiddler types. By using the core function `getKeyValuesArray` we can parse such `key:value` lists into an array of objects with `{key, value}` pairs which is useful for storing simple configurations.
+
+A more functional example would be [[$CorePackages]] which stores a list of URLs of packages to import. $CorePackages is interesting because it's just a bunch of strings `<url> flag,option` but the application parses each line to determine what flags and options apply to each url.
+
+In future we will offer a new type `table` which clearly separates the fields and displays them as a table.
+
+Note: For `list` tiddlers only those lines marked as list items (beginning with `* `) are considered for the list. Everything else is just like a comment for the reader.

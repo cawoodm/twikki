@@ -1,0 +1,36 @@
+Parameters are used to pass messages to objects or widgets.
+
+For example `<<example.greet Mr. Smith>>` passes 2 string parameters to the `greet` [[Widget]] in [[ExamplePlugin]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
+
+Since TWiki is text based the string `"red green blue"` must be parsed to produce parameters. We support 2 basic strategies for function parameters (named and unnamed).
+
+## Unnamed Parameters
+Tradional JavaScript functions accept the passing of multiple unnamed (or positional) parameters as in `function macro(p1, p2, p3)` which accepts 3 arguments. We can invoke it as such:
+* `<<macro foo bar>>` becomes `macro("foo", "bar")` (unquoted space-separated strings)
+* `<<macro 1 true car>>` becomes `macro(1, true, "car")` (literal numbers and booleans)
+* `<<macro 1 "true car">>` becomes `macro(1, "true car")` (quoted strings with spaces)
+* `<<macro 1 true "{foo()}">>` becomes `macro(1, true, foo())` (eval expression)
+
+Note: Technically the parameters are parsed into an array which is then spread as it is passed to the function.
+
+## Named Parameters
+Modern JavaScript functions expect a single object as a parameter or what may be called named parameters:
+Consider the `function greet({title, lastName})` which accepts 2 named parameters. It can be invoked as such:
+* `<<greet title:Mr. lastName:Smith>>` yielding `greet("Mr.", "Smith")` (unquoted space-separated strings)
+* `<<greet title:"Prof. Dr." lastName:"Bryson">>` yielding `greet("Prof. Dr.", "Bryson")` (quoted strings with spaces)
+The same rules for booleans `true/false` or numbers and eval expressions apply as above.
+
+Notes:
+* There may be no space before or after the `:` and properties may contain only characters `a-z`, `A-Z`, `0-9` or the `_` .
+* Objects do not (yet) support dynamic/eval expressions like `foo:{fcn()}`
+
+## Arrays
+It is not yet possible to pass an array to a function. We get around this by passing a csv string which the function can then manually `split(',')`.
+In future arrays will be possible via comma-separated tokens:
+* `<<add 1,2,3>>` yielding `add([1, 2, 3])`
+
+For example `<<selector red,green,blue>>` passes three colors to the [[SelectorWidget]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
+
+## Dynamic Parameters
+TWiki supports [[Commands]] which allow 3 types of serialized parameters:
+* 

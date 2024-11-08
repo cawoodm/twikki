@@ -1,0 +1,42 @@
+* Saving works out of the box
+  * localStorage with Backup option via plugin
+  * [[Backup]] to or [[Synchronization]] with [JSONBin](https://jsonbin.io/)
+* Namespaces: Easily switch between different stores!
+* List all tiddlers
+  * [All Normal Tiddlers](#msg:ui.open.all)
+  * [Really All (*) Tiddlers](#msg:ui.open.all:{"title":"*","tag":"*"})
+* Add, Edit, Close and Delete a tiddler
+  * Double-Click to edit
+  * Ctrl+Enter to save
+  * [[$TrashedTiddlers]] saved not really deleted
+  * TWiki tiddlers are validated (e.g. macros) on save
+  * JSON tiddlers are validated on save
+* Rendering 
+  * x-twiki and [CommonMark](#Markdown%20Test) markdown
+  * Code highlighting ([js](#Code%20Tiddler), [css](#StyleSheet) and [html](#HTML%20Example))
+* Open single or list of tiddlers via link
+  * [⭐Favorties](#msg:ui.open.all:tag:Favorite)
+* Code/Plugin tiddlers
+  * Tiddlers of type `script/js` are just executed (eval) in global context
+  * Macros - e.g. to open/close all/selected tiddlers
+    * `<<ShowAllTiddlersButton>>` <<ShowAllTiddlersButton>>
+    * `<<CloseAllTiddlersButton>>` <<CloseAllTiddlersButton>>
+* Theming
+  * [[$Theme]] stores name of [Themes](#msg:search:$tag:$Theme) e.g.:
+    * [[$CoreTheme]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet)
+  * Stylesheets can be in one or more tiddlers
+  * [[$DisplayTemplate]] tiddler determines display of tiddler
+  * [[$TitleBar]] to customize the titlebar
+  * `<<ThemeSelector>>` <<ThemeSelector>>
+* Structured Data
+  * Configurable lists or key-value pairs via `list` tiddlers
+    * e.g. Tiddler types from [[$TiddlerTypes]] tiddler
+  * Configuration objects via `json` tiddlers
+    * e.g. Backup settings for [[Backup2JSONBinPlugin]]
+* Packages
+  * Import tiddlers from a list of packages in [[$CorePackages]] ✅
+  * Import tiddlers from any URL
+
+## Other/Tech
+* Basic pub/sub events ✅
+* Vanilla JS, no complicated framework
