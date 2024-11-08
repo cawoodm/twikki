@@ -24,12 +24,14 @@
     themeUpdate();
   });
 
-  wireUp('tiddler.updated', (t) => {
-    if (tiddlerIsThemeRelevant(t.title))
+  wireUp('tiddler.updated', tiddlerChanged);
+  wireUp('tiddler.deleted', tiddlerChanged);
+  function tiddlerChanged(title) {
+    if (tiddlerIsThemeRelevant(title))
       return themeUpdate();
-    if (tiddlerIsATheme(t.title))
+    if (tiddlerIsATheme(title))
       return themesUpdate();
-  });
+  }
 
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
