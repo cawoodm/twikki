@@ -47,7 +47,7 @@
     const template = document.createElement('template');
     template.innerHTML = html.trim();
     const nNodes = template.content.childNodes.length;
-    if (nNodes !== 1) return de(`html parameter must represent a single node; got ${nNodes}. `);
+    if (nNodes !== 1) return console.error(`html parameter must represent a single node; got ${nNodes}. `);
     return template.content.firstElementChild;
   }
   function nearestAttribute(el, attribute, selector) {

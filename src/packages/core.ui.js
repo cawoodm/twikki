@@ -2,7 +2,8 @@
 
   const name = 'core.ui';
   const version = '0.0.1';
-  const exports = {};
+  const exports = {
+  };
 
   // Exports
   // exports.notify = notify;

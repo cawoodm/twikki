@@ -1,18 +1,16 @@
 (function(tw) {
 
-  const meta = {
-    name: 'core.packaging',
-    version: '0.0.1',
-  };
+  const name = 'core.packaging';
+  const version = '0.0.1';
 
-  tw.packaging = {
+  const exports = {
     loadPackageFromURL,
     reloadPackageFromUrl,
     loadPackageFromJSONBin,
     reloadPackageFromJSONBin,
   };
 
-  return meta;
+  return {name, version, exports};
 
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
     console.debug('Loading package', name, url);

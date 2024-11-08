@@ -35,7 +35,7 @@
     }
     const types = {S: '📗 Success', E: '<b title="Error">📕</b>', W: '<b title="Warning">📙</b>', D: '<b title="Debug">📓</b>', I: '<b title="Info">📘</b>'};
     if (type === 'E')
-      de(preserveMsg + types[type] + ': ' + msg, stack || '');
+      console.error(preserveMsg + types[type] + ': ' + msg, stack || '');
     notifyDiv.innerHTML = (preserveMsg + types[type] + ' ' + escapeHtml(msg)).replace(/\n/g, '<br>');
     // TODO: Keep array of tw.tmp.notifyMsgs = [{msg, expires}]
     notifyShow();
