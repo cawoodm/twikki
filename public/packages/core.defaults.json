@@ -2,11 +2,11 @@
   "tiddlers": [
     {
       "title": "$CorePackages",
-      "text": "* https://cawoodm.github.io/twiki/packages/base.json save,force",
+      "text": "* https://cawoodm.github.io/twikki/packages/base.json save,force",
       "tags": [],
       "type": "list",
       "created": "2024-11-03T20:36:53.2910798Z",
-      "updated": "2024-11-08T10:21:10.2269272Z"
+      "updated": "2024-11-08T11:50:58.3820234Z"
     },
     {
       "title": "$CoreThemeDark",
@@ -15,7 +15,7 @@
         "$Theme",
         "$ThemeDark"
       ],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.2938565Z",
       "updated": "2024-11-03T20:45:52.0549499Z"
     },
@@ -25,17 +25,17 @@
       "tags": [
         "$Theme"
       ],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3004609Z",
       "updated": "2024-10-04T19:45:16.2089505Z"
     },
     {
       "title": "$ExtensionPackages",
-      "text": "* https://cawoodm.github.io/twiki/packages/icons.json save,force\n* https://cawoodm.github.io/twiki/packages/demo.json save,force\n* https://cawoodm.github.io/twiki/packages/website.json nooverwrite\n",
+      "text": "* https://cawoodm.github.io/twikki/packages/icons.json save,force\n* https://cawoodm.github.io/twikki/packages/demo.json save,force\n* https://cawoodm.github.io/twikki/packages/website.json nooverwrite\n",
       "tags": [],
       "type": "list",
       "created": "2024-11-03T20:36:53.3022594Z",
-      "updated": "2024-10-11T19:08:11.9307740Z"
+      "updated": "2024-11-08T11:50:58.7993909Z"
     },
     {
       "title": "$GeneralSettings",
@@ -49,7 +49,7 @@
       "title": "$IconBackup",
       "text": "Backup",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3022594Z",
       "updated": "2024-10-04T20:30:49.4911028Z"
     },
@@ -57,7 +57,7 @@
       "title": "$IconCancel",
       "text": "ⓧ",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3067674Z",
       "updated": "2024-10-04T19:45:16.2099502Z"
     },
@@ -65,7 +65,7 @@
       "title": "$IconCloseAll",
       "text": "Close All",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3074827Z",
       "updated": "2024-10-04T20:27:08.0374043Z"
     },
@@ -73,7 +73,7 @@
       "title": "$IconDelete",
       "text": "🗑",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3074827Z",
       "updated": "2024-10-04T19:45:16.2099502Z"
     },
@@ -81,7 +81,7 @@
       "title": "$IconDone",
       "text": "✓",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3074827Z",
       "updated": "2024-10-04T19:45:16.2099502Z"
     },
@@ -89,7 +89,7 @@
       "title": "$IconEdit",
       "text": "✎",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3152307Z",
       "updated": "2024-10-04T19:45:16.2109509Z"
     },
@@ -97,7 +97,7 @@
       "title": "$IconFavorite",
       "text": "⭐",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3172315Z",
       "updated": "2024-10-04T19:45:16.2109509Z"
     },
@@ -105,7 +105,7 @@
       "title": "$IconHelp",
       "text": "?",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3172315Z",
       "updated": "2024-10-04T19:45:16.2119516Z"
     },
@@ -113,7 +113,7 @@
       "title": "$IconNew",
       "text": "New",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3207657Z",
       "updated": "2024-10-04T19:45:16.2119516Z"
     },
@@ -121,7 +121,7 @@
       "title": "$IconOpenAll",
       "text": "Open All",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3207657Z",
       "updated": "2024-10-04T20:28:35.3551841Z"
     },
@@ -129,7 +129,7 @@
       "title": "$IconPull",
       "text": "Pull",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3232728Z",
       "updated": "2024-10-24T10:52:02.2465239Z"
     },
@@ -137,7 +137,7 @@
       "title": "$IconPush",
       "text": "Push",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3232728Z",
       "updated": "2024-10-24T10:51:54.4614194Z"
     },
@@ -145,7 +145,7 @@
       "title": "$IconRefresh",
       "text": "🔃",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3232728Z",
       "updated": "2024-10-04T20:21:19.3672282Z"
     },
@@ -153,7 +153,7 @@
       "title": "$IconRestore",
       "text": "Restore",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3232728Z",
       "updated": "2024-10-04T20:35:27.6136249Z"
     },
@@ -161,7 +161,7 @@
       "title": "$IconSave",
       "text": "🖫",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3307556Z",
       "updated": "2024-10-04T19:45:16.2129525Z"
     },
@@ -169,7 +169,7 @@
       "title": "$IconSettings",
       "text": "⚙️",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3325171Z",
       "updated": "2024-10-04T19:45:16.2129525Z"
     },
@@ -177,7 +177,7 @@
       "title": "$IconSynch",
       "text": "Synch",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3325171Z",
       "updated": "2024-10-04T20:37:06.0098287Z"
     },
@@ -185,25 +185,25 @@
       "title": "$IconTag",
       "text": "Tags",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3378409Z",
       "updated": "2024-10-04T19:45:16.2139486Z"
     },
     {
       "title": "$MainLayout",
-      "text": "<div>\n  <div style=\"position:absolute; top: 0px; right: 0px; z-index: 1\" tiddler-include=\"$Workspaces\"></div>\n  <div style=\"position:absolute; top: 0px; right: 150px; z-index: 1\" tiddler-include=\"$Themes\"></div>\n  <div id=\"header\" class=\"flex\">\n    <div id=\"header-col1\" class=\"flex col1\">\n      <div id=\"site-title\" tiddler-include=\"$SiteTitle\"><h1>TWIKI</h1></div>\n      <div id=\"site-title\" tiddler-include=\"$SiteSubTitle\">...</h1></div>\n  </div>\n  <div id=\"header-col2\" class=\"flex col2\" tiddler-include=\"$TitleBar\">\n  </div>\n  <div id=\"header-col3\" class=\"flex col3\">\n      <input id=\"search\" type=\"search\" placeholder=\"search\" />\n    </div>\n  </div>\n  <div id=\"body\" class=\"flex\">\n    <div id=\"sidebar\">\n      <div>\n        <ul id=\"all-tiddlers\"></ul>\n      </div>\n    </div>\n    <div id=\"visible-tiddlers\">\n    </div>\n  </div>\n  <dialog id=\"preview-dialog\">\n  </dialog>\n  <dialog id=\"new-dialog\">\n    <form id=\"new-form\">\n      <div class=\"toolbar\">\n        <button class=\"icon\" data-msg=\"form.done\" tiddler-include=\"$IconDone\" title=\"Done\"></button>\n        <button class=\"icon\" data-msg=\"form.cancel\" tiddler-include=\"$IconCancel\" title=\"Cancel\"></button>\n      </div>\n      <input id=\"old-title\" type=\"hidden\" />\n      <div class=\"title\"><input id=\"new-title\" placeholder=\"Title\" size /></div>\n      <div class=\"text\"><textarea row=\"10\" id=\"new-body\" placeholder=\"Text\"></textarea></div>\n      <div><input id=\"new-type\" list=\"new-types\" onfocus=\"this.value=null;\" onchange=\"this.blur();\" />\n        <datalist id=\"new-types\">\n        </datalist>\n      </div>\n      <div><input id=\"new-tags\" placeholder=\"Tags\" size /></div>\n      <div><button id=\"new-save\">OK</button><button id=\"new-cancel\">Cancel</button></div>\n    </form>\n  </dialog>\n  <div id=\"notify\" class=\"notifyHidden\"></div>\n</div>",
+      "text": "<div>\n  <div style=\"position:absolute; top: 0px; right: 0px; z-index: 1\" tiddler-include=\"$Workspaces\"></div>\n  <div style=\"position:absolute; top: 0px; right: 150px; z-index: 1\" tiddler-include=\"$Themes\"></div>\n  <div id=\"header\" class=\"flex\">\n    <div id=\"header-col1\" class=\"flex col1\">\n      <div id=\"site-title\" tiddler-include=\"$SiteTitle\"><h1>TWikki</h1></div>\n      <div id=\"site-title\" tiddler-include=\"$SiteSubTitle\">...</h1></div>\n  </div>\n  <div id=\"header-col2\" class=\"flex col2\" tiddler-include=\"$TitleBar\">\n  </div>\n  <div id=\"header-col3\" class=\"flex col3\">\n      <input id=\"search\" type=\"search\" placeholder=\"search\" />\n    </div>\n  </div>\n  <div id=\"body\" class=\"flex\">\n    <div id=\"sidebar\">\n      <div>\n        <ul id=\"all-tiddlers\"></ul>\n      </div>\n    </div>\n    <div id=\"visible-tiddlers\">\n    </div>\n  </div>\n  <dialog id=\"preview-dialog\">\n  </dialog>\n  <dialog id=\"new-dialog\">\n    <form id=\"new-form\">\n      <div class=\"toolbar\">\n        <button class=\"icon\" data-msg=\"form.done\" tiddler-include=\"$IconDone\" title=\"Done\"></button>\n        <button class=\"icon\" data-msg=\"form.cancel\" tiddler-include=\"$IconCancel\" title=\"Cancel\"></button>\n      </div>\n      <input id=\"old-title\" type=\"hidden\" />\n      <div class=\"title\"><input id=\"new-title\" placeholder=\"Title\" size /></div>\n      <div class=\"text\"><textarea row=\"10\" id=\"new-body\" placeholder=\"Text\"></textarea></div>\n      <div><input id=\"new-type\" list=\"new-types\" onfocus=\"this.value=null;\" onchange=\"this.blur();\" />\n        <datalist id=\"new-types\">\n        </datalist>\n      </div>\n      <div><input id=\"new-tags\" placeholder=\"Tags\" size /></div>\n      <div><button id=\"new-save\">OK</button><button id=\"new-cancel\">Cancel</button></div>\n    </form>\n  </dialog>\n  <div id=\"notify\" class=\"notifyHidden\"></div>\n</div>",
       "tags": [
         "$Template"
       ],
       "type": "html/template",
       "created": "2024-11-07T17:05:57.9455610Z",
-      "updated": "2024-11-08T11:47:43.2641572Z"
+      "updated": "2024-11-08T11:51:50.5197677Z"
     },
     {
       "title": "$Settings",
       "text": "* [[$GeneralSettings]]\n* [[$TitleBar]]\n  * [[$SiteTitle]]\n  * [[$SiteSubTitle]]\n* [[$Theme]]\n  * [[$TiddlerDisplay]]\n* [[$Packages]]\n  * [[$CorePackages]]\n  * [[$ExtensionPackages]]",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3420197Z",
       "updated": "2024-10-11T19:08:49.4378102Z"
     },
@@ -211,17 +211,17 @@
       "title": "$SiteSubTitle",
       "text": "Inspired by [TiddlyWiki](https://tiddlwiki.com) ✨",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3434628Z",
       "updated": "2024-10-04T19:45:16.2139486Z"
     },
     {
       "title": "$SiteTitle",
-      "text": "# TWIKI v{{$TWIKIVersion}}",
+      "text": "# TWikki v{{$TWikkiVersion}}",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3451847Z",
-      "updated": "2024-10-04T19:45:16.2149484Z"
+      "updated": "2024-11-08T11:51:50.9704605Z"
     },
     {
       "title": "$StyleSheetCore",
@@ -247,7 +247,7 @@
       "title": "$Theme",
       "text": "[[$CoreThemeLight]]",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3556100Z",
       "updated": "2024-10-04T19:45:16.2159490Z"
     },
@@ -265,7 +265,7 @@
       "title": "$Themes",
       "text": "<<ThemeSelector>>",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3556100Z",
       "updated": "2024-10-04T19:45:16.2159490Z"
     },
@@ -311,35 +311,35 @@
     },
     {
       "title": "$TiddlerTypes",
-      "text": "* x-twiki: TWiki Data\n* plain: Plain Text\n* html: HTML\n* html/template: HTML Template\n* css: StyleSheet\n* script/js: JavaScript\n* markdown: Markdown\n* macro: Macro\n* list: List\n* keyval: Key Values\n* table: Tabular Data\n* json: JSON Data\n",
+      "text": "* x-twikki: TWikki Data\n* plain: Plain Text\n* html: HTML\n* html/template: HTML Template\n* css: StyleSheet\n* script/js: JavaScript\n* markdown: Markdown\n* macro: Macro\n* list: List\n* keyval: Key Values\n* table: Tabular Data\n* json: JSON Data\n",
       "tags": [],
       "type": "keyval",
       "created": "2024-11-03T20:36:53.3679929Z",
-      "updated": "2024-10-12T19:41:40.3662575Z"
+      "updated": "2024-11-08T11:51:29.4319050Z"
     },
     {
       "title": "$TitleBar",
       "text": "<<ShowAllTiddlersButton>>\n\n<<CloseAllTiddlersButton>>\n\n[{{$IconBackup}}](#Backup)\n\n<<synch.pull>>\n<<synch.push>>\n\n<<synch.full>>\n\n<<New>>\n\n<<Save>>\n\n[{{$IconFavorite}}](#msg:ui.open.all:{\"tag\":\"Favorite\"})\n\n<<Settings>>\n\n<<TrashCanIcon>>\n\n[{{$IconTag}}](#Tags)\n\n[{{$IconHelp}}](#Help)",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3694933Z",
       "updated": "2024-10-24T10:57:14.6446766Z"
     },
     {
-      "title": "$TWIKIVersion",
-      "text": "0.13.0 RC1",
+      "title": "$TWikkiVersion",
+      "text": "0.14.0 🎉",
       "tags": [
         "$NoEdit"
       ],
       "type": "text",
       "created": "2024-11-03T20:36:53.3722371Z",
-      "updated": "2024-10-30T10:58:17.5535228Z"
+      "updated": "2024-11-08T11:53:34.7835867Z"
     },
     {
       "title": "$Workspaces",
       "text": "<<WorkspaceSelect>>",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-03T20:36:53.3393484Z",
       "updated": "2024-11-07T15:13:14.8565303Z"
     }

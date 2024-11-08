@@ -7,7 +7,7 @@ The `type` field of a tiddler determines what it's content means and how it is d
   * To view hidden tiddlers just prefix your search with `$`
 * Rendering is based on the tiddler type:
   * `css`, `html/template` or `scripts/js` are displayed as code with highlighting
-  * `x-twiki` or `markdown` are rendered as markdown and intended for reading
+  * `x-twikki` or `markdown` are rendered as markdown and intended for reading
   *  `list`, `keyval` or `table` are rendered as markdown and intended for storing structured data
   * `json` is rendered as JSON and intended for storing data/objects
 * Behaviour can be based on type or name:
@@ -21,8 +21,8 @@ The `type` field of a tiddler determines what it's content means and how it is d
 * $Shadow tiddlers are included in source, expected to be there and we cannot start without them
 * Packages specified in [[$CorePackages]] are loaded from URLs when we start
   * Core: Adds basic useful functionality
-  * Website: provides helpful content and functionality for the TWiki website
-  * Onboarding: The onboarding package helps users learn TWiki
+  * Website: provides helpful content and functionality for the TWikki website
+  * Onboarding: The onboarding package helps users learn TWikki
 * Tiddlers imported via a package are not automatically saved to your localStorage when you save
   * If you edit and save them then they will be
   * Once you save them, they will not be overwritten from the package until you delete them

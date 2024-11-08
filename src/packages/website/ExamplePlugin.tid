@@ -12,7 +12,7 @@ This plugin will do provide some examples of widgets and extensible functions.
 Feel free to customize it's [settings](#ExamplePluginSettings) or look at the [code](#ExamplePluginCode).
 
 # Examples
-type: x-twiki
+type: x-twikki
 {{ExamplePluginExamples}}
 
 # Settings

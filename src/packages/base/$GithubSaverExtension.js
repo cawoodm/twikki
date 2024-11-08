@@ -3,7 +3,7 @@ tw.plugins.GitHubSaver = {
     //
     branch = branch || 'main';
     endpoint = endpoint || 'https://api.github.com';
-    commitMessage = 'TWIKI Save ' + new Date().toISOString();
+    commitMessage = 'TWikki Save ' + new Date().toISOString();
 
     validate({text, token, repo, path, filename, commitMessage});
 

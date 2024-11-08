@@ -2,7 +2,7 @@ Parameters are used to pass messages to objects or widgets.
 
 For example `<<example.greet Mr. Smith>>` passes 2 string parameters to the `greet` [[Widget]] in [[ExamplePlugin]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
 
-Since TWiki is text based the string `"red green blue"` must be parsed to produce parameters. We support 2 basic strategies for function parameters (named and unnamed).
+Since TWikki is text based the string `"red green blue"` must be parsed to produce parameters. We support 2 basic strategies for function parameters (named and unnamed).
 
 ## Unnamed Parameters
 Tradional JavaScript functions accept the passing of multiple unnamed (or positional) parameters as in `function macro(p1, p2, p3)` which accepts 3 arguments. We can invoke it as such:
@@ -32,5 +32,5 @@ In future arrays will be possible via comma-separated tokens:
 For example `<<selector red,green,blue>>` passes three colors to the [[SelectorWidget]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
 
 ## Dynamic Parameters
-TWiki supports [[Commands]] which allow 3 types of serialized parameters:
+TWikki supports [[Commands]] which allow 3 types of serialized parameters:
 * 

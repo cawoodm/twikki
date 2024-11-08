@@ -14,7 +14,7 @@
       "tags": [
         "Favorite"
       ],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5288490Z",
       "updated": "2024-10-19T09:45:24.4926677Z"
     },
@@ -38,7 +38,7 @@
       "title": "TODO",
       "text": "## Search\n* Open all results\n* Highlight search term\n\n## Code Tiddlers\n* Only run when opened\n\n## Links\n* Auto link CamelCase\n* Browser history (back)\n\n## Tabs:\n* Favories view of favorite tiddlers\n* History view of recently viewed tiddlers\n* Recent view of recently edited tiddlers\n\n# Toolbars\n* Close other tiddlers\n* ⭐ Add to Favorites",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5318496Z",
       "updated": "2024-10-30T11:03:57.7831434Z"
     }

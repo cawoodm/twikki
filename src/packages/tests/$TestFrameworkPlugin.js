@@ -102,7 +102,7 @@
         results.push({suite, name: t.name, error: e.message});
       }
     }
-    tw.events.send('tiddler.preview', {title: `TestResults: ${suite} (${new Date().toLocaleString()})`, text: '<<tests.results>>', type: 'x-twiki', tags: []});
+    tw.events.send('tiddler.preview', {title: `TestResults: ${suite} (${new Date().toLocaleString()})`, text: '<<tests.results>>', type: 'x-twikki', tags: []});
   }, 'tests.run');
 
   function sleep(ms) {return new Promise(r => setTimeout(r, ms));}

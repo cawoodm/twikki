@@ -1,9 +1,9 @@
 # Welcome
 
-TWiki is, like TiddlyWiki, a cool way to manage semi-structured information with the core concept being "code is data". [[Features]]
+TWikki is, like TiddlyWiki, a cool way to manage semi-structured information with the core concept being "code is data". [[Features]]
 
 ## Introduction
-With TWiki everything is in the database including code meaning that the information platform is also the development environment.
+With TWikki everything is in the database including code meaning that the information platform is also the development environment.
 
 When you create a new "entry" it can be data (like a note) or code which actually runs - so installing a plugin means, in practice, adding a new entry.
 

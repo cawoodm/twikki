@@ -90,7 +90,7 @@ function New-TiddlerObject($repo, $file) {
 }
 function TypeFromName($Name, $Ext) {
   switch ($Name) {
-    ".tid" {'x-twiki'}
+    ".tid" {'x-twikki'}
     ".md" {'markdown'}
     ".js" {'script/js'}
     ".json" {'json'}

@@ -9,10 +9,10 @@
   * Double-Click to edit
   * Ctrl+Enter to save
   * [[$TrashedTiddlers]] saved not really deleted
-  * TWiki tiddlers are validated (e.g. macros) on save
+  * TWikki tiddlers are validated (e.g. macros) on save
   * JSON tiddlers are validated on save
 * Rendering 
-  * x-twiki and [CommonMark](#Markdown%20Test) markdown
+  * x-twikki and [CommonMark](#Markdown%20Test) markdown
   * Code highlighting ([js](#Code%20Tiddler), [css](#StyleSheet) and [html](#HTML%20Example))
 * Open single or list of tiddlers via link
   * [⭐Favorties](#msg:ui.open.all:tag:Favorite)

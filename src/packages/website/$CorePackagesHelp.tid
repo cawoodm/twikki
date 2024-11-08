@@ -1,6 +1,6 @@
-The [[$CorePackages]] tiddler contains a [[DataList]] of packages to import when TWiki first loads.
+The [[$CorePackages]] tiddler contains a [[DataList]] of packages to import when TWikki first loads.
 
-Core Packages are a select few packages which form the base of twiki i.e. necessary functionality.
+Core Packages are a select few packages which form the base of twikki i.e. necessary functionality.
 These should be distinguished from [[$ExtensionPackages]] which provided additional functionality.
 
 ## What is a Package?

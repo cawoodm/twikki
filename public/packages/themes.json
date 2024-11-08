@@ -16,7 +16,7 @@
       "tags": [
         "$Theme"
       ],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5979488Z",
       "updated": "2024-10-04T19:45:16.2189510Z"
     },
@@ -34,7 +34,7 @@
       "title": "DemoTiddler",
       "text": "This demo will import a [[DemoStyleSheet]] and apply it to the [[$Theme]].\n\nA whole lotta text should now be green!",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5999500Z",
       "updated": "2024-10-04T19:45:16.2189510Z"
     }

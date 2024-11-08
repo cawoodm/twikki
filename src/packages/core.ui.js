@@ -31,7 +31,7 @@
   // TODO: Would be nice to return an element here to which we could bind a real event and payload
     if (text.match(/[<\{]/))
     // WikiText
-      text = tw.call('renderTwiki', {text});
+      text = tw.call('renderTWikki', {text});
     else
       text = tw.core.common.escapeHtml(text);
     let className = '';

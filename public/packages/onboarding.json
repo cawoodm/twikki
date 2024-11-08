@@ -10,19 +10,19 @@
     },
     {
       "title": "Congratulations",
-      "text": "By clicking the \"Begin\" button you have created your first Tiddler!\n\nA Tiddler is just a block of text, like the one you are reading now.\n\nEach tiddler can however do more than just store text, it can run code!\n\nClick the following button to see how code can change your twiki:\n\n<<welcome.Step2Button>>\n",
+      "text": "By clicking the \"Begin\" button you have created your first Tiddler!\n\nA Tiddler is just a block of text, like the one you are reading now.\n\nEach tiddler can however do more than just store text, it can run code!\n\nClick the following button to see how code can change your twikki:\n\n<<welcome.Step2Button>>\n",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5368491Z",
-      "updated": "2024-10-04T19:45:16.2059492Z"
+      "updated": "2024-11-08T11:50:59.3654266Z"
     },
     {
       "title": "Onboarding",
-      "text": "Welcome to Twiki.\n\n<button onclick=\"tw.macros.welcome.Step1()\">Begin</button>",
+      "text": "Welcome to TWikki.\n\n<button onclick=\"tw.macros.welcome.Step1()\">Begin</button>",
       "tags": [],
-      "type": "x-twiki",
+      "type": "x-twikki",
       "created": "2024-11-08T10:20:43.5378505Z",
-      "updated": "2024-10-04T19:45:16.2069527Z"
+      "updated": "2024-11-08T11:51:51.1114310Z"
     }
   ]
 }

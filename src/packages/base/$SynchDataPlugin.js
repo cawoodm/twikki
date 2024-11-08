@@ -159,7 +159,7 @@ tw.macros.synch = (function(){
       title: `$SynchLog ${new Date().toISOString()}`,
       text: logSummary(local, remote) + '\n\n## Log\n' + log.join('  \n') + '',
       tags: ['$SynchLog'],
-      type: 'x-twiki',
+      type: 'x-twikki',
     };
 
     if (push && !dryRun) {

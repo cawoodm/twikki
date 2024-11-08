@@ -140,8 +140,8 @@
       tw.shadowTiddlers = Array.from(tw.tiddlers.all);
       tw.shadowTiddlers.forEach(t => {
         // HACK: Load packages locally for development
-        if (t.title === '$CorePackages' && document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) t.text = t.text.replaceAll('https://cawoodm.github.io/twiki', 'http://' + document.location.host);
-        if (t.title === '$ExtensionPackages' && document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) t.text = t.text.replaceAll('https://cawoodm.github.io/twiki', 'http://' + document.location.host);
+        if (t.title === '$CorePackages' && document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) t.text = t.text.replaceAll('https://cawoodm.github.io/twikki', 'http://' + document.location.host);
+        if (t.title === '$ExtensionPackages' && document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) t.text = t.text.replaceAll('https://cawoodm.github.io/twikki', 'http://' + document.location.host);
       });
       Object.freeze(tw.shadowTiddlers);
       console.debug(`${tw.packages.length} packages loaded. Running packages...`);
@@ -272,7 +272,7 @@
     await rebootSoft(1); // Event: tw.events.send('reboot.soft');
     if (location.hash) handleHashLink(location.hash);
   }
-  /* BEGIN TWIKI */
+  /* BEGIN TWikki */
   /* Functions */
   // rebootSofter is called when lots of local tiddlers - i.e. after synching
   //   unlike rebootSoft it does not CorePackages packages
@@ -528,8 +528,8 @@
   function makeTiddlerText({title, text, type}) {
     const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
     const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
-    if (type === 'x-twiki') {
-      return tw.core.markdown.render(renderTwiki({text, title}));
+    if (type === 'x-twikki') {
+      return tw.core.markdown.render(renderTWikki({text, title}));
     } else if (markdownTypes.includes(type)) {
       return tw.core.markdown.render(text);
     } else if (codeTypes.includes(type)) {
@@ -548,9 +548,9 @@
     }).join(', '));
   }
   function renderTiddler(title) {
-    return renderTwiki({text: getTiddlerTextRaw(title), title});
+    return renderTWikki({text: getTiddlerTextRaw(title), title});
   }
-  function renderTwiki({text, title, validation}) {
+  function renderTWikki({text, title, validation}) {
     let result = text;
     try {
     // TODO: Label this tiddler to update when one of these macros change!
@@ -618,9 +618,9 @@
       });
     // TODO: Auto-link CamelCase words? except ~CamelCasedTilde?
     } catch (e) {
-      console.warn(`renderTwiki "${title}" Failed: ${e.message}`, e.stack);
+      console.warn(`renderTWikki "${title}" Failed: ${e.message}`, e.stack);
       if (validation) throw e;
-      return `<span class="error">ERROR: renderTwiki '${title}' Failed: ${e.message}</span>`;
+      return `<span class="error">ERROR: renderTWikki '${title}' Failed: ${e.message}</span>`;
     }
     return result;
   }
@@ -663,7 +663,7 @@
     tw.core.dom.frm.elements['new-title'].value = tiddler.title || '';
     tw.core.dom.frm.elements['new-body'].value = tiddler.text || '';
     tw.core.dom.frm.elements['new-tags'].value = tiddler.tags || '';
-    tw.core.dom.frm.elements['new-type'].value = tiddler.type || 'x-twiki';
+    tw.core.dom.frm.elements['new-type'].value = tiddler.type || 'x-twikki';
     if (!saveButton) tw.core.dom.$('new-save').disabled = true;
     tw.core.dom.$('new-dialog').showModal();
     setDirty(true);
@@ -699,8 +699,8 @@
     let existingTiddler = getTiddler(oldTitle, true);
     let forceSave = false;
     try {
-    // Validate t.text with renderTwiki
-      renderTwiki({text: t.text, title: t.title, validation: true});
+    // Validate t.text with renderTWikki
+      renderTWikki({text: t.text, title: t.title, validation: true});
     } catch (e) {
       if (e.message.match(/existent/)) return tw.ui.notify(e.message, 'W');
       if (confirm(e.message + '\nDo you want to force save?')) {
@@ -709,7 +709,7 @@
       // TODO: BUG: Doesn't display tiddler after creation
       } else {
         return;
-      // Message already displayed in renderTwiki/executeText
+      // Message already displayed in renderTWikki/executeText
       // tw.ui.notify(e.message, 'E', e.stack);
       }
     }
@@ -812,7 +812,7 @@
     saveVisible();
   }
   function emptyTiddler() {
-    return {title: '', text: '', type: 'x-twiki', tags: []};
+    return {title: '', text: '', type: 'x-twikki', tags: []};
   }
   function nonExistentTiddler(title) {
     let t = emptyTiddler();
@@ -1045,7 +1045,7 @@
 
   // TODO: Move $to ListTiddlersCoreFunctions
   function showTiddlerList(list, title = 'unknown') {
-    return tw.lib.markdown(renderTwiki({text: list.map(t => `* [[${t.title}]]`).join('\n'), title}));
+    return tw.lib.markdown(renderTWikki({text: list.map(t => `* [[${t.title}]]`).join('\n'), title}));
   }
 
   /* Store */
@@ -1161,7 +1161,7 @@
         let target = tw.core.dom.$(targetId);
         if (!target) {
           console.warn(`No target '${targetId}' found`);
-          tw.events.send('tiddler.preview', {title: 'Results', text: result[0], type: 'x-twiki', tags: []});
+          tw.events.send('tiddler.preview', {title: 'Results', text: result[0], type: 'x-twikki', tags: []});
           return result;
         }
         target.innerHTML = result[0];
@@ -1197,7 +1197,7 @@
     return eval(functionName)(...args);
   }
 
-  /* END TWIKI */
+  /* END TWikki */
   async function loadCorePackage(packageName) {
     let res = readObject('/packages' + packageName);
     if (!res?.code || qs.reload) res = await fetchPackage(packageName);
