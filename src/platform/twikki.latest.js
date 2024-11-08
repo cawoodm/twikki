@@ -1210,7 +1210,7 @@
     console.debug(`Downloading package from '${packageUrl}'...`);
     let result = {name: packageName}; try {result = await fetch(packageUrl);} catch {}
     if (!result.ok) throw new Error(`Unable to download package from '${packageUrl}' HTTP status: ${result.statusCode}`);
-    if (result.headers.get('Content-Type')?.match(/text\/javascript/)) {
+    if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
       res.code = await result.text();
       res.type = 'code';
     } else if (result.headers.get('Content-Type')?.match(/application\/json/)) {

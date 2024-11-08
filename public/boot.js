@@ -12,16 +12,25 @@
  *   "code": "console.log('hello from weboose!');"
  * }
  */
-async function boot(p = {}) {
+window.boot = async function(p = {}) {
 
   const RE_OS_NAME = /^[a-z0-9\.]{3,30}$/;
-  const BOOTLOADER_VERSION = '0.0';
+  const BOOTLOADER_VERSION = '0.0.1';
   const OS_FILENAME = '/os.name';
   const OS_URL = '/base.url';
 
-  console.debug(`BOOT: Bootloader (v${BOOTLOADER_VERSION}) starting...`);
+  window.addEventListener('error', (e) => {
+    console.error(e.message, e.error.stack);
+  });
 
   const qs = Object.fromEntries(new URLSearchParams(location.search));
+  Object.keys(qs).filter(q => qs[q] === '').forEach(q => (qs[q] = true)); // Empty params are switches => convert to true
+
+  if (qs.clear) localStorage.clear();
+  if (!qs.debug) console.debug = () => undefined;
+
+  console.debug(`BOOT: Bootloader (v${BOOTLOADER_VERSION}) starting...`);
+  document.title = 'WebOOSe';
 
   let osName = qs.os || read(OS_FILENAME) || p.os.name;
   if (!osName.match(RE_OS_NAME)) throw new Error(`INVALID_OS_NAME: '${osName}' is not a valid OS name!`);
@@ -51,7 +60,7 @@ async function boot(p = {}) {
     // Fallback to .json
     if (!res) try {let osUrl = baseUrl + osName + '.json'; res = await fetch(osUrl);} catch {}
     if (!res.ok) throw new Error(`OS_DOWNLOAD_ERROR: Unable to download OS from '${osUrl}' HTTP status: ${res.statusCode}`);
-    if (res.headers.get('Content-Type')?.match(/text\/javascript/)) os.code = await res.text();
+    if (res.headers.get('Content-Type')?.match(/\/javascript/)) os.code = await res.text();
     else if (res.headers.get('Content-Type')?.match(/application\/json/)) {
       try {
         console.debug(`BOOT: Loading OS '${osName}'...`);
@@ -135,4 +144,4 @@ async function boot(p = {}) {
   function write(item, value) {
     return localStorage.setItem(item, value);
   }
-}
+};

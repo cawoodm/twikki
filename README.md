@@ -1,6 +1,8 @@
 # TWikki
 TWikki is an extensible wiki and information platform inspired by TiddlyWiki.  
 
+Demo: https://cawoodm.github.io/twikki/
+
 ## Background
 TiddlyWiki started as a simple note-taking browser app famous for storing all code and data in a single file. In an age in which thumb-drives were hip it was a cool idea to just take your entire knowlege with you in a simple .html file without needing any application (other than a browser) to view and interact with it. In the meantime TiddlyWiki developed into an advanced platform for application development with advanced features for storing data outside the .html file. The downsides are that saving your data with TiddlyWiki are idiosyncratic at best, require some technical knowledge at worst although there are cloud hosted solutions which ease the process.
 

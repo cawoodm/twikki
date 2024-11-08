@@ -9,7 +9,7 @@
     const handlers = [];
     return {
       send(event, params) {
-        console.debug('events.send', event, params);
+        // dp('events.send', event, params);
         let result = [];
         handlers
           .filter(h => h.event === event)
