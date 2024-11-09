@@ -133,3 +133,4 @@ tmp*
 
 # Since we publish these separately, no need to check them in
 public/packages
+dist/

@@ -36,7 +36,7 @@
     // Must delay or results disappear before they can be clicked
     window.setTimeout(() => {
       tw.core.dom.$('search-results').style.display = 'none';
-    }, 300);
+    }, 150);
   }
   function searchShowResults(list) {
     tw.core.dom.$('search-results').style.display = '';

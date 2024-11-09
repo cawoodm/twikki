@@ -490,7 +490,7 @@
   function makeTiddlerText({title, text, type}) {
     const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
     const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
-    if (type === 'x-twikki') {
+    if (type === 'x-twikki' || type === 'x-twiki') {
       return tw.core.markdown.render(renderTWikki({text, title}));
     } else if (markdownTypes.includes(type)) {
       return tw.core.markdown.render(text);
@@ -499,7 +499,7 @@
     } else if (type === 'html') {
       return text;
     } else {
-      return `<pre>${tw.core.common.escapeHtml(text)}</pre>`;
+      return `UNKNOWN TYPE:<hr><pre>${tw.core.common.escapeHtml(text)}</pre>`;
     }
   }
   function makeTiddlerTagLinks(tags) {
@@ -898,7 +898,7 @@
     if (!autoSave) return;
     saveAll({silent: true});
   }
-  function saveAll({silent}) {
+  function saveAll() {
     const oldTiddlers = tw.store.get('tiddlers');
     // TODO: Better local backups/versioning
     if (oldTiddlers?.length) tw.store.set('tiddlers-backup1', oldTiddlers);

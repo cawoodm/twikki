@@ -5,17 +5,3 @@ tags: Favorite
 * [[$AutoImport]]
 * [😎Shadows](#msg:search:$tag:$Shadow)
 * [✌️Styling](#msg:search:$tag:$Styling)
----
-### Themes
-* Themes
-  * Importing a Theme doesn't mean it persists because we `doNotSave` it:
-    *  <<packages.import name:themes url:./packages/themes.json filter:white>>
-    *  <<packages.import name:themes url:./packages/themes.json filter:khaki>>
-  * [$Theme](#$Theme)
-    * [[$StyleForTiddlers]]
-    * [[$StyleSheetWhite]]
-    * [[$StyleSheetMarc]]
-      * [[$StyleSheet]]
-* Layout
-  * [$TiddlerDisplay](#$TiddlerDisplay)
-  * [$TitleBar](#$TitleBar)
