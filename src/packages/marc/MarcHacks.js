@@ -12,3 +12,5 @@ tw.events.subscribe('script.loaded', (name) => {
   if (name !== 'highlight-core') return;
   tw.core.dom.addScript('highlight-lang-powershell', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js');
 }, 'marc.addLanguages');
+
+tw.tiddlers.all.filter(t => t.type === 'x-twiki').forEach(t => (t.type = 'x-twikki'));

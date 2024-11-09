@@ -19,7 +19,7 @@ function main() {
     if ($LASTEXITCODE -ne 0) {throw "GIT PULL Failed!"}
     Remove-Item -Recurse -Force * -Verbose
     Copy-Item ../../twikki/dist/* -Recurse ./ -Verbose
-    Read-Host "Commit & Push?"
+    #Read-Host "Commit & Push?"
     git add .
     git commit -a -m "twikki-$ver-$(Get-Date -f yyyyMMddhhmm)"
     git push
