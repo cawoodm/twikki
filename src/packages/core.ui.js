@@ -23,7 +23,7 @@
     let html = tw.run.getTiddler('$MainLayout').text;
     document.body.innerHTML = html;
     tw.core.dom.divVisibleTiddlers = tw.core.dom.$('visible-tiddlers');
-    tw.core.dom.divAllTiddlers = tw.core.dom.$('all-tiddlers');
+    tw.core.dom.divSearchResults = tw.core.dom.$('search-results');
     tw.core.dom.preview = tw.core.dom.$('preview-dialog');
   }
 

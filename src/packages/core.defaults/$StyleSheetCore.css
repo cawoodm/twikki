@@ -85,6 +85,21 @@ div#sidebar {
   box-shadow: 1px 1px 0.5rem var(--col0);
 }
 
+#header-col3 {
+  position: relative;
+}
+
+#search-results {
+  background: var(--colbg3);
+  position: absolute;
+  top: 30px;
+  left: 15px;
+  padding: 1rem;
+  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
+  outline: 1px solid var(--col1);
+  box-shadow: 1px 1px 0.5rem var(--col0);
+}
+
 #header .col1 {
   flex-wrap: wrap;
 }
@@ -126,6 +141,7 @@ div#sidebar {
   }
 
   #sidebar {
+    display: none;
     flex-grow: 1;
   }
 

@@ -2,6 +2,7 @@
  * ## Description
  * Provides all theme logic
  * Provides <<ThemeSelector>> widget
+ *   listing all tiddlers tagged with $Theme
  */
 /**
  * ## Data

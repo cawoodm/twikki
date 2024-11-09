@@ -15,13 +15,57 @@
   const reTag = /tag:(\S+)\s?/;
   const rePck = /pck:(\S+)\s?/;
 
-  const run = () => {};
+  tw.events.subscribe('ui.loading', wireUIEvents);
+  tw.events.subscribe('search', searchQuery); // From #msg:search:foo events
 
-  return {name, version, exports, run};
+  return {name, version, exports};
+
+  function searchQuery(q) {
+    tw.core.dom.$('search').value = q;
+    searchNow();
+  }
+  function searchNow() {
+    searchShowResults(search(tw.core.dom.$('search').value, tw.tiddlers.all));
+  }
+  function searchFocus() {
+    // Re-search as data may have changed since last render
+    searchShowResults();
+    tw.core.dom.$('search-results').style.display = '';
+  }
+  function searchLoseFocus() {
+    // Must delay or results disappear before they can be clicked
+    window.setTimeout(() => {
+      tw.core.dom.$('search-results').style.display = 'none';
+    }, 300);
+  }
+  function searchShowResults(list) {
+    tw.core.dom.$('search-results').style.display = '';
+    if (!list) return searchNow();
+    tw.core.dom.divSearchResults.innerHTML = '';
+    list.forEach(displayTiddlerLink);
+  }
+  function displayTiddlerLink({title, type}) {
+  // TODO: Apply tw.templates.TiddlerSearchResult
+    let newElement = document.createElement('li');
+    newElement.className = 'tiddler-list'; // + (type ? ' line-clamp' : '');
+    // BUG: If tiddlers have no type we don't display a link!
+    if (type) newElement.appendChild(newTiddlerLink({title, type}));
+    else newElement.innerHTML = title;
+    tw.core.dom.divSearchResults.insertAdjacentElement('beforeend', newElement);
+  }
+  function newTiddlerLink({title}) {
+    let newElement = document.createElement('a');
+    newElement.setAttribute('data-msg', 'tiddler.show');
+    newElement.setAttribute('data-param', title);
+    newElement.setAttribute('data-tiddler-backref', tw.core.common.hash(title));
+    newElement.setAttribute('href', 'javascript:false;');
+    newElement.innerText = title;
+    return newElement;
+  }
 
   /**
- * Sort alphabetically, search and return best matches first
- */
+   * Sort alphabetically, search and return best matches first
+   */
   function search(q, list) {
     let results = list
       .sort(alphabetically)
@@ -32,10 +76,10 @@
     if (!q.match(/^\$/)) title += ` Type '\$${q}' to search hidden tiddlers!`;
     return results.length ? results.map(t => t.tiddler) : [{title}];
   }
-  /**
- * Ranked substring search preferring title/tags match to fulltext
- */
 
+  /**
+   * Ranked substring search preferring title/tags match to fulltext
+   */
   function simpleSearch(q) {
     q = q.trim().toLowerCase();
     const Q = q;
@@ -61,6 +105,7 @@
       } else if (Q === '') {
         rank = 1; // Return everything when no search is specified
       }
+      if (rank === 0) return;
       return {
         rank,
         tiddler: t,
@@ -79,5 +124,12 @@
   }
 
   function notEmpty(v){return !!v;}
+
+  function wireUIEvents() {
+    tw.core.dom.$('search')?.addEventListener('keyup', searchNow);
+    tw.core.dom.$('search')?.addEventListener('focus', searchFocus);
+    tw.core.dom.$('search')?.addEventListener('blur', searchLoseFocus);
+    searchLoseFocus();
+  }
 
 });

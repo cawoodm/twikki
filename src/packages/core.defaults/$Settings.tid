@@ -3,6 +3,7 @@
   * [[$SiteTitle]]
   * [[$SiteSubTitle]]
 * [[$Theme]]
+  * [[$MainLayout]]
   * [[$TiddlerDisplay]]
 * [[$Packages]]
   * [[$CorePackages]]

@@ -128,3 +128,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+tmp*
+
+# Since we publish these separately, no need to check them in
+public/packages

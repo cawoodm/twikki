@@ -1,5 +1,5 @@
 type: list
 
-* https://cawoodm.github.io/twikki/packages/icons.json save,force
-* https://cawoodm.github.io/twikki/packages/demo.json save,force
+* https://cawoodm.github.io/twikki/packages/icons.json force
+* https://cawoodm.github.io/twikki/packages/demo.json force
 * https://cawoodm.github.io/twikki/packages/website.json nooverwrite

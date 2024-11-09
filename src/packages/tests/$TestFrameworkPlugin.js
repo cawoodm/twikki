@@ -1,4 +1,4 @@
-/* eslint-disable complexity */
+
 /**
  * TestFramework
  * Provides some macros and functions to run UI/E2E tests
@@ -20,7 +20,7 @@
   tw.tmp.tests = {queue, results};
   Object.freeze(tw.tmp.tests);
   tw.extensions.registerMacro('tests', 'queue', (options) => {
-    if (isRunning) return;
+    if (isRunning) return '';
     // TODO: Save currentTiddler and visibleTiddlers
     let id = randstr();
     let name = options.name;
@@ -73,7 +73,7 @@
   }
 
   tw.extensions.registerMacro('tests', 'clear', () => {
-    if (isRunning) return;
+    if (isRunning) return '';
     queue.length = 0;
     return 'Tests Cleared';
   });
@@ -102,6 +102,7 @@
         results.push({suite, name: t.name, error: e.message});
       }
     }
+    isRunning = false;
     tw.events.send('tiddler.preview', {title: `TestResults: ${suite} (${new Date().toLocaleString()})`, text: '<<tests.results>>', type: 'x-twikki', tags: []});
   }, 'tests.run');
 

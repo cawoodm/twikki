@@ -2,9 +2,9 @@ type: html/template
 tags: $Template
 
 <div>
-  <div style="position:absolute; top: 0px; right: 0px; z-index: 1" tiddler-include="$Workspaces"></div>
-  <div style="position:absolute; top: 0px; right: 150px; z-index: 1" tiddler-include="$Themes"></div>
   <div id="header" class="flex">
+    <div style="position:absolute; top: 0px; right: 0px; z-index: 1" tiddler-include="$Workspaces"></div>
+    <div style="position:absolute; top: 0px; right: 150px; z-index: 1" tiddler-include="$Themes"></div>
     <div id="header-col1" class="flex col1">
       <div id="site-title" tiddler-include="$SiteTitle"><h1>TWikki</h1></div>
       <div id="site-title" tiddler-include="$SiteSubTitle">...</h1></div>
@@ -12,14 +12,15 @@ tags: $Template
   <div id="header-col2" class="flex col2" tiddler-include="$TitleBar">
   </div>
   <div id="header-col3" class="flex col3">
-      <input id="search" type="search" placeholder="search" />
+      <input id="search" type="search" placeholder="search" autocomplete="off"/>
+      <div id="search-results">
+        <ul id="search-results"></ul>
+      </div>
     </div>
   </div>
   <div id="body" class="flex">
     <div id="sidebar">
-      <div>
-        <ul id="all-tiddlers"></ul>
-      </div>
+      
     </div>
     <div id="visible-tiddlers">
     </div>

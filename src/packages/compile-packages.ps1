@@ -40,7 +40,7 @@ function New-TiddlerObject($repo, $file) {
   $title = $file.BaseName
   $tags = @()
   # if ($file.name -eq '$CorePackages.tid') {Write-Host 'BreakPoint'}
-  if ($repo -eq 'shadow') {$tags += "`$Shadow"}
+  if ($repo -eq 'core.defaults') {$tags += "`$Shadow"}
   if ($repo -eq 'core') {$tags += "`$NoEdit"}
   if ($file.Extension -eq '.css') {$tags += "`$StyleSheet"}
   # TODO: Linux provides incorrect CreationTime - we need to cache it and not overwrite

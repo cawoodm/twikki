@@ -2,7 +2,6 @@
 // https://cdnjs.com/libraries/highlight.js
 
 (function(){
-
   tw.events.subscribe('ui.loaded', () => {
     tw.core.dom.addStyleSheet('highlight-light', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css');
     tw.core.dom.addStyleSheet('highlight-dark', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css');
@@ -17,7 +16,14 @@
       }
       if (name !== 'highlight-lang-json') return;
       tw.lib.highlight = window.hljs;
-      tw.events.send('highlight.loaded');
+      // Since the scripts/css above load after the core has rendered all visible tiddlers,
+      //   we have to highlight them now:
+      tw.tiddlers.visible
+        .forEach(title => {
+          let tiddler = tw.run.getTiddler(title);
+          let el = tw.run.getTiddlerElement(tiddler.title);
+          el.querySelectorAll('pre code').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
+        });
     }, 'HighlightPlugin');
   }, 'HighlightPlugin');
   tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
