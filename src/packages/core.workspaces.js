@@ -16,17 +16,14 @@
     workspaceSwitch();
   }
 
-  // Events
-  tw.events.subscribe('workspace.switch', workspaceSwitch);
-  tw.events.subscribe('workspace.load', workspaceLoad);
-  tw.events.subscribe('workspace.create', workspaceCreate);
-  tw.events.subscribe('workspace.delete', workspaceDelete);
-  tw.events.subscribe('workspace.delete.ui', workspaceDeleteUI);
-  tw.events.subscribe('workspace.clone', workspaceCloneUI);
-
   // Run
   const run = () => {
-
+    tw.events.subscribe('workspace.switch', workspaceSwitch);
+    tw.events.subscribe('workspace.load', workspaceLoad);
+    tw.events.subscribe('workspace.create', workspaceCreate);
+    tw.events.subscribe('workspace.delete', workspaceDelete);
+    tw.events.subscribe('workspace.delete.ui', workspaceDeleteUI);
+    tw.events.subscribe('workspace.clone', workspaceCloneUI);
   };
 
   // Exports

@@ -15,10 +15,13 @@
   const reTag = /tag:(\S+)\s?/;
   const rePck = /pck:(\S+)\s?/;
 
-  tw.events.subscribe('ui.loading', wireUIEvents);
-  tw.events.subscribe('search', searchQuery); // From #msg:search:foo events
+  // Run
+  const run = () => {
+    tw.events.subscribe('ui.loading', wireUIEvents);
+    tw.events.subscribe('search', searchQuery); // From #msg:search:foo events
+  };
 
-  return {name, version, exports};
+  return {name, version, exports, run};
 
   function searchQuery(q) {
     tw.core.dom.$('search').value = q;
@@ -129,7 +132,7 @@
     tw.core.dom.$('search')?.addEventListener('keyup', searchNow);
     tw.core.dom.$('search')?.addEventListener('focus', searchFocus);
     tw.core.dom.$('search')?.addEventListener('blur', searchLoseFocus);
-    searchLoseFocus();
+    tw.core.dom.$('search-results').style.display = 'none';
   }
 
 });

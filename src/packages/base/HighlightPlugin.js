@@ -22,12 +22,12 @@
         .forEach(title => {
           let tiddler = tw.run.getTiddler(title);
           let el = tw.run.getTiddlerElement(tiddler.title);
-          el.querySelectorAll('pre code').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
+          el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
         });
     }, 'HighlightPlugin');
   }, 'HighlightPlugin');
   tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
-    newElement.querySelectorAll('pre code').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
+    newElement.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
   }, 'HighlightPlugin');
 
   function languageFromTiddlerType(type) {

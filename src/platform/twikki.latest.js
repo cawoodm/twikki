@@ -139,6 +139,8 @@
 
       loadStore();
 
+      wireUpEvents();
+
       tw.packages
         .filter(pck => pck.meta?.run)
         .forEach(pck => {
@@ -159,8 +161,6 @@
           }
         });
       console.debug('Packages run');
-
-      wireUpEvents();
 
       document.title = renderTiddler('$SiteTitle');
       tw.extend = {tiddlerDetails: {
@@ -260,36 +260,29 @@
   async function onPageLoad() {
     tw.events.send('ui.loading');
     wireEvents();
-    await rebootSoft(1); // Event: tw.events.send('reboot.soft');
+    await loadCorePackages();
+    if (!qs.safemode) await loadExtensionPackages();
+    // TODO: Load registered scripts/css here like our highlighter core, css and languages
+    reload();
     if (location.hash) handleHashLink(location.hash);
   }
   /* BEGIN TWikki */
   /* Functions */
-  // rebootSofter is called when lots of local tiddlers - i.e. after synching
-  //   unlike rebootSoft it does not CorePackages packages
-  function rebootSofter() {
-    reload();
-  }
-  // rebootSoft is called when the local store changes - i.e. after restoring a backup
-  //   it reloads CorePackages packages, runs tiddlers, does span includes, themes and renders all tiddlers
-  async function rebootSoft() {
-    await loadCorePackages();
-    if (!qs.safemode) await loadExtensionPackages();
-    // TODO: Load registered scripts/css here like our highlighter core, css and languages
-    reload(1);
-  }
+
   function rebootHard() {
     window.location.reload();
   }
-  function reload(time) {
+  function reload() {
     // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
     if (!qs.safemode) runExtensionTiddlers();
     loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
-    if (time === 1) tw.events.send('ui.loaded');
-    else tw.events.send('ui.reloaded', time);
+    if (!tw.tmp.rebootCount) tw.tmp.rebootCount = 0;
+    tw.tmp.rebootCount++;
+    if (tw.tmp.rebootCount === 1) tw.events.send('ui.loaded');
+    else tw.events.send('ui.reloaded', tw.tmp.rebootCount);
     renderAllTiddlers();
   }
   function loadTemplates() {
@@ -334,19 +327,15 @@
     saveSilent();
   }
 
-  function wireUp(event, handler) {
-    tw.events.subscribe(event, handler, 'core');
-  }
   function wireUpEvents() {
+    // tw.events.clear();
+    tw.events.init();
     wireUp('ui.open.all', showAllTiddlers);
     wireUp('ui.close.all', closeAllTiddlers);
     wireUp('save', save);
     wireUp('save.silent', saveSilent);
     wireUp('save.all', saveAll);
-    wireUp('reboot.softer', rebootSofter);
-    wireUp('reboot.soft', rebootSoft);
     wireUp('reboot.hard', rebootHard);
-    // wireUp('search', searchQuery);
     wireUp('ui.reload', reload);
 
     wireUp('tiddler.new', formNewTiddler);
@@ -373,6 +362,9 @@
     wireUp('package.load.url', tw.core.packaging.loadPackageFromURL);
     wireUp('package.reload.url', tw.core.packaging.reloadPackageFromUrl);
     wireUp('package.reload.bin', tw.core.packaging.reloadPackageFromJSONBin);
+  }
+  function wireUp(event, handler) {
+    tw.events.subscribe(event, handler, 'core');
   }
 
   function tiddlerIsValid(t) {
@@ -796,9 +788,9 @@
     else if (tiddlerIsATemplate(t))
       loadTemplates();
     else if (isPackageList(t))
-      if (confirm('Would you like to refresh?')) tw.events.send('reboot.soft');
+      if (confirm('Would you like to reload?')) tw.events.send('reboot.hard');
     if (title === '$MainLayout')
-      if (confirm('Would you like to refresh?')) tw.events.send('reboot.soft');
+      if (confirm('Would you like to reload?')) tw.events.send('reboot.hard');
   }
   function tiddlerIsATemplate(t) {
     return t.tags.includes('$Template');
@@ -1203,7 +1195,7 @@
   }
   function readObject(item) {
     let json = os.read(item);
-    if (!json?.match(/^\{\[/)) return {};
+    if (!json?.match(/^[\{\[]/)) return {};
     return JSON.parse(json);
   }
   function writeObject(item, value) {

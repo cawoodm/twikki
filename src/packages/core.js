@@ -7,7 +7,11 @@
   tw.core = {};
   tw.events = (function() {
     const handlers = [];
+    let initialized = false;
     return {
+      init() {
+        initialized = true;
+      },
       send(event, params) {
         // dp('events.send', event, params);
         let result = [];
@@ -28,6 +32,7 @@
       // TODO: Should have subscribe to listen and override to handle
       // handlerName is used to ensure we don't call the same function twice for the same event
       subscribe(event, handler, handlerName) {
+        if (!initialized) throw new Error('Events not yet initialized!');
         if (!handlerName && typeof handler === 'string') {
           handlerName = handler;
           handler = eval(handlerName);
@@ -50,6 +55,7 @@
         handlers.push({event, handler});
       },
       handlers() {return handlers;},
+      clear() {dp('clear'); handlers.length = 0;},
     };
     function decoder(encoded) {
       const binary = atob(encoded);

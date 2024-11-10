@@ -167,6 +167,7 @@ dialog#new-dialog form textarea {
   padding: 4px;
   width: 100%;
   height: 100%;
+  border: 1px solid var(--col0);
   border-radius: var(--rad1) var(--rad2);
 }
 

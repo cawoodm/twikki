@@ -30,7 +30,8 @@ tw.macros.backup = {
     if (!res.ok) return tw.ui.notify(`Restore failed '${res.status}' (see log)`, 'E');
     let result = await res.json();
     Object.assign(tw.tiddlers, result.record);
-    tw.events.send('reboot.soft');
+    tw.run.save();
+    if (confirm('Restore complete. Would you like to reload?')) tw.events.send('reboot.hard');
     tw.ui.notify('Restore complete!', 'S'); // Should we save/remind to save?
   },
   async save() {
@@ -51,10 +52,11 @@ tw.macros.backup = {
       body,
     });
     // doesn't get caught by notify!! throw new Error('Backup failed: ' + res.statusText);
+    if (!res.status === 403) return tw.ui.notify(`Backup failed '${res.status}': 100KB limit reached on JSONBin!`, 'E');
     if (!res.ok) return tw.ui.notify(`Backup failed '${res.status}' (see log)`, 'E');
     // let result = await res.json();
     tw.ui.notify(`Backup complete! (${body.length / 1000} KB)`, 'S');
   },
 };
-tw.events.subscribe('backup.save', tw.macros.backup.save);
-tw.events.subscribe('backup.restore', tw.macros.backup.restore);
+tw.events.override('backup.save', tw.macros.backup.save);
+tw.events.override('backup.restore', tw.macros.backup.restore);

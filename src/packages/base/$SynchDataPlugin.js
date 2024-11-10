@@ -56,7 +56,7 @@ tw.macros.synch = (function(){
     // TODO: Delete all local and pull (restore)
   };
 
-  // eslint-disable-next-line complexity
+
   async function synch({push = true, pull = true, dryRun = false}) {
 
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
@@ -79,7 +79,7 @@ tw.macros.synch = (function(){
     let localTiddlers = tw.tiddlers.all
       .filter(t => !t.isRawShadow); // Don't synch raw shadows - See BUG below
 
-    // eslint-disable-next-line complexity
+
     remoteTiddlers.forEach(remoteTiddler => {
       remoteTiddler.created = new Date(remoteTiddler.created);
       remoteTiddler.updated = new Date(remoteTiddler.updated);
@@ -180,7 +180,8 @@ tw.macros.synch = (function(){
       if (!res.ok) return tw.ui.notify(`Synch (push) to remote failed '${res.status}' (see log)`, 'E');
     }
 
-    if (!dryRun) tw.events.send('reboot.softer');
+    // Rebooting here is left up to the user
+    //  we cannot know what has changed
 
     if (push && pull) {
       tw.ui.notify('Synch (full) complete!', 'S');
