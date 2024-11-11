@@ -85,7 +85,7 @@
   tw.macros.core.ThemeSelector = () => {
     let theme = getCurrentThemeName();
     return `<select id="theme-select" onchange="tw.events.send('theme.switch', this.value);">
-    ${getThemeNames().map(n => `<option value="${n}"${n === theme ? ' selected' : ''}>${n.replace(/(^\$)|(Theme$)/g, '')}</option>`).join('\n')}
+    ${getThemeNames().sort().map(n => `<option value="${n}"${n === theme ? ' selected' : ''}>${n.replace(/(^\$)|(Theme)/g, '')}</option>`).join('\n')}
   </select>`;
   };
 

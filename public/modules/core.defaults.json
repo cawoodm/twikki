@@ -1,0 +1,427 @@
+{
+  "tiddlers": [
+    {
+      "title": "$BasePackage",
+      "text": "* code: base\n* namespace: base\n* version: 0.0.1\n* url: https://cawoodm.github.io/twikki/packages/base.json\n* overwrite: yes\n* save: no\n",
+      "tags": [
+        "$Shadow",
+        "$Package"
+      ],
+      "type": "list",
+      "created": "2024-11-11T11:53:50.0654157Z",
+      "updated": "2024-11-11T12:14:05.5116855Z"
+    },
+    {
+      "title": "$CorePackages",
+      "text": "* https://cawoodm.github.io/twikki/packages/base.json force",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "list",
+      "created": "2024-11-03T20:36:53.2910798Z",
+      "updated": "2024-11-09T19:01:27.1028260Z"
+    },
+    {
+      "title": "$CoreThemeDark",
+      "text": "* [[$StyleSheetCore]]\n* [[$StyleSheetCoreDark]]\n* [[$ThemeBase]]\n* [[$StyleSheetUser]]",
+      "tags": [
+        "$Shadow",
+        "$Theme",
+        "$ThemeDark"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.2938565Z",
+      "updated": "2024-11-03T20:45:52.0549499Z"
+    },
+    {
+      "title": "$CoreThemeLight",
+      "text": "* [[$StyleSheetCore]]\n* [[$ThemeBase]]\n* [[$StyleSheetUser]]",
+      "tags": [
+        "$Shadow",
+        "$Theme"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3004609Z",
+      "updated": "2024-10-04T19:45:16.2089505Z"
+    },
+    {
+      "title": "$ExtensionPackages",
+      "text": "* https://cawoodm.github.io/twikki/packages/icons.json force\n* https://cawoodm.github.io/twikki/packages/demo.json force\n* https://cawoodm.github.io/twikki/packages/website.json nooverwrite\n",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "list",
+      "created": "2024-11-03T20:36:53.3022594Z",
+      "updated": "2024-11-09T19:01:27.0100424Z"
+    },
+    {
+      "title": "$GeneralSettings",
+      "text": "{}",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "json",
+      "created": "2024-11-03T20:36:53.3022594Z",
+      "updated": "2024-10-29T14:55:06.4807827Z"
+    },
+    {
+      "title": "$IconBackup",
+      "text": "Backup",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3022594Z",
+      "updated": "2024-10-04T20:30:49.4911028Z"
+    },
+    {
+      "title": "$IconCancel",
+      "text": "ⓧ",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3067674Z",
+      "updated": "2024-10-04T19:45:16.2099502Z"
+    },
+    {
+      "title": "$IconCloseAll",
+      "text": "Close All",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3074827Z",
+      "updated": "2024-10-04T20:27:08.0374043Z"
+    },
+    {
+      "title": "$IconDelete",
+      "text": "🗑",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3074827Z",
+      "updated": "2024-10-04T19:45:16.2099502Z"
+    },
+    {
+      "title": "$IconDone",
+      "text": "✓",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3074827Z",
+      "updated": "2024-10-04T19:45:16.2099502Z"
+    },
+    {
+      "title": "$IconEdit",
+      "text": "✎",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3152307Z",
+      "updated": "2024-10-04T19:45:16.2109509Z"
+    },
+    {
+      "title": "$IconFavorite",
+      "text": "⭐",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3172315Z",
+      "updated": "2024-10-04T19:45:16.2109509Z"
+    },
+    {
+      "title": "$IconHelp",
+      "text": "?",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3172315Z",
+      "updated": "2024-10-04T19:45:16.2119516Z"
+    },
+    {
+      "title": "$IconNew",
+      "text": "New",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3207657Z",
+      "updated": "2024-10-04T19:45:16.2119516Z"
+    },
+    {
+      "title": "$IconOpenAll",
+      "text": "Open All",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3207657Z",
+      "updated": "2024-10-04T20:28:35.3551841Z"
+    },
+    {
+      "title": "$IconPull",
+      "text": "Pull",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3232728Z",
+      "updated": "2024-10-24T10:52:02.2465239Z"
+    },
+    {
+      "title": "$IconPush",
+      "text": "Push",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3232728Z",
+      "updated": "2024-10-24T10:51:54.4614194Z"
+    },
+    {
+      "title": "$IconRefresh",
+      "text": "🔃",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3232728Z",
+      "updated": "2024-10-04T20:21:19.3672282Z"
+    },
+    {
+      "title": "$IconRestore",
+      "text": "Restore",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3232728Z",
+      "updated": "2024-10-04T20:35:27.6136249Z"
+    },
+    {
+      "title": "$IconSave",
+      "text": "🖫",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3307556Z",
+      "updated": "2024-10-04T19:45:16.2129525Z"
+    },
+    {
+      "title": "$IconSettings",
+      "text": "⚙️",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3325171Z",
+      "updated": "2024-10-04T19:45:16.2129525Z"
+    },
+    {
+      "title": "$IconSynch",
+      "text": "Synch",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3325171Z",
+      "updated": "2024-10-04T20:37:06.0098287Z"
+    },
+    {
+      "title": "$IconTag",
+      "text": "Tags",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3378409Z",
+      "updated": "2024-10-04T19:45:16.2139486Z"
+    },
+    {
+      "title": "$MainLayout",
+      "text": "<div>\n  <div style=\"position:absolute; top: 0px; left: 10px; z-index: 1\" tiddler-include=\"$Workspaces\"></div>\n  <div style=\"position:absolute; top: 0px; right: 10px; z-index: 1\" tiddler-include=\"$Themes\"></div>\n  <div id=\"header\" class=\"flex\">\n    <div id=\"header-col1\" class=\"flex col1\">\n      <div id=\"site-title\" tiddler-include=\"$SiteTitle\"><h1>TWikki</h1></div>\n      <div id=\"site-title\" tiddler-include=\"$SiteSubTitle\">...</h1></div>\n  </div>\n  <div id=\"header-col2\" class=\"flex col2\" tiddler-include=\"$TitleBar\">\n  </div>\n  <div id=\"header-col3\" class=\"flex col3\">\n      <input id=\"search\" type=\"search\" placeholder=\"search\" autocomplete=\"off\"/>\n      <div id=\"search-results\">\n        <ul id=\"search-results\"></ul>\n      </div>\n    </div>\n  </div>\n  <div id=\"body\" class=\"flex\">\n    <div id=\"sidebar\">\n      \n    </div>\n    <div id=\"visible-tiddlers\">\n    </div>\n  </div>\n  <dialog id=\"preview-dialog\">\n  </dialog>\n  <dialog id=\"new-dialog\">\n    <form id=\"new-form\">\n      <div class=\"toolbar\">\n        <button class=\"icon\" data-msg=\"form.done\" tiddler-include=\"$IconDone\" title=\"Done\"></button>\n        <button class=\"icon\" data-msg=\"form.cancel\" tiddler-include=\"$IconCancel\" title=\"Cancel\"></button>\n      </div>\n      <input id=\"old-title\" type=\"hidden\" />\n      <div class=\"title\"><input id=\"new-title\" placeholder=\"Title\" size /></div>\n      <div class=\"text\"><textarea row=\"10\" id=\"new-body\" placeholder=\"Text\"></textarea></div>\n      <div><input id=\"new-type\" list=\"new-types\" onfocus=\"this.value=null;\" onchange=\"this.blur();\" />\n        <datalist id=\"new-types\">\n        </datalist>\n      </div>\n      <div><input id=\"new-tags\" placeholder=\"Tags\" size /></div>\n    </form>\n  </dialog>\n  <div id=\"notify\" class=\"notifyHidden\"></div>\n</div>",
+      "tags": [
+        "$Shadow",
+        "$Template"
+      ],
+      "type": "html/template",
+      "created": "2024-11-07T17:05:57.9455610Z",
+      "updated": "2024-11-11T15:59:42.2891477Z"
+    },
+    {
+      "title": "$Settings",
+      "text": "* [[$GeneralSettings]]\n* [[$TitleBar]]\n  * [[$SiteTitle]]\n  * [[$SiteSubTitle]]\n* [[$Theme]]\n  * [[$MainLayout]]\n  * [[$TiddlerDisplay]]\n* [[$Packages]]\n  * [[$CorePackages]]\n  * [[$ExtensionPackages]]",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3420197Z",
+      "updated": "2024-11-09T18:32:27.6345319Z"
+    },
+    {
+      "title": "$SiteSubTitle",
+      "text": "Inspired by [TiddlyWiki](https://tiddlywiki.com) ✨",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3434628Z",
+      "updated": "2024-11-09T19:46:00.0940160Z"
+    },
+    {
+      "title": "$SiteTitle",
+      "text": "# TWikki v{{$TWikkiVersion}}",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3451847Z",
+      "updated": "2024-11-08T11:51:50.9704605Z"
+    },
+    {
+      "title": "$StyleSheetCore",
+      "text": "/* CSS Reset */\nhtml {\n  box-sizing: border-box;\n  font-size: 16px;\n}\n\n*,\n*:before,\n*:after {\n  box-sizing: inherit;\n}\n\nbody,\np,\nol,\nul {\n  margin: 0;\n  padding: 0;\n  font-weight: normal;\n}\n\nol,\nul {\n  list-style: none;\n}\n\nimg {\n  max-width: 100%;\n  height: auto;\n}\n\na {\n  text-decoration: none;\n}\n\na:hover {\n  text-decoration: underline;\n}\n\na[data-msg]:hover {\n  cursor: pointer;\n}\n\n/* Responsive */\n.flex {\n  display: flex;\n  align-content: flex-start;\n}\n\n#header.flex {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: flex-end;\n}\n\n#header .col1 div {\n  width: 100%;\n}\n\n#titlebar.flex {\n  display: flex;\n  flex-wrap: wrap;\n  width: 100%;\n}\n\n#body.flex {\n  display: flex;\n  align-items: flex-start;\n  width: 100%;\n}\n\ndiv#visible-tiddlers {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  margin: 0.3rem;\n}\n\ndiv#sidebar {\n  margin: 0.3rem;\n  padding: 0.5rem;\n  background-color: var(--colbg3);\n  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);\n  outline: 1px solid var(--col1);\n  box-shadow: 1px 1px 0.5rem var(--col0);\n}\n\n#header-col3 {\n  position: relative;\n}\n\n#search {\n  font-size: 1rem;\n  line-height: 1.2rem;\n}\n\n#search-results {\n  background: var(--colbg3);\n  position: absolute;\n  top: 30px;\n  left: 15px;\n  padding: 1rem;\n  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);\n  outline: 1px solid var(--col1);\n  box-shadow: 1px 1px 0.5rem var(--col0);\n}\n\n#header .col1 {\n  flex-wrap: wrap;\n}\n\n#header .col2 {\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n#header .col3 input {\n  width: 100%;\n  border: solid 1px var(--col1)\n}\n\n@media (min-width: 0px) {\n  html {\n    font-size: 10px;\n  }\n\n  #header .col1,\n  #header .col2,\n  #header .col3 {\n    flex-grow: 1;\n  }\n\n  #search {\n    font-size: 2rem;\n  }\n\n  #site-title,\n  #site-subtitle {\n    text-align: center;\n  }\n\n  #site-title h1,\n  #site-subtitle div {\n    margin: 2px;\n    padding: 2px;\n  }\n\n  #body.flex {\n    flex-wrap: wrap;\n  }\n\n  #sidebar {\n    display: none;\n    flex-grow: 1;\n  }\n\n  div#visible-tiddlers {\n    flex-grow: 1;\n    max-width: 100%;\n  }\n\n  h1 {\n    font-size: 1rem;\n  }\n}\n\n@media (min-width: 600px) {\n  html {\n    font-size: 16px;\n  }\n\n  #header .col1 {\n    flex-grow: 1;\n  }\n\n  #header .col2 {\n    flex-grow: 3;\n  }\n\n  #header .col3 {\n    flex-basis: 100%;\n  }\n\n  #body.flex {\n    flex-wrap: nowrap;\n    flex-direction: row;\n  }\n\n  #sidebar {\n    flex-grow: 1;\n  }\n\n  div#visible-tiddlers {\n    flex-grow: 4;\n  }\n\n  h1 {\n    font-size: 1.7rem;\n  }\n}\n\n/* Fallback Colors in case Themes forget them */\n:root {\n  --colbg1: #fdeeee;\n  --colbg2: #efefef;\n  --colbg3: #dfdfdf;\n  --colbgi: #efefef;\n  --colfgi: #373737;\n  --colfg: #323232;\n  --col0: #323232;\n  --col1: #6e6e6e;\n  --col3: #8fbfdf;\n  --col4: #8d8d8d;\n  --col6: #6db193;\n  --notify-rgba: 210, 180, 90;\n  --rad1: 0.3rem;\n  --rad2: 0.3rem;\n  --rad3: 0.3rem;\n  --rad4: 0.3rem;\n}",
+      "tags": [
+        "$Shadow",
+        "$StyleSheet"
+      ],
+      "type": "css",
+      "created": "2024-11-03T20:36:53.3493314Z",
+      "updated": "2024-11-11T15:57:54.6046114Z"
+    },
+    {
+      "title": "$StyleSheetCoreDark",
+      "text": ":root {\n  --colbg1: #101f1f;\n  --colbg2: #101f1f;\n  --colbg3: #2a2a2a;\n  --colbgi: #3f3f3f;\n  --colfgi: #d7d7d7;\n  --colfg: rgb(205, 205, 205);\n  --col0: #cdcdcd;\n  --col1: #6e6e6e;\n  --col3: #8fbfdf;\n  --col4: #8d8d8d;\n  --col6: #6db193;\n  --notify-rgba: 210, 180, 90;\n  --rad1: 0.3rem;\n  --rad2: 0.3rem;\n  --rad3: 0.3rem;\n  --rad4: 0.3rem;\n}",
+      "tags": [
+        "$Shadow",
+        "$StyleSheet"
+      ],
+      "type": "css",
+      "created": "2024-11-03T20:36:53.3493314Z",
+      "updated": "2024-10-04T19:45:16.2149484Z"
+    },
+    {
+      "title": "$Theme",
+      "text": "[[$CoreThemeLight]]",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3556100Z",
+      "updated": "2024-10-04T19:45:16.2159490Z"
+    },
+    {
+      "title": "$ThemeBase",
+      "text": "/* https://coolors.co/image-picker */\n\n\n* {\n  font-family:\n    system-ui,\n    'Segoe UI',\n    Roboto,\n    Helvetica,\n    Arial,\n    sans-serif;\n\n}\n\nhtml,\nbody {\n  height: 100%;\n}\n\nbody {\n  padding: 0px;\n}\n\n.line-clamp {\n  white-space: nowrap\n}\n\na:not([class]) {\n  text-decoration-skip-ink: auto;\n  font-weight: bolder;\n  color: var(--col6);\n}\n\nbody {\n  background-color: var(--colbg1);\n  color: var(--colfg);\n}\n\ndiv#header {\n  position: sticky;\n  top: 0px;\n  display: flex;\n  align-items: flex-start;\n  flex-direction: row;\n  flex-wrap: nowrap;\n  justify-content: space-evenly;\n  border: 1px solid var(--col4);\n  background-color: var(--colbg3);\n  padding: 5px;\n  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);\n  box-shadow: 1px 1px 5px var(--col0);\n}\n\ndiv#body {\n  padding: 5px;\n  height: 100%;\n}\n\ndialog::backdrop {\n  background-image: linear-gradient(45deg, #000, #888);\n  opacity: 0.85;\n}\n\nul {\n  margin-left: 0px;\n  padding: auto;\n}\n\nul {\n  margin-left: 10px;\n}\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 1;\n}\n\nth {\n  font-weight: bold;\n  background-color: var(--col3);\n}\n\nth,\ntd {\n  padding: 5px;\n  border: 1px solid black;\n}\n\n\nul li::marker {\n  font-family: FontAwesome;\n  content: \"🗲\";\n  color: var(--col0);\n}\n\nli li {\n  margin-left: 20px;\n}\n\ndialog#preview-dialog {\n  border: 0px;\n  overflow-y: hidden;\n  background-color: #00000000;\n  width: 90%;\n  height: 90%;\n  min-height: 500px;\n}\n\ndialog#preview-dialog div.tiddler {\n  height: 100%;\n}\n\ndialog#preview-dialog div.text {\n  height: 100%;\n  max-height: 1000px;\n}\n\ndialog#new-dialog {\n  background-color: var(--colbg2);\n  width: 75%;\n  height: 75%;\n}\n\ndialog#new-dialog form {\n  width: 100%;\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n}\n\ndialog#new-dialog form div {\n  margin-bottom: 4px;\n}\n\ndialog#new-dialog form div.text {\n  flex-grow: 1;\n  min-height: 300px;\n}\n\n/* Forms */\n\ndialog#new-dialog div input {\n  font-size: large;\n  font-weight: bold;\n  border-radius: var(--rad1) var(--rad2);\n  border: 1px;\n}\n\ninput#search {\n  width: 30%;\n}\n\ninput,\ntextarea,\nselect {\n  background-color: var(--colbgi);\n  color: var(--colfgi);\n}\n\ntextarea {\n  scrollbar-color: var(--col1) var(--colbg2);\n}\n\ndialog#new-dialog form input,\ndialog#new-dialog form textarea {\n  font-size: 1rem;\n  padding: 4px;\n  width: 100%;\n  height: 100%;\n  border: 1px solid var(--col0);\n  border-radius: var(--rad1) var(--rad2);\n}\n\ndialog#new-dialog div.toolbar {\n  text-align: right;\n}\n\nblockquote {\n  background-color: var(--col4);\n  border-left: 10px solid var(--col3);\n  margin: 1.5em 10px;\n  padding: 0.5em 10px;\n  quotes: \"\\201C\" \"\\201D\" \"\\2018\" \"\\2019\";\n}\n\n#notify {\n  position: fixed;\n  z-index: 1;\n  left: 50%;\n  transform: translate(-50%);\n  bottom: 10px;\n  min-width: 250px;\n  background-color: rgba(var(--notify-rgba), 0.9);\n  color: var(--col1);\n  text-align: left;\n  border: 1px solid var(--col0);\n  box-shadow: 1px 1px 5px var(--col0);\n  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);\n  padding: 16px;\n  line-height: 1.2rem;\n}\n\ndiv.notifyHidden {\n  visibility: hidden;\n  opacity: 0;\n  transition: visibility 0.3s linear, opacity 0.3s linear;\n}\n\ndiv.notifyShow {\n  transition: visibility 0.3s linear, opacity 0.3s linear;\n  visibility: show;\n  opacity: 1;\n}\n\nh1 {\n  font-size: 1.8rem;\n  padding: 5px;\n}\n\nh2 {\n  font-size: 1.4rem;\n  padding: 4px;\n}\n\nh3 {\n  font-size: 1.4rem;\n  padding: 3px;\n}\n\nh4 {\n  font-size: 1.2rem;\n  padding: 2px;\n}\n\ndiv.tiddler pre {\n  white-space: pre-wrap;\n}\n\ncode {\n  background-color: var(--colbg3);\n  font-family: Consolas, 'Courier New', Courier, monospace;\n}\n\npre code {\n  border: 1px solid var(--col0);\n}\n\ncode {\n  padding: .2rem .5rem;\n  margin: 0 .2rem;\n  font-size: 90%;\n  white-space: nowrap;\n  border: 1px solid #E1E1E1;\n  border-radius: 4px;\n}\n\npre>code {\n  display: block;\n  padding: 1rem 1.5rem;\n  white-space: pre;\n}\n\n/* Tiddlers */\ndiv.tiddler {\n  margin-bottom: 20px;\n  padding: 2rem;\n  background-color: var(--colbg2);\n  outline: 1px solid var(--col1);\n  box-shadow: 1px 1px 5px var(--col0);\n  background-color: var(--colbg2);\n  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);\n}\n\ndiv.tiddler-nosave {\n  outline: 4px dotted green;\n}\n\ndiv.tiddler-readonly {\n  border-left: 5px solid gray;\n  outline: 2px dotted gray;\n}\n\ndiv.shadowtrue div.title {\n  font-style: italic;\n}\n\ndiv.shadowtrue {\n  border-left: 5px solid var(--colbg3);\n  outline: 2px dashed gray;\n}\n\n\ndiv.tiddler div.modified {\n  text-align: right;\n  font-style: italic;\n  color: var(--col1)\n}\n\ndiv.tiddler div.title {\n  padding: 5px;\n  font-size: 2rem;\n  line-height: 1.2;\n  font-weight: bold;\n  background-color: var(--colbg2);\n}\n\nbutton:hover svg {\n  fill: var(--col6);\n}\n\nbutton:yellow svg {\n  fill: yellow;\n}\n\nbutton.purple svg {\n  fill: purple;\n}\n\nbutton.icon {\n  fill: var(--col1);\n  border: 1px solid var(--col4);\n  background-color: transparent;\n  border: none;\n  cursor: pointer;\n}\n\nbutton {\n  fill: var(--col1);\n  border: 1px solid var(--col4);\n  background-color: var(--col3);\n  cursor: pointer;\n}\n\ndiv.tiddler div.title button {\n  border: none;\n  background-color: transparent;\n  float: right;\n}\n\ndiv.tiddler div.meta {\n  text-align: right;\n  font-size: small;\n  color: var(--col3);\n}\n\ndiv.tiddler div.text {\n  margin: 2px;\n  padding: 2px;\n  overflow-y: auto;\n  scrollbar-color: var(--col1) var(--colbg2);\n  scrollbar-width: thin;\n  max-height: 9000px;\n}\n\ndiv.tiddler div.tags {\n  font-size: small;\n  color: gray;\n  float: right\n}\n\ndiv.tiddler p {\n  margin: 16px 0px;\n}\n\nspan.error {\n  color: white;\n  background-color: red;\n}",
+      "tags": [
+        "$Shadow",
+        "$StyleSheet"
+      ],
+      "type": "css",
+      "created": "2024-11-03T20:36:53.3556100Z",
+      "updated": "2024-11-11T13:23:54.1390950Z"
+    },
+    {
+      "title": "$Themes",
+      "text": "<<ThemeSelector>>",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3556100Z",
+      "updated": "2024-10-04T19:45:16.2159490Z"
+    },
+    {
+      "title": "$TiddlerDisplay",
+      "text": "<div class=\"tiddler shadow{{=isRawShadow}}\" data-tiddler-id=\"{{=id}}\" data-tiddler-title=\"$currentTiddler\" tabindex=\"0\">\n  <div class=\"title\" title=\"{{=type}}\">\n    {{=title}}\n    <button class=\"icon\" title=\"close\" data-msg=\"tiddler.close\" data-param=\"$currentTiddler\">{{$IconCancel}}</button>\n    {{!editDisabled}}\n    <button class=\"icon\" title=\"edit\" {{=editDisabled}} data-msg=\"tiddler.edit\" data-param=\"$currentTiddler\">{{$IconEdit}}</button>\n    <button class=\"icon\" title=\"delete\"{{=editDisabled}} data-msg=\"tiddler.delete\" data-param=\"$currentTiddler\">{{$IconDelete}}</button>\n    {{/!editDisabled}}\n    <<favorites.toggle>>\n    <!--<button class=\"icon\" title=\"favorite\" data-msg=\"favorites.toggle\" data-param=\"$currentTiddler\">{{$IconFavorite}}</button>-->\n  </div>\n  <div class=\"modified\">{{=modified}}</div>\n  <div class=\"text\">{{=fullText}}</div>\n  <div class=\"tags\">{{=tagLinks}}</div>\n  <div class=\"meta\">{{=metaInfo}}</div>\n</div>",
+      "tags": [
+        "$Shadow",
+        "$Template"
+      ],
+      "type": "html/template",
+      "created": "2024-11-03T20:36:53.3613581Z",
+      "updated": "2024-10-30T11:01:34.6865456Z"
+    },
+    {
+      "title": "$TiddlerPreview",
+      "text": "<div class=\"tiddler\" data-tiddler-id=\"{{=id}}\" data-tiddler-title=\"{{=title}}\" tabindex=\"0\">\n  <div class=\"title\" title=\"{{=type}}\">\n    {{=title}}\n    <button class=\"icon\" title=\"close\" data-msg=\"tiddler.preview.close\" data-param=\"$currentTiddler\">{{$IconCancel}}</button>\n    <!-- TODO: Save Button -->\n  </div>\n  <div class=\"modified\">{{=modified}}</div>\n  <div class=\"text\">{{=fullText}}</div>\n  <div class=\"tags\">{{=tagLinks}}</div>\n</div>",
+      "tags": [
+        "$Shadow",
+        "$Template"
+      ],
+      "type": "html/template",
+      "created": "2024-11-03T20:36:53.3613581Z",
+      "updated": "2024-10-29T12:59:43.5491253Z"
+    },
+    {
+      "title": "$TiddlerSearchResult",
+      "text": "tbd<!-- Rendering Search Results -->",
+      "tags": [
+        "$Shadow",
+        "$Template"
+      ],
+      "type": "html/template",
+      "created": "2024-11-03T20:36:53.3650856Z",
+      "updated": "2024-10-04T19:45:16.2169485Z"
+    },
+    {
+      "title": "$TiddlerTrashed",
+      "text": "<div class=\"tiddler\" data-tiddler-id=\"{{=id}}\" data-tiddler-title=\"{{=title}}\" tabindex=\"0\">\n  <div class=\"title\" title=\"{{=type}}\">\n    {{=title}}\n    <button class=\"icon\" title=\"close\" data-msg=\"tiddler.preview.close\" data-param=\"$currentTiddler\">{{$IconCancel}}</button>\n    <button class=\"icon\" title=\"delete\" data-msg=\"tiddler.trashed.destroy\" data-param=\"$currentTiddler\">{{$IconDelete}}</button>\n    <button class=\"icon\" title=\"restore\" data-msg=\"tiddler.trashed.restore\" data-param=\"$currentTiddler\">{{$IconRefresh}}</button>\n  </div>\n  <div class=\"modified\">{{=modified}}</div>\n  <div class=\"text\">{{=fullText}}</div>\n  <div class=\"tags\">{{=tagLinks}}</div>\n</div>",
+      "tags": [
+        "$Shadow",
+        "$Template"
+      ],
+      "type": "html/template",
+      "created": "2024-11-03T20:36:53.3659518Z",
+      "updated": "2024-10-30T07:58:23.5248196Z"
+    },
+    {
+      "title": "$TiddlerTypes",
+      "text": "* x-twikki: TWikki Data\n* plain: Plain Text\n* html: HTML\n* html/template: HTML Template\n* css: StyleSheet\n* script/js: JavaScript\n* markdown: Markdown\n* macro: Macro\n* list: List\n* keyval: Key Values\n* table: Tabular Data\n* json: JSON Data\n",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "keyval",
+      "created": "2024-11-03T20:36:53.3679929Z",
+      "updated": "2024-11-08T11:51:29.4319050Z"
+    },
+    {
+      "title": "$TitleBar",
+      "text": "<<ShowAllTiddlersButton>>\n\n<<CloseAllTiddlersButton>>\n\n[{{$IconBackup}}](#Backup)\n\n<<synch.pull>>\n<<synch.push>>\n\n<<synch.full>>\n\n<<New>>\n\n<<Save>>\n\n[{{$IconFavorite}}](#msg:ui.open.all:{\"tag\":\"Favorite\"})\n\n<<Settings>>\n\n<<TrashCanIcon>>\n\n[{{$IconTag}}](#Tags)\n\n[{{$IconHelp}}](#Help)",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3694933Z",
+      "updated": "2024-10-24T10:57:14.6446766Z"
+    },
+    {
+      "title": "$TWikkiVersion",
+      "text": "0.14.0 🎉",
+      "tags": [
+        "$Shadow",
+        "$NoEdit"
+      ],
+      "type": "plain",
+      "created": "2024-11-03T20:36:53.3722371Z",
+      "updated": "2024-11-11T11:53:34.0458075Z"
+    },
+    {
+      "title": "$Workspaces",
+      "text": "<<WorkspaceSelect>>",
+      "tags": [
+        "$Shadow"
+      ],
+      "type": "x-twikki",
+      "created": "2024-11-03T20:36:53.3393484Z",
+      "updated": "2024-11-07T15:13:14.8565303Z"
+    }
+  ]
+}

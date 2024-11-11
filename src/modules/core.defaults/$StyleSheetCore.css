@@ -89,6 +89,11 @@ div#sidebar {
   position: relative;
 }
 
+#search {
+  font-size: 1rem;
+  line-height: 1.2rem;
+}
+
 #search-results {
   background: var(--colbg3);
   position: absolute;
@@ -125,6 +130,10 @@ div#sidebar {
     flex-grow: 1;
   }
 
+  #search {
+    font-size: 2rem;
+  }
+
   #site-title,
   #site-subtitle {
     text-align: center;
@@ -147,6 +156,7 @@ div#sidebar {
 
   div#visible-tiddlers {
     flex-grow: 1;
+    max-width: 100%;
   }
 
   h1 {
@@ -168,7 +178,7 @@ div#sidebar {
   }
 
   #header .col3 {
-    flex-grow: 2F<<F;
+    flex-basis: 100%;
   }
 
   #body.flex {

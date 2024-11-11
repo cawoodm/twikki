@@ -3,7 +3,7 @@
  * $SynchDataFunctions
  * Synch your data with [JSONBIN.io](https://jsonbin.io)
  * ### Release Notes
- * * v1.0.8
+ * * v1.0.9
  *   * Don't synch trashed tiddlers
  */
 /**
@@ -16,13 +16,9 @@
  */
 // ## Code
 // ```javascript
-// TODO: Push force, clearing remote
 // TODO: Pull force, clearing local
 // TODO: Selective Synch: Include/Exclude Tags/Packages
 tw.macros.synch = (function(){
-  // TODO: Make events handler support asynch
-  // tw.events.subscribe('synch.full')
-  // onclick=tw.events.send(\'synch.full\')
   return {
     // <<synch.full>>: Push/pull to/from remote
     full() {
@@ -52,12 +48,19 @@ tw.macros.synch = (function(){
     async doPush() {
       return await synch({pull: false, push: true});
     },
+    // <<synch.upload>>: Overwrite remote from local
+    upload() {
+      return tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple');
+    },
+    async doUpload() {
+      return await synch({pull: false, push: true, fetchRemote: false});
+    },
     // TODO: Delete all remote and push (backup)
     // TODO: Delete all local and pull (restore)
   };
 
 
-  async function synch({push = true, pull = true, dryRun = false}) {
+  async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
 
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
 
@@ -66,11 +69,15 @@ tw.macros.synch = (function(){
     let headers = {'X-Access-Key': settings.synch.JSONBin.accessKey};
 
     // Fetch remote
-    let res = await fetch('https://api.jsonbin.io/v3/b/' + settings.synch.JSONBin.binId, {headers});
-    if (!res.ok) return tw.ui.notify(`Restore failed '${res.status}' (see log)`, 'E');
-    let result = await res.json();
-    let remoteTiddlers = result.record.tiddlers || [];
-    let remoteTrashedTiddlers = result.record.trashed || [];
+    let remoteTiddlers = [];
+    let remoteTrashedTiddlers = [];
+    if (fetchRemote) {
+      let res = await fetch('https://api.jsonbin.io/v3/b/' + settings.synch.JSONBin.binId, {headers});
+      if (!res.ok) return tw.ui.notify(`Fetch remote failed '${res.status}' (see log)`, 'E');
+      let result = await res.json();
+      remoteTiddlers = result.record.tiddlers || [];
+      remoteTrashedTiddlers = result.record.trashed || [];
+    }
 
     let log = [];
     let remote = {create: [], update: [], delete: []};
@@ -79,12 +86,12 @@ tw.macros.synch = (function(){
     let localTiddlers = tw.tiddlers.all
       .filter(t => !t.isRawShadow); // Don't synch raw shadows - See BUG below
 
-
     remoteTiddlers.forEach(remoteTiddler => {
       remoteTiddler.created = new Date(remoteTiddler.created);
       remoteTiddler.updated = new Date(remoteTiddler.updated);
       let localTiddler = localTiddlers.find(t => t.title === remoteTiddler.title);
-      if (remoteTiddler.tags.includes('$NoSynch') || localTiddler?.tags.includes('$NoSynch')) log.push(`Skipping $NoSynch tiddler [[${localTiddler.title}]]`);
+      if (remoteTiddler.tags.includes('$NoSynch') || localTiddler?.tags.includes('$NoSynch')) return log.push(`Skipping $NoSynch tiddler [[${localTiddler.title}]]`);
+      if (localTiddler?.doNotSave) return log.push(`Skipping doNotSave tiddler [[${localTiddler.title}]]`);
       // if (remoteTiddler.title.match(/SynchLog/)) debugger;
       // TODO: BUG: Deleted local shadow tiddler is pulled in from remote
       let deletedLocalTiddler = tw.tiddlers.trashed.find(t => t.title === remoteTiddler.title);
@@ -116,7 +123,8 @@ tw.macros.synch = (function(){
     });
 
     localTiddlers.forEach(localTiddler => {
-      if (localTiddler.tags.includes('$NoSynch')) log.push(`Skipping $NoSynch tiddler [[${localTiddler.title}]]`);
+      if (localTiddler.tags.includes('$NoSynch')) return log.push(`Skipping $NoSynch tiddler [[${localTiddler.title}]]`);
+      if (localTiddler?.doNotSave) return log.push(`Skipping doNotSave tiddler [[${localTiddler.title}]]`);
       let remoteTiddler = remoteTiddlers.find(t => t.title === localTiddler.title);
       if (remoteTiddler) {
         remoteTiddler.created = new Date(remoteTiddler.created);
@@ -133,6 +141,7 @@ tw.macros.synch = (function(){
           log.push(`Deleted local tiddler [[${localTiddler.title}]]`);
         }
       } else if (createdLocally) {
+        if (localTiddler.title.match(/Icon/)) debugger;
         if (push) remote.create.push(localTiddler.title);
       }
       // Updated locally/remotely handled above ☝️
@@ -177,7 +186,16 @@ tw.macros.synch = (function(){
         body,
       });
       // doesn't get caught by notify!! throw new Error('Backup failed: ' + res.statusText);
-      if (!res.ok) return tw.ui.notify(`Synch (push) to remote failed '${res.status}' (see log)`, 'E');
+      if (!res.status === 403) {
+        logTiddler.title = 'Failed: ' + logTiddler.title;
+        tw.run.previewTiddler(logTiddler);
+        return tw.ui.notify(`Synch (push) to remote failed '${res.status}': 100KB limit reached on JSONBin!`, 'E');
+      }
+      if (!res.ok) {
+        logTiddler.title = 'Failed: ' + logTiddler.title;
+        tw.run.previewTiddler(logTiddler);
+        return tw.ui.notify(`Synch (push) to remote failed '${res.status}' (see log)`, 'E');
+      }
     }
 
     // Rebooting here is left up to the user
@@ -208,6 +226,7 @@ tw.macros.synch = (function(){
   }
 
 })();
-tw.events.subscribe('synch.full', 'tw.macros.synch.doFull');
-tw.events.subscribe('synch.push', 'tw.macros.synch.doPush');
-tw.events.subscribe('synch.pull', 'tw.macros.synch.doPull');
+tw.events.override('synch.full', 'tw.macros.synch.doFull');
+tw.events.override('synch.push', 'tw.macros.synch.doPush');
+tw.events.override('synch.pull', 'tw.macros.synch.doPull');
+tw.events.override('synch.upload', 'tw.macros.synch.doUpload');

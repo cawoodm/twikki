@@ -28,7 +28,7 @@
       "label": "*** COMPILE",
       "type": "shell",
       "args": [
-        "${workspaceFolder}/src/packages/compile-packages.ps1"
+        "${workspaceFolder}/ci/compile-packages.ps1"
       ],
       "windows": {
         "command": "pwsh.exe"

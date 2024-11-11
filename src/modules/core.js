@@ -3,7 +3,7 @@
   const name = 'twikki.core';
   const version = '0.0.1';
 
-  console.log('TWIKKI Core started');
+  console.log('TWikki Core started');
   tw.core = {};
   tw.events = (function() {
     const handlers = [];
@@ -49,6 +49,7 @@
         handlers.push({event, handler});
       },
       override(event, handler) {
+        if (typeof handler === 'string') handler = eval(handler);
         // Remove existing handlers
         handlers.filter(h => h.event === event).forEach(h => (delete h.event));
         // Add new handler

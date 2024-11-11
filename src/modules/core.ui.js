@@ -27,15 +27,14 @@
     tw.core.dom.preview = tw.core.dom.$('preview-dialog');
   }
 
-  function button(text, message, payload, id = '', attr = '') {
+  function button(text, message, payload, id = '', attr = '', className = '') {
   // TODO: Would be nice to return an element here to which we could bind a real event and payload
     if (text.match(/[<\{]/))
     // WikiText
       text = tw.call('renderTWikki', {text});
     else
       text = tw.core.common.escapeHtml(text);
-    let className = '';
-    if (text.match(/<svg/)) className = 'icon';
+    if (text.match(/<svg/)) className += ' icon';
     let paramAttribute = '';
     if (payload) {
       if (typeof payload === 'object') paramAttribute = ` data-params="---enc:${tw.core.common.encoder(JSON.stringify(payload))}"`;

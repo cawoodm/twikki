@@ -1,40 +1,40 @@
 [CmdletBinding()]param(
-  $Path = $PSScriptRoot,
+  $Path,
   $OutDir
 )
 function main() {
-  Push-Location $Path
-  $OutDir = "../../public/packages"
-  if (-not (Test-Path $OutDir)) {mkdir $OutDir}
   try {
-    $repos = 0
-    Get-ChildItem -File $OutDir -Filter *.json | Remove-Item
-    Get-ChildItem -Directory $Path | ForEach-Object {
-      $repo = $_.BaseName
-      "Compiling repo '$repo'..."
-      # TODO: Read existing $repo.json and compare for real changes (not just created/updated)
-      $tiddlers = @()
-      Get-ChildItem -File $repo | ForEach-Object {
-        $tiddlers += New-TiddlerObject $repo $_
-      }
-      [psobject]@{
-        tiddlers = @($tiddlers)
-      } | ConvertTo-Json -Depth 5 > "$OutDir/$repo.json"
-      # if ($repo -eq 'shadow') {
-      #   $template = Get-Content -raw ../shadowTiddlersTemplate.js
-      #   $json = @($tiddlers) | ConvertTo-Json -Depth 3
-      #   $template = $template.replace('["DynamicallyImportShadowPackageHere"]', $json)
-      #   $template > ../shadowTiddlers.js
-      # }
-      $repos++
-    }
-    "$repos compiled"
+    Push-Location $PSScriptRoot
+    Push-Location "../src/packages"
+    Compile-Packages "package" . ../../public/packages
+    Pop-Location
+    Push-Location "../src/modules"
+    Compile-Packages "module" . ../../public/modules
   } catch {
     $Host.UI.WriteErrorLine("ERROR in $($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)")
     #throw $_
   } finally {
     Pop-Location
   }
+}
+function Compile-Packages($type, $Path, $OutDir) {
+  if (-not (Test-Path $OutDir)) {mkdir $OutDir}
+  $repos = 0
+  Get-ChildItem -File $OutDir -Filter *.json | Remove-Item
+  Get-ChildItem -Directory $Path | ForEach-Object {
+    $repo = $_.BaseName
+    "Compiling $type '$repo'..."
+    # TODO: Read existing $repo.json and compare for real changes (not just created/updated)
+    $tiddlers = @()
+    Get-ChildItem -File $repo | ForEach-Object {
+      $tiddlers += New-TiddlerObject $repo $_
+    }
+    [psobject]@{
+      tiddlers = @($tiddlers)
+    } | ConvertTo-Json -Depth 5 > "$OutDir/$repo.json"
+    $repos++
+  }
+  "$repos $($type)s compiled"
 }
 function New-TiddlerObject($repo, $file) {
   $title = $file.BaseName

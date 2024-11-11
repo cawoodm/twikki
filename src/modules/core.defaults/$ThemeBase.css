@@ -312,6 +312,10 @@ button:yellow svg {
   fill: yellow;
 }
 
+button.purple svg {
+  fill: purple;
+}
+
 button.icon {
   fill: var(--col1);
   border: 1px solid var(--col4);

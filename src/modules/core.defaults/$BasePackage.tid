@@ -1,0 +1,9 @@
+type: list
+tags: $Package
+
+* code: base
+* namespace: base
+* version: 0.0.1
+* url: https://cawoodm.github.io/twikki/packages/base.json
+* overwrite: yes
+* save: no

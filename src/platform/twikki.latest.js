@@ -36,7 +36,7 @@
       defaults = p.platform;
       window.dp = console.log;
       tw.core = {};
-      tw.packages = [];
+      tw.modules = [];
       tw.tmp = {};
       tw.templates = {};
       tw.tiddlers = {all: [], visible: [], trashed: []};
@@ -64,9 +64,9 @@
         debugMode: qs.debug,
       };
 
-      console.debug('Looking for local TWIKKI.Core...');
+      console.debug('Looking for local TWikki.Core modules...');
 
-      let packagesToLoad = [
+      let modulesToLoad = [
         '/core.js',
         '/core.common.js',
         '/core.workspaces.js',
@@ -80,8 +80,8 @@
         '/core.search.js',
         '/core.markdown.js',
       ];
-      let packagesLoaded = await Promise.all(packagesToLoad.map(loadCorePackage));
-      tw.packages = packagesToLoad.map((p, i) => ({name: p, res: packagesLoaded[i]}));
+      let modulesLoaded = await Promise.all(modulesToLoad.map(loadCoreModule));
+      tw.modules = modulesToLoad.map((p, i) => ({name: p, res: modulesLoaded[i]}));
 
       os.write('/base.url', baseUrl);
 
@@ -90,16 +90,16 @@
     async start() {
       const errMsgs = [];
 
-      tw.packages
+      tw.modules
         .forEach(pck => {
           if (pck.res.type === 'code') {
-            console.debug('Installing code package', pck.name);
+            console.debug('Installing code module', pck.name);
             if (!qs.trace) {
-              // Normally we try/catch packages to provide user-friendly feedback...
+              // Normally we try/catch modules to provide user-friendly feedback...
               try {
                 pck.meta = (1, eval)(pck.res.code)(tw);
               } catch (e) {
-                let errMsg = `Package '${pck.name}' failed: ${e.message}`;
+                let errMsg = `Module '${pck.name}' failed: ${e.message}`;
                 errMsgs.push(errMsg);
                 console.error(errMsg, e.stack);
                 return;
@@ -116,17 +116,22 @@
             }
             console.debug(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
           } else if (pck.res.type === 'list') {
-            console.debug('Loading packaged list ', pck.name);
+            console.debug('Loading moduled list ', pck.name);
             pck.res.tiddlers.forEach(t => {
               t.doNotSave = true; // Don't save unless edited
               t.isRawShadow = true;
             });
+            /* pck.res.tiddlers.forEach(t => {
+              if (tiddlerExists)
+              })*/
             tw.tiddlers.all = tw.tiddlers.all.concat(pck.res.tiddlers);
             console.debug(`Loaded ${pck.res.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
           } else {
-            console.warn(`Skipping unknown package type '${pck.res.type}' in package '${pck.name}'!`);
+            console.warn(`Skipping unknown module type '${pck.res.type}' in module '${pck.name}'!`);
           }
         });
+      if (handleModuleErrors(errMsgs)) return;
+
       tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
       tw.shadowTiddlers = Array.from(tw.tiddlers.all);
       tw.shadowTiddlers.forEach(t => {
@@ -135,21 +140,22 @@
         if (t.title === '$ExtensionPackages' && document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) t.text = t.text.replaceAll('https://cawoodm.github.io/twikki', 'http://' + document.location.host);
       });
       Object.freeze(tw.shadowTiddlers);
-      console.debug(`${tw.packages.length} packages loaded. Running packages...`);
 
       loadStore();
 
       wireUpEvents();
 
-      tw.packages
+      console.debug(`${tw.modules.length} modules loaded. Running modules...`);
+      tw.modules
         .filter(pck => pck.meta?.run)
         .forEach(pck => {
+          console.debug(`Running module '${pck.name}'...`);
           if (!qs.trace) {
-            // Normally we try/catch packages to provide user-friendly feedback...
+            // Normally we try/catch modules to provide user-friendly feedback...
             try {
               pck.meta.run();
             } catch (e) {
-              let errMsg = `Package '${pck.name}' failed: ${e.message}`;
+              let errMsg = `Module '${pck.name}' failed: ${e.message}`;
               errMsgs.push(errMsg);
               console.error(errMsg, e.stack);
               return;
@@ -160,7 +166,8 @@
             pck.meta.run();
           }
         });
-      console.debug('Packages run');
+      console.debug('Modules run');
+      if (handleModuleErrors(errMsgs)) return;
 
       document.title = renderTiddler('$SiteTitle');
       tw.extend = {tiddlerDetails: {
@@ -232,35 +239,34 @@
       };
       tw.plugins = {};
 
-      // tw.core.notifications.notify('OK');
       console.debug(`*** TWikki v${VERSION}`);
-      console.debug('ShadowTiddlers: ' + tw.shadowTiddlers.length);
-      if (errMsgs.length){
-        console.warn('*** Errors Occurred');
-        console.warn('<p class="error">Developers can reload with ?trace to debug exact issue in DevTools');
-      }
-      console.debug('Extensions: ' + defaults.extensions?.join(', '));
+      if (handleModuleErrors(errMsgs)) return;
 
       // TODO: Load External Scripts and Stylesheets
       // TODO: Load Extensions
       onPageLoad();
-      return;
-      /* TODO: Move to console.log
-
-      errMsgs.forEach(e => {
-        console.debug(`<p class="error">${e}`);
-      });
-      console.debug('<h2>Details:</h2>');
-      console.debug(`<p>Loaded TWIKKI.Core v${tw.packages[0].meta.version}`);
-      console.debug('<p>Events: ' + tw.events.handlers().length);
-      */
     },
   };
+  function handleModuleErrors(errMsgs) {
+    if (errMsgs.length === 0) return;
+    document.write('<h1>Module Errors Occurred</h1>');
+    errMsgs.forEach(e => {
+      document.write(`<p class="error">${e}`);
+    });
+    let traceUrl = document.location.href;
+    traceUrl = traceUrl.match(/\?/) ? traceUrl + '&trace' : traceUrl + '?trace';
+    document.write('<p class="error">Tips:');
+    document.write('<ul>');
+    document.write(`<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`);
+    document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
+    document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
+    document.write('</ul>');
+  }
 
   async function onPageLoad() {
     tw.events.send('ui.loading');
     wireEvents();
-    await loadCorePackages();
+    await loadCoreModules();
     if (!qs.safemode) await loadExtensionPackages();
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
     reload();
@@ -292,7 +298,7 @@
     tw.templates.TiddlerTrashed = renderTiddler('$TiddlerTrashed');
     tw.templates.TiddlerSearchResult = renderTiddler('$TiddlerSearchResult');
   }
-  async function loadCorePackages() {
+  async function loadCoreModules() {
     let packages = tw.run.getTiddlerList('$CorePackages');
     await loadPackages(packages);
   }
@@ -861,7 +867,7 @@
     if (t.tags.includes('$NoEdit') && !automation && !confirm('This tiddler is marked as read-only. Deleting it may cause issues. Really delete?')) return;
     let tiddler = removeFromArray(tw.tiddlers.all, titleIs(title))?.[0];
     if (shadowTiddler) addTiddler({...shadowTiddler});
-    if (shadowTiddler)
+    if (shadowTiddler && !automation)
       rerenderTiddler(title);
     else
       hideTiddler(title);
@@ -1163,25 +1169,25 @@
   }
 
   /* END TWikki */
-  async function loadCorePackage(packageName) {
-    let res = readObject('/packages' + packageName);
-    if (!res?.code || qs.reload) res = await fetchPackage(packageName);
-    writeObject('/packages' + packageName, res);
+  async function loadCoreModule(moduleName) {
+    let res = readObject('/modules' + moduleName);
+    if (!res?.code || qs.reload || qs.update) res = await fetchModule(moduleName);
+    writeObject('/modules' + moduleName, res);
     return res;
   }
-  async function fetchPackage(packageName) {
-    if (!baseUrl) throw new Error('NO_PACKAGE_URL: Unable to determine URL to load package from!');
-    let packageUrl = baseUrl + '/packages' + packageName;
+  async function fetchModule(moduleName) {
+    if (!baseUrl) throw new Error('NO_MODULE_URL: Unable to determine URL to load module from!');
+    let moduleUrl = baseUrl + '/modules' + moduleName;
     let res = {};
-    console.debug(`Downloading package from '${packageUrl}'...`);
-    let result = {name: packageName}; try {result = await fetch(packageUrl);} catch {}
-    if (!result.ok) throw new Error(`Unable to download package from '${packageUrl}' HTTP status: ${result.statusCode}`);
+    console.debug(`Downloading module from '${moduleUrl}'...`);
+    let result = {name: moduleName}; try {result = await fetch(moduleUrl);} catch {}
+    if (!result.ok) throw new Error(`Unable to download module from '${moduleUrl}' HTTP status: ${result.statusCode}`);
     if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
       res.code = await result.text();
       res.type = 'code';
     } else if (result.headers.get('Content-Type')?.match(/application\/json/)) {
       try {
-        console.debug(`Reading packaged list '${packageName}'...`);
+        console.debug(`Reading moduled list '${moduleName}'...`);
         res = JSON.parse(await result.text());
         res.type = 'list';
       } catch (e){
@@ -1189,8 +1195,8 @@
         res.error = e;
       }
       if (res.error)
-        throw new Error(`INVALID_PACKAGE_JSON '${packageName}' ${res.error.message}`);
-    } else throw new Error(`PACKAGE_FORMAT_UNKNOWN: ${packageUrl} is not served as JS/JSON`);
+        throw new Error(`INVALID_MODULE_JSON '${moduleName}' ${res.error.message}`);
+    } else throw new Error(`MODULE_FORMAT_UNKNOWN: ${moduleUrl} is not served as JS/JSON`);
     return res;
   }
   function readObject(item) {
