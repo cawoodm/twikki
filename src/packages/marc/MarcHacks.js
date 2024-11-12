@@ -14,3 +14,18 @@ tw.events.subscribe('script.loaded', (name) => {
 }, 'marc.addLanguages');
 
 tw.tiddlers.all.filter(t => t.type === 'x-twiki').forEach(t => (t.type = 'x-twikki'));
+
+// We need a <<button name:"Delete Something" msg:"tiddlers.delet" params:"tag:Marc">>
+
+// Some Snippets
+if (0) {
+  // Find duplicate tiddlers
+  tw.tiddlers.all.filter(td => tw.tiddlers.all.filter(t => t.title === td.title).length > 1).map(t => t.title);
+
+  // Delete duplicate tiddlers
+  tw.tiddlers.all.filter(td => tw.tiddlers.all.filter(t => t.title === td.title).length > 1).map(t => t.title).forEach(t => (tw.run.deleteTiddler(t, true)));
+
+  // Delete tiddlers from a package
+  tw.tiddlers.all.filter(t => t.package === 'base').map(t => t.title).forEach(t => (tw.run.deleteTiddler(t, true)));
+
+}
