@@ -9,8 +9,8 @@ tw.macros.core.Reload = () => {
 tw.macros.core.Save = () => {
   return tw.ui.button('{{$IconSave}}', 'save.all', null, '', 'title="Save"');
 };
-tw.macros.core.Settings = () => {
-  return tw.ui.button('{{$IconSettings}}', 'tiddler.show', '$Settings', '', 'title="Settings"');
+tw.macros.core.Settings = (size = '22') => {
+  return tw.ui.button(`{{$IconSettings|size:${size}px}}`, 'tiddler.show', '$Settings', '', 'title="Settings"');
 };
 tw.macros.core.New = () => {
   return tw.ui.button('{{$IconNew}}', 'tiddler.new', null);

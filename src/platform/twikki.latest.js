@@ -7,13 +7,14 @@
 
   // Constants
   // TODO: Warn about problematic characters in tiddler titles:
-  //         '/' - Used to point to blocks within multipart tiddlers
+  //         '/' - Could be used to point to blocks within multipart tiddlers
   // TODO: Inadvisable but should work characters:
   //         ':' - Used in search queries and parameters
   //         '!' - Used to negate logic (e.g. msg:search:!tag:$Shadow)
-  const reTiddlerTitle = /[a-z0-9_\-\.:\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
+  const reTiddlerTitle = /[a-z0-9_\-\.\(\):\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
   const reTiddlerTitleComplete = RegExp.compose(/^reTiddlerTitle$/gi, {reTiddlerTitle});
   const reInclusion = RegExp.compose(/\{\{(reTiddlerTitle)\|?([^\}]+)?}}/gi, {reTiddlerTitle});
+  const reInclusionParams = /#([a-z]+)#=?([^#]+)?#?/gi;
   const reLinks = RegExp.compose(/\[\[(reTiddlerTitle)]]/gi, {reTiddlerTitle});
   // Events are alphanumeric with "." e.g. 'foo.bar' (lowercase only)
   const reEventName = /[a-z0-9\.]+/g;
@@ -566,8 +567,10 @@
       // TODO: Support raw/wikified {{=}} inclusions
       getInclusions(result).forEach(m => {
         let title = m[1];
-        // let vars = m[2];
-        let text = getTiddlerTextRaw(title);
+        let params = m[2];
+        if (params?.match(/[ :]/)) params = tw.core.params.parseParams(params);
+        dp('inclusion: title=', title, 'params=', params);
+        let text = getTiddlerTextReplaced(title, params);
         if (!text) text = `No tiddler '${title}' found - let's [create it](#${title})!`;
         result = result.replace(m[0], text);
       });
@@ -935,6 +938,24 @@
   // Functions to extract data from structured tiddlers
   function getTiddlerTextRaw(title) {
     return getTiddler(title)?.text || '';
+  }
+  // 'this #$1# and that #$2#'[foo, bar] => 'this foo and that bar'
+  function getTiddlerTextReplaced(title, params) {
+    let res = getTiddler(title)?.text || '';
+    if (Array.isArray(params)) {
+      params.forEach(i => {
+        res = res.replaceAll('#$' + i + '#', params[i]);
+      });
+    } else if (typeof params === 'object') {
+      Object.keys(params).forEach(k => {
+        res = res.replaceAll('#' + k + '#', params[k]);
+      });
+    }
+    Array.from(res.match(/\|\|=[^#]+#/g) || []).forEach(m => {
+      // TODO: Pass in default
+      res = res.replace(m, '');
+    });
+    return res;
   }
   function getTiddlerTextLines(title) {
     return getTiddlerTextRaw(title).split('\n');

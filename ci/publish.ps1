@@ -5,12 +5,15 @@ function main() {
   #vite build --base=/twikki --emptyOutDir
   cd $PSScriptRoot
   cd ..
+  
   Remove-Item dist/* -Recurse -Force
+  mkdir dist/platform/ | Out-Null
+
   Copy-Item public/* dist/ -Recurse
   Copy-Item src/index.html dist/
   Copy-Item src/packages/*.js dist/packages/
-  mkdir dist/platform/ | Out-Null
   Copy-Item src/platform/*.js dist/platform/
+  Copy-Item src/modules/*.js dist/modules/
 
   $ver = Get-Content .\package.json | ConvertFrom-Json | Select-Object -ExpandProperty version
   Push-Location ../cawoodm.github.io/twikki/
