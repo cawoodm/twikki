@@ -36,7 +36,14 @@
       qs = p.qs;
       os = p.os;
       defaults = p.platform;
-      window.dp = console.log;
+      if (qs.logfilter)
+        // Overwridden console.log has advantage of filtering logs
+        window.dp = function() {
+          if (!tw.logging.logFilter.test(JSON.stringify(Array.from(arguments)))) return; console.log.apply(console, arguments);
+        };
+      else
+        // Native console.log has advantage of showing where log was created
+        window.dp = console.log;
       tw.core = {};
       tw.modules = [];
       tw.tmp = {};
@@ -62,7 +69,7 @@
       baseUrl = qs.pUrl || qs.url || os.read('base.url') || p.base;
 
       tw.logging = {
-        logFilter: new RegExp(qs.logfilter || '.'),
+        logFilter: new RegExp(qs.logfilter || '.', 'i'),
         debugMode: qs.debug,
       };
 
@@ -230,6 +237,11 @@
           tw.macros[namespace][name] = fcn;
           if (options) Object.assign(tw.macros[namespace][name], options);
         },
+        registerPlugin(namespace, name, fcn, options) {
+          if (!tw.plugins[namespace]) tw.plugins[namespace] = {};
+          tw.plugins[namespace][name] = fcn();
+          if (options) Object.assign(tw.plugins[namespace][name], options);
+        },
       };
       window.markdown = tw.lib.markdown;
       // ----------
@@ -284,7 +296,11 @@
     // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
-    if (!qs.safemode) runExtensionTiddlers();
+    if (!qs.safemode) {
+      runExtensionTiddlers();
+      initPlugins();
+      runPlugins();
+    }
     loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
     if (!tw.tmp.rebootCount) tw.tmp.rebootCount = 0;
@@ -432,6 +448,28 @@
         }
       });
   }
+  function initPlugins() {
+    Object.keys(tw.plugins)
+      .forEach(n => {
+        let namespace = tw.plugins[n];
+        Object.keys(namespace).forEach(p => {
+          let plugin = namespace[p];
+          dp('Initializing plugin', plugin.name, plugin.version);
+          plugin.init();
+        });
+      });
+  }
+  function runPlugins() {
+    Object.keys(tw.plugins)
+      .forEach(n => {
+        let namespace = tw.plugins[n];
+        Object.keys(namespace).forEach(p => {
+          let plugin = namespace[p];
+          dp('Running plugin', plugin.name, plugin.version);
+          plugin.start();
+        });
+      });
+  }
   function executeCodeTiddler(text, title) {
     if (qs.trace) return executeText(text, title);
     try {
@@ -568,9 +606,10 @@
       // TODO: Support raw/wikified {{=}} inclusions
       getInclusions(result).forEach(m => {
         let title = m[1];
-        const inclusionSearch = new RegExp(`(?<!\`)\{\{${title}`);
+        const inclusionSearch = new RegExp(`(?<!\`)${escapeRegExp('{{' + title)}`);
         const indexOfInclusion = result.search(inclusionSearch);
-        // if (title === 'SayHelloAdvanced') debugger;
+        if (indexOfInclusion < 0) throw new Error(`Unable to locate inclusion of '${title}'!`);
+        // if (title === '$TWikkiVersion') {dp(inclusionSearch); debugger;}
         let params = m[2];
         params = tw.core.params.parseParams(params);
         // dp('inclusion: title=', title, 'params=', params);
@@ -579,6 +618,9 @@
         // result = result.replace(m[0], text);
         result = replaceFrom(result, indexOfInclusion, m[0], text);
       });
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+      }
       getTiddlerLinks(result).forEach(m => {
         let linkName = m[1];
         let linkURL = m[1];

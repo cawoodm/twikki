@@ -10,6 +10,8 @@ function main() {
     Pop-Location
     Push-Location "../src/modules"
     Compile-Packages "module" . ../../public/modules
+    Pop-Location
+    echo "vite reload" > ../src/tmp.html # Force vite reload
   } catch {
     $Host.UI.WriteErrorLine("ERROR in $($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)")
     #throw $_

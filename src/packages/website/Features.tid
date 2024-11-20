@@ -23,7 +23,9 @@
 * Code is automatically highlighted using [Highlight-JS](https://highlightjs.org/) (e.g. [js](#Code%20Tiddler), [css](#StyleSheet) and [html](#HTML%20Example))
 * Include tiddler content with `{{$TWikkiVersion}}` = "{{$TWikkiVersion}}"
   * Or with params `{{SayHello|"John Smith"}}` = "{{SayHello|"John Smith"}}"
+  * Params can have default values `{{SayHello}}` = "{{SayHello}}"
   * Or with named params `{{SayHelloAdvanced|name:"John Smith" site:Twikki}}` = "{{SayHelloAdvanced|name:"John Smith" site:Twikki}}"
+    * See [[Parameters]] for more examples of how parameters work
 
 ## Extensibility
 * Tiddlers of type `script/js` are just executed (eval) in global context when Twikki loads or the tiddler changes
