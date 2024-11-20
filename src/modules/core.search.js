@@ -19,12 +19,23 @@
   const run = () => {
     tw.events.subscribe('ui.loading', wireUIEvents);
     tw.events.subscribe('search', searchQuery); // From #msg:search:foo events
+    tw.events.subscribe('search.advanced', searchQueryAdvanced); // From #msg:search.advanced:pck:icons title:add
   };
 
   return {name, version, exports, run};
 
+  function searchQueryAdvanced({all = false, title, tag, pck, id}) {
+    let q = '';
+    if (title) q += ' ' + title;
+    if (tag) q += ' tag:' + tag;
+    if (pck) q += ' pck:' + pck;
+    tw.core.dom.$('search').value = q.trim();
+    let results = search(tw.core.dom.$('search').value, tw.tiddlers.all, {all});
+    if (id) searchShowResults(results, id);
+    return results;
+  }
   function searchQuery(q) {
-    tw.core.dom.$('search').value = q;
+    tw.core.dom.$('search').value = q.trim();
     searchNow();
   }
   function searchNow() {
@@ -41,20 +52,24 @@
       tw.core.dom.$('search-results').style.display = 'none';
     }, 150);
   }
-  function searchShowResults(list) {
-    tw.core.dom.$('search-results').style.display = '';
+  function searchShowResults(list, targetId = 'search-results') {
+    let target = tw.core.dom.$(targetId);
+    target.style.display = '';
     if (!list) return searchNow();
-    tw.core.dom.divSearchResults.innerHTML = '';
-    list.forEach(displayTiddlerLink);
+    target.innerHTML = '';
+    list.forEach(t => {
+      displayTiddlerLink(t, target);
+    });
   }
-  function displayTiddlerLink({title, type}) {
+  function displayTiddlerLink({title, type}, target) {
   // TODO: Apply tw.templates.TiddlerSearchResult
-    let newElement = document.createElement('li');
+    let newElement = document.createElement('div');
     newElement.className = 'tiddler-list'; // + (type ? ' line-clamp' : '');
     // BUG: If tiddlers have no type we don't display a link!
     if (type) newElement.appendChild(newTiddlerLink({title, type}));
     else newElement.innerHTML = title;
-    tw.core.dom.divSearchResults.insertAdjacentElement('beforeend', newElement);
+    target = target || tw.core.dom.divSearchResults;
+    target.insertAdjacentElement('beforeend', newElement);
   }
   function newTiddlerLink({title}) {
     let newElement = document.createElement('a');
@@ -69,29 +84,32 @@
   /**
    * Sort alphabetically, search and return best matches first
    */
-  function search(q, list) {
+  function search(q, list, options = {}) {
+    tw.logging.break('search');
     let results = list
       .sort(alphabetically)
-      .map(simpleSearch(q))
+      .map(simpleSearch(q, options))
       .filter(notEmpty)
       .sort(ranking);
     let title = 'No results!';
-    if (!q.match(/^\$/)) title += ` Type '\$${q}' to search hidden tiddlers!`;
+    if (!q.match(/^\$/) && !options.all) title += ` Type '\$${q}' to search hidden tiddlers!`;
     return results.length ? results.map(t => t.tiddler) : [{title}];
   }
 
   /**
    * Ranked substring search preferring title/tags match to fulltext
    */
-  function simpleSearch(q) {
+  function simpleSearch(q, options = {}) {
     q = q.trim().toLowerCase();
     const Q = q;
     let searchAll = q[0] === '$';
     if (searchAll) q = q.substring(1);
+    searchAll = searchAll || options.all;
     let searchTag = q.match(reTag)?.[1];
     if (searchTag) q = q.replace(reTag, '');
     let searchPackage = q.match(rePck)?.[1];
     if (searchPackage) q = q.replace(rePck, '');
+    q = q.trim();
 
     return (t) => {
       let rank = 0;
@@ -102,6 +120,7 @@
       // If tag: or pck: it must match so no match means rank is zero
       if (searchTag) rank = t.tags.find(t => t.toLowerCase() === searchTag) ? rank + TAG_MATCH : 0;
       if (searchPackage) rank = searchPackage === t.package ? rank + TAG_MATCH : 0;
+      if ((searchTag || searchPackage) && rank === 0) return;
       if (q) {
         rank = titleText.indexOf(q) >= 0 ? rank + TITLE_MATCH : (fullText.indexOf(q) >= 0 ? rank + TEXT_MATCH : 0);
         if (titleText === q || titleText === Q) rank += EXACT_TITLE_MATCH;

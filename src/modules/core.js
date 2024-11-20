@@ -26,7 +26,7 @@
         return result;
       },
       decode(params) {
-        if (params?.match(/^---enc:/)) return decoder(params.substring(7));
+        if (typeof params === 'string' && params.match(/^---enc:/)) return decoder(params.substring(7));
         return params;
       },
       // TODO: Should have subscribe to listen and override to handle

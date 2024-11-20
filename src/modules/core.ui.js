@@ -23,12 +23,12 @@
     let html = tw.run.getTiddler('$MainLayout').text;
     document.body.innerHTML = html;
     tw.core.dom.divVisibleTiddlers = tw.core.dom.$('visible-tiddlers');
-    tw.core.dom.divSearchResults = tw.core.dom.$('search-results');
     tw.core.dom.preview = tw.core.dom.$('preview-dialog');
   }
 
   function button(text, message, payload, id = '', attr = '', className = '') {
   // TODO: Would be nice to return an element here to which we could bind a real event and payload
+    dp('attr', attr);
     if (text.match(/[<\{]/))
     // WikiText
       text = tw.call('renderTWikki', {text});
@@ -41,6 +41,7 @@
       else if (typeof payload === 'string') paramAttribute = ` data-param="---enc:${tw.core.common.encoder(payload)}"`;
       else return '<span class="error">ERROR: Button Payload is not a string!</span>';
     }
+    if (attr.match(/JSON/)) debugger;
     return `<button${id ? ' id="' + id + '"' : ''} class="${className}" data-msg="${message}" ${paramAttribute} ${attr}>${text}</button>`;
   }
   // Block-style expander

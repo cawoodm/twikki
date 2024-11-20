@@ -36,14 +36,12 @@
       qs = p.qs;
       os = p.os;
       defaults = p.platform;
+      window.dp = () => {};
       if (qs.logfilter)
-        // Overwridden console.log has advantage of filtering logs
+        // Output filtered loggsOverwridden console.log has advantage of filtering logs
         window.dp = function() {
           if (!tw.logging.logFilter.test(JSON.stringify(Array.from(arguments)))) return; console.log.apply(console, arguments);
         };
-      else
-        // Native console.log has advantage of showing where log was created
-        window.dp = console.log;
       tw.core = {};
       tw.modules = [];
       tw.tmp = {};
@@ -71,6 +69,10 @@
       tw.logging = {
         logFilter: new RegExp(qs.logfilter || '.', 'i'),
         debugMode: qs.debug,
+        breakPoint: qs.breakpoint,
+        break(name) {
+          if (tw.logging.breakPoint && name.match(new RegExp(tw.logging.breakPoint))) debugger;
+        },
       };
 
       console.debug('Looking for local TWikki.Core modules...');
@@ -843,9 +845,15 @@
     else if (tiddlerIsATemplate(t))
       loadTemplates();
     else if (isPackageList(t))
-      if (confirm('Would you like to reload?')) tw.events.send('reboot.hard');
+      if (confirm('Would you like to reload?')) {
+        save();
+        tw.events.send('reboot.hard');
+      }
     if (title === '$MainLayout')
-      if (confirm('Would you like to reload?')) tw.events.send('reboot.hard');
+      if (confirm('Would you like to reload?')) {
+        save();
+        tw.events.send('reboot.hard');
+      }
   }
   function tiddlerIsATemplate(t) {
     return t.tags.includes('$Template');
@@ -908,6 +916,7 @@
   }
 
   function deleteTiddler(title, automation) {
+    debugger;
     let t = getTiddler(title);
     if (!automation && !confirm('Sure you want to delete me?')) return;
     const shadowTiddler = tw.shadowTiddlers.find(titleIs(title));
@@ -1117,15 +1126,18 @@
     if (!cmds) throw new Error(`Invalid command '${cmd}' does not match ${reCommand}/!`);
     let msg = cmds[1];
     if (!params) params = cmds.length > 2 ? cmds[2] : null;
+    tw.logging.break('command');
     if (typeof param === 'undefined' || param === null) {
       params = tw.events.decode(params);
       if (params) params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
       if (params?.match(/^\{\{\{/)) try {params = eval(params);} catch {dp('events.send received invalid JS payload: ' + params);}
       else if (params?.match(/^[\[\{]/)) try {params = JSON.parse(params);} catch {dp('events.send received invalid JSON payload: ' + params);}
       else params = tw.core.params.parseParams(params);
-    } else
+    } else if (typeof param === 'string')
       params = tw.events.decode(param).replaceAll('$currentTiddler', currentTiddlerTitle);
-    // dp('sendCommand', msg, 'param=', param, 'params=', params);
+    else
+      params = param;
+    dp('sendCommand', msg, 'params=', params);
     let result = tw.events.send(msg, params);
     if (msg === 'tiddler.show') scrollToTiddler(params);
     location.hash = '';
