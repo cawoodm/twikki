@@ -1,42 +1,65 @@
-* Saving works out of the box
-  * localStorage with Backup option via plugin
-  * [[Backup]] to or [[Synchronization]] with [JSONBin](https://jsonbin.io/)
-* Namespaces: Easily switch between different stores!
-* List all tiddlers
-  * [All Normal Tiddlers](#msg:ui.open.all)
-  * [Really All (*) Tiddlers](#msg:ui.open.all:{"title":"*","tag":"*"})
-* Add, Edit, Close and Delete a tiddler
-  * Double-Click to edit
-  * Ctrl+Enter to save
-  * [[$TrashedTiddlers]] saved not really deleted
-  * TWikki tiddlers are validated (e.g. macros) on save
-  * JSON tiddlers are validated on save
-* Rendering 
-  * x-twikki and [CommonMark](#Markdown%20Test) markdown
-  * Code highlighting ([js](#Code%20Tiddler), [css](#StyleSheet) and [html](#HTML%20Example))
-* Open single or list of tiddlers via link
-  * [⭐Favorties](#msg:ui.open.all:tag:Favorite)
-* Code/Plugin tiddlers
-  * Tiddlers of type `script/js` are just executed (eval) in global context
-  * Macros - e.g. to open/close all/selected tiddlers
+## Simple Data Access
+* Double-Click to edit
+* Ctrl+Enter to save
+* Deleted tiddlers can be restored via [[$TrashedTiddlers]]
+* [[$Workspaces]]: Easily switch between different stores!
+
+## Secure Data
+* Saving works out of the box (localStorage)
+* Use the [[Backup]] button <<backup.backupButton>> to save a snapshot remotely
+* Use the [[Synchronization]] button <<synch.full>> to synch to a remote
+
+## Great Search
+* [Search Tiddlers for the word 'welcome'](#msg:search:welcome) `msg:search:welcome`
+* [Search Tiddlers with the tag:$Theme 'welcome'](#msg:search:"tag:$Theme") `msg:search:"tag:$Theme"`
+* Or create links to:
+  * List all tiddlers
+    * [All Normal Tiddlers](#msg:ui.open.all) `#msg:ui.open.all`
+    * [Open Tiddlers beginning with A](#msg:ui.open.all:title:^A) `msg:ui.open.all:title:^A`
+    * [Open Tiddlers tagged 'Favorite'](#msg:ui.open.all:tag:Favorite) ⭐
+
+## Markdown
+* Use [CommonMark](https://commonmark.org/) to format your text [example](#Markdown%20Test)
+* Code is automatically highlighted using [Highlight-JS](https://highlightjs.org/) (e.g. [js](#Code%20Tiddler), [css](#StyleSheet) and [html](#HTML%20Example))
+* Include tiddler content with `{{$TWikkiVersion}}` = "{{$TWikkiVersion}}"
+  * Or with params `{{SayHello|"John Smith"}}` = "{{SayHello|"John Smith"}}"
+  * Or with named params `{{SayHelloAdvanced|name:"John Smith" site:Twikki}}` = "{{SayHelloAdvanced|name:"John Smith" site:Twikki}}"
+
+## Extensibility
+* Tiddlers of type `script/js` are just executed (eval) in global context when Twikki loads or the tiddler changes
+  * Unless tagged with `$CodeDisabled`
+* Check out how [[$GeneralWidgets]] provides additional functionality such as:
+  * Macros with `tw.extensions.registerMacro()` to, for example, open/close all/selected tiddlers
     * `<<ShowAllTiddlersButton>>` <<ShowAllTiddlersButton>>
     * `<<CloseAllTiddlersButton>>` <<CloseAllTiddlersButton>>
-* Theming
-  * [[$Theme]] stores name of [Themes](#msg:search:$tag:$Theme) e.g.:
-    * [[$CoreTheme]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet)
-  * Stylesheets can be in one or more tiddlers
-  * [[$DisplayTemplate]] tiddler determines display of tiddler
-  * [[$TitleBar]] to customize the titlebar
-  * `<<ThemeSelector>>` <<ThemeSelector>>
-* Structured Data
-  * Configurable lists or key-value pairs via `list` tiddlers
-    * e.g. Tiddler types from [[$TiddlerTypes]] tiddler
-  * Configuration objects via `json` tiddlers
-    * e.g. Backup settings for [[Backup2JSONBinPlugin]]
-* Packages
-  * Import tiddlers from a list of packages in [[$CorePackages]] ✅
-  * Import tiddlers from any URL
+
+## Theming
+* `<<ThemeSelector>>` <<ThemeSelector>>
+Checkout [[Themes]] for more details
+
+## Structured Data
+* Configurable lists or key-value pairs via `list` tiddlers
+  * e.g. Tiddler types from [[$TiddlerTypes]] tiddler
+* Configuration objects via `json` tiddlers
+  * e.g. Backup settings for [[Backup2JSONBinPlugin]]
+
+## Validation
+* Markdown tiddlers are validated on save (e.g. to ensure macros run correctly)
+* JSON tiddlers are validated on save
+* Code tiddlers are validated (run) on save (unless tagged `$CodeDisabled`)
+
+## Packages
+A package is just a list of tiddlers in JSON format `{"tiddlers": [...]}` which is usually loaded via URL.
+* Packages listed in [[$CorePackages]] are loaded when TW starts
+* Packages listed in [[$ExtensionPackages]] are loaded when TW starts (unless `?safemode` is used)
+* Any package can be imported via the `<<import>>` widget:
+  * <<packages.import name:website url:./packages/website.json filter:* force:false>>
 
 ## Other/Tech
-* Basic pub/sub events ✅
+* Basic pub/sub events
 * Vanilla JS, no complicated framework
+* Based on the Web OS called "weboose" which:
+  * Dynamically loads Twikki as a platform from a URL
+  * Caches loaded operatings systems and platforms in localStorage
+  * Lets you run and update multiple versions of twikki simultaneously
+  * See [github/weboose](https://github.com/cawoodm/weboose) for more details

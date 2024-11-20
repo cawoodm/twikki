@@ -1,5 +1,11 @@
 Themes are collections of stylesheets.
 
+* A [[$Theme]] stores name of [Themes](#msg:search:$tag:$Theme) e.g.:
+  * [[$CoreTheme]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet)
+* Stylesheets can be in one or more tiddlers
+* [[$DisplayTemplate]] tiddler determines display of tiddler
+* [[$TitleBar]] to customize the titlebar
+
 The shadow [[$Theme]] tiddler contains one word: the name of the tiddler with the current theme (e.g. {{$Theme}}). This theme tiddler should contain a [[DataList]] of stylesheets. To change the theme just edit the $Theme tiddler and enter the name of any tiddler containing a list of stylesheets.
 
 By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Themes should include `Light` or `Dark` in their name to assist in automatically using the right styles for code/syntax highlighting.

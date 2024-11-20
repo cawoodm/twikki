@@ -9,6 +9,8 @@ tags: $Template
     <button class="icon" title="edit" {{=editDisabled}} data-msg="tiddler.edit" data-param="$currentTiddler">{{$IconEdit}}</button>
     <button class="icon" title="delete"{{=editDisabled}} data-msg="tiddler.delete" data-param="$currentTiddler">{{$IconDelete}}</button>
     {{/!editDisabled}}
+    <<favorites.toggle>>
+    <!--<button class="icon" title="favorite" data-msg="favorites.toggle" data-param="$currentTiddler">{{$IconFavorite}}</button>-->
   </div>
   <div class="modified">{{=modified}}</div>
   <div class="text">{{=fullText}}</div>

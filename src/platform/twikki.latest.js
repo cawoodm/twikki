@@ -13,8 +13,9 @@
   //         '!' - Used to negate logic (e.g. msg:search:!tag:$Shadow)
   const reTiddlerTitle = /[a-z0-9_\-\.\(\):\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
   const reTiddlerTitleComplete = RegExp.compose(/^reTiddlerTitle$/gi, {reTiddlerTitle});
-  const reInclusion = RegExp.compose(/\{\{(reTiddlerTitle)\|?([^\}]+)?}}/gi, {reTiddlerTitle});
-  const reInclusionParams = /#([a-z]+)#=?([^#]+)?#?/gi;
+  const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
+  const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerTitle)\|?([^\}]+)?}}/gi, {reTiddlerTitle});
+  const reInclusionParams = /\##([\$0-9a-z]+)\#([^\#]+)?#/gi;
   const reLinks = RegExp.compose(/\[\[(reTiddlerTitle)]]/gi, {reTiddlerTitle});
   // Events are alphanumeric with "." e.g. 'foo.bar' (lowercase only)
   const reEventName = /[a-z0-9\.]+/g;
@@ -498,7 +499,7 @@
     } else if (type === 'html') {
       return text;
     } else {
-      return `UNKNOWN TYPE:<hr><pre>${tw.core.common.escapeHtml(text)}</pre>`;
+      return `<pre>${tw.core.common.escapeHtml(text)}</pre>`;
     }
   }
   function makeTiddlerTagLinks(tags) {
@@ -567,12 +568,16 @@
       // TODO: Support raw/wikified {{=}} inclusions
       getInclusions(result).forEach(m => {
         let title = m[1];
+        const inclusionSearch = new RegExp(`(?<!\`)\{\{${title}`);
+        const indexOfInclusion = result.search(inclusionSearch);
+        // if (title === 'SayHelloAdvanced') debugger;
         let params = m[2];
-        if (params?.match(/[ :]/)) params = tw.core.params.parseParams(params);
-        dp('inclusion: title=', title, 'params=', params);
+        params = tw.core.params.parseParams(params);
+        // dp('inclusion: title=', title, 'params=', params);
         let text = getTiddlerTextReplaced(title, params);
         if (!text) text = `No tiddler '${title}' found - let's [create it](#${title})!`;
-        result = result.replace(m[0], text);
+        // result = result.replace(m[0], text);
+        result = replaceFrom(result, indexOfInclusion, m[0], text);
       });
       getTiddlerLinks(result).forEach(m => {
         let linkName = m[1];
@@ -592,8 +597,7 @@
     return text.substring(0, index) + text.substring(index).replace(search, replace);
   }
   function getMacros(text) {
-    const macros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
-    return Array.from(text.matchAll(macros));
+    return Array.from(text.matchAll(reMacros));
   }
   function getTiddlerLinks(text) {
     return Array.from(text.matchAll(reLinks));
@@ -824,18 +828,18 @@
   /* TODO: Move to $GeneralCoreMacros.js */
   function showAllTiddlers({tag, title, pck}) {
     if (!title) title = '!^\\$';
-    tiddlerSearch({title, tag, pck})
+    tiddlerList({title, tag, pck})
       .map(t => t.title)
       .forEach(showTiddler);
     renderAllTiddlers();
   }
   function closeAllTiddlers({tag = '', title = '', pck}) {
     if (!title) title = '!^\\$';
-    tiddlerSearch({title, tag, pck})
+    tiddlerList({title, tag, pck})
       .map(t => t.title)
       .forEach(hideTiddler);
   }
-  function tiddlerSearch({title, tag, pck}) {
+  function tiddlerList({title, tag, pck}) {
     return tw.tiddlers.all
       .filter(titleMatch(title))
       .filter(tagMatch(tag))
@@ -942,18 +946,11 @@
   // 'this #$1# and that #$2#'[foo, bar] => 'this foo and that bar'
   function getTiddlerTextReplaced(title, params) {
     let res = getTiddler(title)?.text || '';
-    if (Array.isArray(params)) {
-      params.forEach(i => {
-        res = res.replaceAll('#$' + i + '#', params[i]);
-      });
-    } else if (typeof params === 'object') {
-      Object.keys(params).forEach(k => {
-        res = res.replaceAll('#' + k + '#', params[k]);
-      });
-    }
-    Array.from(res.match(/\|\|=[^#]+#/g) || []).forEach(m => {
-      // TODO: Pass in default
-      res = res.replace(m, '');
+    Array.from(res.matchAll(reInclusionParams) || []).forEach(m => {
+      let all = m[0];
+      let key = m[1];
+      let def = m[2] || '';
+      res = res.replace(all, params[key] || def);
     });
     return res;
   }
@@ -1019,8 +1016,9 @@
   }
   function titleMatch(title) {
     if (!title || title === '*') return () => true;
-    let re = new RegExp(title.match(/^!/) ? title.substr(1) : title);
-    return t => (title.match(/^!/) ? !t.title.match(re) : t.title.match(re));
+    const negate = title.match(/^!/);
+    let re = new RegExp(negate ? title.substr(1) : title);
+    return t => (negate ? !t.title.match(re) : t.title.match(re));
   }
   function isCommand(str) {
     return str?.match(/^#?msg:(.+)/)?.[1];
@@ -1085,6 +1083,7 @@
       else params = tw.core.params.parseParams(params);
     } else
       params = tw.events.decode(param).replaceAll('$currentTiddler', currentTiddlerTitle);
+    // dp('sendCommand', msg, 'param=', param, 'params=', params);
     let result = tw.events.send(msg, params);
     if (msg === 'tiddler.show') scrollToTiddler(params);
     location.hash = '';

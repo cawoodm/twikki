@@ -1,5 +1,14 @@
-Synchronization replicates local changes to a remote defined in [[$GeneralSettings]]:
+Synchronization replicates local changes to a remote server.
+
+The standard setup uses [JSONBin](https://jsonbin.io/) so register there and add your `binId` and `accessKey` to [[$GeneralSettings]]
+
 * <<synch.test>>: Simulate a Synch
 * <<synch.full>>: Run full synch (pull+push)
-* <<synch.push>>: Push changes to remote
-* <<synch.pull>>: Pull changes from remote
+* <<synch.push>>: Push changes to remote without pulling anything in locally
+* <<synch.pull>>: Pull changes from remote without pushing anything to remote
+* <<synch.upload>>: Push changes to remote overwriting everything
+
+The synch algorithm is:
+* Latest change/deletion wins
+  * This includes local deletions in your trash - they will be deleted remotely unless the remote update is newer than the deletion
+* Tiddlers tagged `$NoSynch` or marked `DoNotSave` are not considered for synching
