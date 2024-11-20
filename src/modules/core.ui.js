@@ -28,7 +28,6 @@
 
   function button(text, message, payload, id = '', attr = '', className = '') {
   // TODO: Would be nice to return an element here to which we could bind a real event and payload
-    dp('attr', attr);
     if (text.match(/[<\{]/))
     // WikiText
       text = tw.call('renderTWikki', {text});
@@ -41,7 +40,6 @@
       else if (typeof payload === 'string') paramAttribute = ` data-param="---enc:${tw.core.common.encoder(payload)}"`;
       else return '<span class="error">ERROR: Button Payload is not a string!</span>';
     }
-    if (attr.match(/JSON/)) debugger;
     return `<button${id ? ' id="' + id + '"' : ''} class="${className}" data-msg="${message}" ${paramAttribute} ${attr}>${text}</button>`;
   }
   // Block-style expander

@@ -71,6 +71,7 @@
         debugMode: qs.debug,
         breakPoint: qs.breakpoint,
         break(name) {
+          // eslint-disable-next-line no-debugger
           if (tw.logging.breakPoint && name.match(new RegExp(tw.logging.breakPoint))) debugger;
         },
       };
@@ -916,7 +917,6 @@
   }
 
   function deleteTiddler(title, automation) {
-    debugger;
     let t = getTiddler(title);
     if (!automation && !confirm('Sure you want to delete me?')) return;
     const shadowTiddler = tw.shadowTiddlers.find(titleIs(title));

@@ -141,7 +141,6 @@ tw.macros.synch = (function(){
           log.push(`Deleted local tiddler [[${localTiddler.title}]]`);
         }
       } else if (createdLocally) {
-        if (localTiddler.title.match(/Icon/)) debugger;
         if (push) remote.create.push(localTiddler.title);
       }
       // Updated locally/remotely handled above ☝️
