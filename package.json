@@ -1,6 +1,6 @@
 {
   "name": "twikki",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "TiddlyWiki-Inspired Information Platform",
   "scripts": {
     "dev": "vite",
