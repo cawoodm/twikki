@@ -10,10 +10,10 @@
 
   const EXACT_TITLE_MATCH = 4;
   const TITLE_MATCH = 3;
-  const TAG_MATCH = 2;
   const TEXT_MATCH = 1;
   const reTag = /tag:(\S+)\s?/;
   const rePck = /pck:(\S+)\s?/;
+  const reType = /type:(\S+)\s?/;
 
   // Run
   const run = () => {
@@ -24,13 +24,14 @@
 
   return {name, version, exports, run};
 
-  function searchQueryAdvanced({all = false, title, tag, pck, id}) {
+  function searchQueryAdvanced({all = false, title, tag, pck, type, id}) {
     let q = '';
     if (title) q += ' ' + title;
     if (tag) q += ' tag:' + tag;
     if (pck) q += ' pck:' + pck;
-    tw.core.dom.$('search').value = q.trim();
-    let results = search(tw.core.dom.$('search').value, tw.tiddlers.all, {all});
+    if (type) q += ' type:' + type;
+    // tw.core.dom.$('search').value = q.trim();
+    let results = search(q, tw.tiddlers.all, {all});
     if (id) searchShowResults(results, id);
     return results;
   }
@@ -109,18 +110,22 @@
     if (searchTag) q = q.replace(reTag, '');
     let searchPackage = q.match(rePck)?.[1];
     if (searchPackage) q = q.replace(rePck, '');
+    let searchType = q.match(reType)?.[1];
+    if (searchType) q = q.replace(reType, '');
     q = q.trim();
 
     return (t) => {
-      let rank = 0;
       if (!searchAll && t.title[0] === '$') return;
       let titleText = t.title.toLowerCase();
       let fullText = titleText + t.text.toLowerCase();
       if (searchAll) fullText += t.type;
-      // If tag: or pck: it must match so no match means rank is zero
-      if (searchTag) rank = t.tags.find(t => t.toLowerCase() === searchTag) ? rank + TAG_MATCH : 0;
-      if (searchPackage) rank = searchPackage === t.package ? rank + TAG_MATCH : 0;
-      if ((searchTag || searchPackage) && rank === 0) return;
+
+      // If field specified, it must match or exit
+      let rank = 1;
+      if (searchTag && !t.tags.find(t => t.toLowerCase() === searchTag)) rank = 0;
+      if (searchPackage && searchPackage !== t.package) rank = 0;
+      if (searchType && searchType !== t.type) rank = 0;
+      if (rank === 0) return;
       if (q) {
         rank = titleText.indexOf(q) >= 0 ? rank + TITLE_MATCH : (fullText.indexOf(q) >= 0 ? rank + TEXT_MATCH : 0);
         if (titleText === q || titleText === Q) rank += EXACT_TITLE_MATCH;
