@@ -19,47 +19,46 @@
 // TODO: Pull force, clearing local
 // TODO: Selective Synch: Include/Exclude Tags/Packages
 tw.macros.synch = (function(){
+  tw.events.override('synch.full', doFull);
+  tw.events.override('synch.push', doPush);
+  tw.events.override('synch.pull', doPull);
+  tw.events.override('synch.upload', doUpload);
   return {
     // <<synch.full>>: Push/pull to/from remote
     full() {
       return tw.ui.button('{{$IconSynch}}', 'synch.full', null, 'btn-synch', 'title="Synch Data"');
     },
-    async doFull() {
-      return await synch({pull: true, push: true});
-    },
     // <<synch.test>>: Simulate push/pull to/from remote
     test() {
       return '<button onclick="tw.macros.synch.doTest()">Synch Test</button>';
-    },
-    async doTest() {
-      return await synch({pull: true, push: true, dryRun: true});
     },
     // <<synch.pull>>: Only import from remote
     pull() {
       return tw.ui.button('{{$IconPull}}', 'synch.pull', null, 'btn-synch-pull', 'title="Pull Synched Data"');
     },
-    async doPull() {
-      return await synch({pull: true, push: false});
-    },
     // <<synch.push>>: Only write to remote
     push() {
       return tw.ui.button('{{$IconPush}}', 'synch.push', null, 'btn-synch-push', 'title="Push Synched Data"');
-    },
-    async doPush() {
-      return await synch({pull: false, push: true});
     },
     // <<synch.upload>>: Overwrite remote from local
     upload() {
       return tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple');
     },
-    async doUpload() {
-      return await synch({pull: false, push: true, fetchRemote: false});
-    },
-    // TODO: Delete all remote and push (backup)
     // TODO: Delete all local and pull (restore)
   };
 
-
+  async function doFull() {
+    return await synch({pull: true, push: true});
+  }
+  async function doPull() {
+    return await synch({pull: true, push: false});
+  }
+  async function doPush() {
+    return await synch({pull: false, push: true});
+  }
+  async function doUpload() {
+    return await synch({pull: false, push: true, fetchRemote: false});
+  }
   async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
 
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
@@ -225,7 +224,3 @@ tw.macros.synch = (function(){
   }
 
 })();
-tw.events.override('synch.full', 'tw.macros.synch.doFull');
-tw.events.override('synch.push', 'tw.macros.synch.doPush');
-tw.events.override('synch.pull', 'tw.macros.synch.doPull');
-tw.events.override('synch.upload', 'tw.macros.synch.doUpload');

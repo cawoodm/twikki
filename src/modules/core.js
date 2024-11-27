@@ -53,7 +53,7 @@
         // Remove existing handlers
         handlers.filter(h => h.event === event).forEach(h => (delete h.event));
         // Add new handler
-        handlers.push({event, handler});
+        this.subscribe(event, handler);
       },
       handlers() {return handlers;},
       clear() {dp('clear'); handlers.length = 0;},
