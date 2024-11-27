@@ -306,6 +306,7 @@
     }
     loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
+    tw.core.dom.$$('*[macro]')?.forEach(macroInclude);
     if (!tw.tmp.rebootCount) tw.tmp.rebootCount = 0;
     tw.tmp.rebootCount++;
     if (tw.tmp.rebootCount === 1) tw.events.send('ui.loaded');
@@ -988,6 +989,23 @@
         tiddlerSpanInclude(el);
       }
     }, 'handle.tiddler.refresh.' + title);
+  }
+  function macroInclude(el) {
+    let macroName = el.getAttribute('macro');
+    let macroParams = el.getAttribute('params');
+    try {
+      let params = tw.core.params.parseParams(macroParams);
+      let macroFunction;
+      let err;
+      try {macroFunction = eval(`tw.macros.${macroName}`);} catch (e) {err = e;}
+      if (!macroFunction) try {macroName = `core.${macroName}`; macroFunction = eval(`tw.macros.${macroName}`);} catch (e) {err = e;}
+      if (!macroFunction) throw new Error(err);
+      let result = Array.isArray(macroParams) ? macroFunction(...params) : macroFunction(params);
+      el.innerHTML = result;
+    } catch (e) {
+      el.innerHTML = `<span class="error">ERROR: Include "${macroName}" Failed: ${e.message}</span>`;
+      console.error(`tiddlerSpanInclude "${macroName}" Failed: ${e.message}`, e.stack);
+    }
   }
 
   // Functions to extract data from structured tiddlers
