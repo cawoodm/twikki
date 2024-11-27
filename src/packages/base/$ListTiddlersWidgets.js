@@ -43,6 +43,10 @@ Object.assign(tw.macros.core, {
     });
     return [...new Set(tags)];
   },
+  allProperty (property) {
+    let list = tw.tiddlers.all.filter(t => !!t[property]).map(t => t[property]);
+    return [...new Set(list)];
+  },
   AllTagsLinked (sep) {
     if (!sep) sep = ', ';
     let allTags = tw.macros.core.allTags();
