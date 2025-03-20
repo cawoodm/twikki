@@ -1,10 +1,10 @@
 ## Simple Data Access
 * Double-Click to edit
 * Ctrl+Enter to save
-* Deleted tiddlers can be restored via [[$TrashedTiddlers]]
+* Deleted tiddlers can be restored via [[$TrashManager]]
 * [[$Workspaces]]: Easily switch between different stores!
 
-## Secure Data
+## Secure Databox
 * Saving works out of the box (localStorage)
 * Use the [[Backup]] button <<backup.backupButton>> to save a snapshot remotely
 * Use the [[Synchronization]] button <<synch.full>> to synch to a remote
