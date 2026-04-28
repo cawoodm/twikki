@@ -1,11 +1,12 @@
 {
+  "type": "module",
   "name": "twikki",
   "version": "0.15.2",
   "description": "TiddlyWiki-Inspired Information Platform",
   "scripts": {
     "dev": "vite",
     "test": "node --test --watch ./tests/unit/*.test.js",
-    "compile": "pwsh ci/Compile-Packages.ps1",
+    "compile": "node vite-plugin-tiddler-compile.js",
     "watch": "npm-watch",
     "build": "vite build --emptyOutDir && cd dist && vite",
     "build-test": "vite build --emptyOutDir && cd dist && vite --open --host",
