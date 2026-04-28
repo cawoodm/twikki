@@ -1,0 +1,98 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {writeFileSync, mkdirSync, rmSync, readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {randomUUID} from 'node:crypto';
+import {getType, getAutoTags, parseFile, compilePackage} from '../../vite-plugin-tiddler-compile.js';
+
+test('getType maps extensions to tiddler types', () => {
+  assert.equal(getType('.js'), 'script/js');
+  assert.equal(getType('.css'), 'css');
+  assert.equal(getType('.tid'), 'x-twikki');
+  assert.equal(getType('.md'), 'markdown');
+  assert.equal(getType('.json'), 'json');
+  assert.equal(getType('.html'), 'html');
+  assert.equal(getType('.xyz'), '');
+});
+
+test('getAutoTags: base package gets $NoEdit', () => {
+  assert.deepEqual(getAutoTags('base', '.js'), ['$NoEdit']);
+});
+
+test('getAutoTags: core.defaults package gets $Shadow', () => {
+  assert.deepEqual(getAutoTags('core.defaults', '.js'), ['$Shadow']);
+});
+
+test('getAutoTags: .css files get $StyleSheet', () => {
+  assert.deepEqual(getAutoTags('demo', '.css'), ['$StyleSheet']);
+});
+
+test('getAutoTags: base + css combines both tags', () => {
+  assert.deepEqual(getAutoTags('base', '.css'), ['$NoEdit', '$StyleSheet']);
+});
+
+test('parseFile: no metadata header — full file is text', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'MyPlugin.js');
+    writeFileSync(filePath, '(function() { return 1; })();\n');
+    const t = parseFile(filePath, 'demo');
+    assert.equal(t.title, 'MyPlugin');
+    assert.equal(t.type, 'script/js');
+    assert.equal(t.text, '(function() { return 1; })();');
+    assert.deepEqual(t.tags, []);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: metadata header followed by blank line then text', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'MassDeleteDemo.tid');
+    writeFileSync(filePath, 'tags: Demo\n\n<<manager.form>>\n');
+    const t = parseFile(filePath, 'demo');
+    assert.equal(t.title, 'MassDeleteDemo');
+    assert.equal(t.type, 'x-twikki');
+    assert.deepEqual(t.tags, ['Demo']);
+    assert.equal(t.text, '<<manager.form>>');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: auto-tags merged with metadata tags', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'Display.tid');
+    writeFileSync(filePath, 'tags: $Template\n\n<div>{{=title}}</div>\n');
+    const t = parseFile(filePath, 'base');
+    assert.deepEqual(t.tags, ['$NoEdit', '$Template']);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('compilePackage: writes JSON with correct tiddlers array', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
+  mkdirSync(srcDir);
+  mkdirSync(outDir);
+  try {
+    writeFileSync(join(srcDir, 'Hello.js'), '(function(){})();\n');
+    writeFileSync(join(srcDir, 'World.tid'), 'Hello world\n');
+    compilePackage('mypkg', srcDir, outDir);
+    const result = JSON.parse(readFileSync(join(outDir, 'mypkg.json'), 'utf8'));
+    assert.ok(Array.isArray(result.tiddlers));
+    assert.equal(result.tiddlers.length, 2);
+    const titles = result.tiddlers.map(t => t.title).sort();
+    assert.deepEqual(titles, ['Hello', 'World']);
+  } finally {
+    rmSync(srcDir, {recursive: true});
+    rmSync(outDir, {recursive: true});
+  }
+});
