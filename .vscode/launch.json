@@ -18,10 +18,9 @@
     },
     {
       "name": "compile-packages",
-      "type": "PowerShell",
+      "type": "node",
       "request": "launch",
-      "script": "${workspaceFolder}/ci/compile-packages.ps1",
-      "cwd": "${cwd}"
+      "program": "${workspaceFolder}/vite-plugin-tiddler-compile.js"
     },
     {
       "name": "DEBUG (Chrome)",

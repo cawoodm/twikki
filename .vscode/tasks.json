@@ -27,15 +27,10 @@
     {
       "label": "*** COMPILE",
       "type": "shell",
+      "command": "node",
       "args": [
-        "${workspaceFolder}/ci/compile-packages.ps1"
+        "${workspaceFolder}/vite-plugin-tiddler-compile.js"
       ],
-      "windows": {
-        "command": "pwsh.exe"
-      },
-      "linux": {
-        "command": "pwsh"
-      },
       "runOptions": {
         "runOn": "folderOpen"
       },
