@@ -7,7 +7,6 @@
  * created and its id is written back to `$GeneralSettings`.
  *
  * Loading this plugin overrides any previously installed backup provider
- * (e.g. JSONBin, JSONSilo) — only one provider is active at a time.
  *
  * Required `$GeneralSettings` shape:
  * ```json
@@ -40,6 +39,9 @@
   const FORMAT = 'twikki-gist-v1';
   const DEFAULT_DESCRIPTION = 'TWikki backup';
 
+  // Tiddlers tagged $NoBackup are never pushed and are preserved across restore.
+  const isNoBackup = t => t.tags?.includes('$NoBackup');
+
   tw.macros.backup = {
     restoreButton() {
       return tw.ui.button('{{$IconRestore}}', 'backup.restore', null, 'restore', 'title="Restore Backup Data"');
@@ -58,22 +60,34 @@
       }
       let gist = await res.json();
       let rebuilt = rebuildTiddlersFromGist(gist);
+
+      // Preserve local $NoBackup tiddlers across restore — they were never pushed,
+      // so the gist has no authoritative copy. Local wins on title collision.
+      const localKeep = tw.tiddlers.all.filter(isNoBackup);
+      const localKeepTrashed = tw.tiddlers.trashed.filter(isNoBackup);
+      const rebuiltTitles = new Set(rebuilt.all.map(t => t.title));
+      const rebuiltTrashedTitles = new Set(rebuilt.trashed.map(t => t.title));
+      rebuilt.all.push(...localKeep.filter(t => !rebuiltTitles.has(t.title)));
+      rebuilt.trashed.push(...localKeepTrashed.filter(t => !rebuiltTrashedTitles.has(t.title)));
+
       Object.assign(tw.tiddlers, rebuilt);
       tw.run.save();
       if (confirm('Restore complete. Would you like to reload?')) tw.events.send('reboot.hard');
-      tw.ui.notify(`Restore complete! (${rebuilt.all.length} tiddlers)`, 'S');
+      tw.ui.notify(`Restore complete! (${rebuilt.all.length} tiddlers, ${localKeep.length} kept local)`, 'S');
     },
     async save() {
       let cfg = readConfig();
       if (!cfg) return;
       let files = {};
-      tw.tiddlers.all.forEach(t => {
-        files[tiddlerFilename(t.title)] = {content: JSON.stringify(t, null, 2)};
-      });
+      tw.tiddlers.all
+        .filter(t => !isNoBackup(t))
+        .forEach(t => {
+          files[tiddlerFilename(t.title)] = {content: JSON.stringify(t, null, 2)};
+        });
       files[META_FILENAME] = {content: JSON.stringify({
         format: FORMAT,
         visible: tw.tiddlers.visible,
-        trashed: tw.tiddlers.trashed,
+        trashed: tw.tiddlers.trashed.filter(t => !isNoBackup(t)),
       }, null, 2)};
       let body, res;
       if (cfg.gistId) {

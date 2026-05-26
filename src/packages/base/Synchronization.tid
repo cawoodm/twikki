@@ -1,6 +1,6 @@
 Synchronization replicates local changes to a remote server.
 
-The standard setup uses [JSONBin](https://jsonbin.io/) so register there and add your `binId` and `accessKey` to [[$GeneralSettings]]
+The standard setup uses [Github Gists](https://gists.github.com/) so create a gist and PAT add your `gistId` and `accessToken` to [[$GeneralSettings]]
 
 * <<synch.test>>: Simulate a Synch
 * <<synch.full>>: Run full synch (pull+push)

@@ -6,23 +6,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Vite dev server on port 3002 (root is `src/`, opens browser, host-exposed). Hot-reload triggers on `.json` change via a custom plugin in [vite.config.js](vite.config.js). |
-| `npm run compile` | Runs [ci/compile-packages.ps1](ci/compile-packages.ps1) — regenerates `public/packages/*.json` and `public/modules/*.json` from sources in `src/packages/<pkg>/` and `src/modules/`. **PowerShell-only** (Windows/pwsh). Must be re-run whenever you change a tiddler source file under `src/packages/`. A replacement Vite plugin is planned — see [docs/superpowers/specs/2026-04-27-vite-compile-plugin-design.md](docs/superpowers/specs/2026-04-27-vite-compile-plugin-design.md). |
-| `npm run build` | Vite production build into `dist/`, then runs `vite` from inside `dist/`. |
-| `npm run publish` | Runs [ci/publish.ps1](ci/publish.ps1) — assembles `dist/`, then commits & pushes to a sibling checkout at `../cawoodm.github.io/twikki/` (the GitHub Pages target). |
-| `npm test` | Declared as `node --test --watch ./tests/unit/*.test.js`, but **there is no `tests/` directory** in the repo — the test target is currently empty/aspirational. |
+| `npm run dev` | Vite dev server on port 3002 (root is `src/`, opens browser, host-exposed). The [vite-plugin-tiddler-compile.js](vite-plugin-tiddler-compile.js) plugin runs on `buildStart` and watches sources, so package JSON regenerates automatically on source change; the secondary `reload` plugin in [vite.config.js](vite.config.js) then triggers a full browser reload on any `.json` write. |
+| `npm run compile` | Runs `node vite-plugin-tiddler-compile.js` standalone — regenerates `public/packages/*.json` and `public/modules/*.json` from sources in `src/packages/<pkg>/` and `src/modules/<pkg>/`. Cross-platform (pure Node). Only needed outside the dev server, e.g. to seed `public/` before a `vite build` in a one-shot environment. |
+| `npm run build` / `npm run build-test` | Vite production build into `dist/`, then runs `vite` from inside `dist/` (the trailing `vite` previews the built output). `build-test` adds `--open --host`. |
+| `npm run publish` | Declared as `pwsh ci/publish.ps1`: assemble `dist/`, then commit & push to a sibling checkout at `../cawoodm.github.io/twikki/` (the GitHub Pages target). |
+| `npm test` | `node --test --watch ./tests/unit/*.test.js`. Coverage is currently limited to the compile plugin ([tests/unit/compile-plugin.test.js](tests/unit/compile-plugin.test.js)); the runtime platform itself has no unit tests. |
 
 Lint is configured ([eslint.config.mjs](eslint.config.mjs)) but is not wired into an `npm` script. Notable rule overrides: `no-eval` off (the runtime evaluates module strings), single quotes, `object-curly-spacing: never`, `complexity` warns at 40, `require-await` error. Globals `tw` and `dp` are declared.
 
 ## Architecture
 
-This is **not a typical Vite SPA.** It's a TiddlyWiki-inspired wiki/app platform that boots itself dynamically from network-fetched JavaScript and JSON, caching everything in `localStorage` for offline use. Understanding the three-stage boot is essential before editing anything.
+todo...
 
 ### Boot chain
 
-1. **[public/boot.js](public/boot.js) (bootloader)** — loaded by [src/index.html](src/index.html). Reads an OS name + base URL (from query string, localStorage, or `window.boot({...})` parameters), downloads an OS JS/JSON blob, caches it under `/os/<name>` in `localStorage`, then `eval`s it. The OS object must export `init()` and `start()`. Index.html points at `weboose.latest` hosted at `https://cawoodm.github.io/weboose` — that loads back into TWikki via the `platform` parameter.
-2. **OS layer** (weboose, external) — calls `platform.init()` and `platform.start()`.
-3. **[src/platform/twikki.latest.js](src/platform/twikki.latest.js) (the TWikki platform)** — the real app. On `init()` it fetches the core modules listed in the `modulesToLoad` array (around line 81), each from `<baseUrl>/modules/<name>` (or returns cached copies from `localStorage`). On `start()` it `eval`s each `script/js` module and merges JSON modules into the in-memory tiddler store, then loads extension packages from URLs listed in the `$CorePackages` and `$ExtensionPackages` shadow tiddlers.
+[src/index.html](src/index.html) loads [src/platform/twikki.latest.js](src/platform/twikki.latest.js) via a plain `<script>` tag and then calls `window.twikki.init()` followed by `window.twikki.start()` on `load`. There is no external bootloader or OS layer anymore.
+
+- **`init()`** — resolves `baseUrl` from query string (`?pUrl=` / `?url=`), `localStorage['/base.url']`, or `location` (around line 72 of `twikki.latest.js`), then fetches the hard-coded core modules listed in the `modulesToLoad` array (around line 86), each from `<baseUrl>/modules/<name>` (or returns cached copies from `localStorage`).
+- **`start()`** — `eval`s each `script/js` module, merges JSON modules into the in-memory tiddler store, then loads extension packages from the URL lists in the `$CorePackages` and `$ExtensionPackages` shadow tiddlers.
 
 The runtime never imports anything via ESM — modules are strings of JS loaded over HTTP and `eval`'d (the `(1, eval)(...)` indirect-eval pattern is intentional, to evaluate at global scope). **Do not add `import`/`export` statements to files under `src/modules/` or `src/packages/<pkg>/`** — they must remain plain IIFEs/scripts.
 
@@ -43,21 +44,21 @@ A core module under [src/modules/](src/modules/) is an IIFE that takes `tw` and 
 
 ### Source → runtime: the compile step
 
-Tiddler sources live as **individual files** under `src/packages/<pkg>/` and `src/modules/`. The compile step packs each subdirectory into a single JSON file in `public/packages/` or `public/modules/` matching the directory name. The runtime fetches those JSON files; the loose source files are never served directly.
+Tiddler sources live as **individual files** under `src/packages/<pkg>/` and `src/modules/<pkg>/`. The compile step packs each subdirectory into a single JSON file in `public/packages/` or `public/modules/` matching the directory name. The runtime fetches those JSON files; the loose source files are never served directly. Note: `src/modules/` also contains loose `core.*.js` files at its top level — those are the runtime modules listed in `modulesToLoad` and are served as-is (no compile step), distinct from `src/modules/core.defaults/` which gets compiled into `public/modules/core.defaults.json`.
 
-**Both `public/packages/` and `public/modules/` are gitignored** — they're build artifacts produced by `npm run compile`. If you edit a file in `src/packages/<pkg>/` and don't see the change, you need to re-run compile.
+**Both `public/packages/` and `public/modules/` are gitignored** — they're build artifacts. Under `npm run dev` they're regenerated automatically by the Vite plugin on every source change; outside the dev server, run `npm run compile`.
 
-Tiddler file format (parsed by [ci/compile-packages.ps1](ci/compile-packages.ps1)):
+Tiddler file format (parsed by [vite-plugin-tiddler-compile.js](vite-plugin-tiddler-compile.js)):
 - Filename (without extension) becomes the tiddler `title`.
-- Leading lines matching `^[a-z]+: value` are parsed as metadata fields (`tags:` is comma-split). The first non-matching line begins the `text` body.
+- Leading lines matching `^[a-z]+: value` are parsed as metadata fields (`tags:` is comma-split, `true`/`false` are coerced to booleans). The first non-matching line begins the `text` body.
 - Type is derived from the extension: `.tid → x-twikki`, `.js → script/js`, `.md → markdown`, `.json → json`, `.css → css`, `.html → html`.
-- Auto-tags: `base/` files get `$NoEdit`; `core.defaults/` files get `$Shadow`; any `.css` gets `$StyleSheet`.
+- Auto-tags are keyed on the **package directory name**: files in `src/packages/base/` get `$NoEdit`; files in `src/modules/core.defaults/` get `$Shadow`; any `.css` file gets `$StyleSheet` (and tags stack — a `.css` file in `base/` gets both).
 
 A leading `$` in a tiddler title is a convention for shadow/system tiddlers (e.g. `$MainLayout`, `$CorePackages`, `$Theme`).
 
 ### Localhost rewriting
 
-When running on `localhost` or a `*.*.*.*:port` host, the platform rewrites `https://cawoodm.github.io/twikki` URLs in `$CorePackages`/`$ExtensionPackages` to the local origin (see `src/platform/twikki.latest.js` around line 151) so local source serves instead of the published copy. This is how `npm run dev` loads the in-repo packages.
+When running on `localhost` or a `*.*.*.*:port` host, the platform rewrites `https://cawoodm.github.io/twikki` URLs in `$CorePackages`/`$ExtensionPackages` to the local origin (see `src/platform/twikki.latest.js` around lines 156–157) so local source serves instead of the published copy. This is how `npm run dev` loads the in-repo packages.
 
 ### Debugging query params
 

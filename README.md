@@ -13,7 +13,7 @@ TWikki is designed to just work out of the box - the fact is .html files have no
 
 With Twikki it automatically saves every change you make to localStorage. If you use TWikki every day you can do this pretty much indefinitely. Unfortunately browsers tend to clear localStorage after some time of unuse (e.g. 7 days in Chrome on iOS) and thus you do need a more permanent solution.
 
-We still offer the download a backup option available in TiddlyWiki but provide a simple way to save your data to a provider of your choice. Examples are jsonbin.org, github.com, dropbox and Google drive.
+We offer a backup/synch option available in TiddlyWiki which saves your data to private gists on github.com.
 
 ## Overview
 What is special about twikki is that it's cloud-native - your data is stored in the cloud (wherever you choose) and synched to your browser which means it works offline. Whether you visit a web page hosting twikki or eve just open a small .html file in your browser you can synch up your data and get started.

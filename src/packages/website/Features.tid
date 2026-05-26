@@ -43,7 +43,7 @@ Checkout [[Themes]] for more details
 * Configurable lists or key-value pairs via `list` tiddlers
   * e.g. Tiddler types from [[$TiddlerTypes]] tiddler
 * Configuration objects via `json` tiddlers
-  * e.g. Backup settings for [[Backup2JSONBinPlugin]]
+  * e.g. Backup settings for [[GistBackupPlugin]]
 
 ## Validation
 * Markdown tiddlers are validated on save (e.g. to ensure macros run correctly)

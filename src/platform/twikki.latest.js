@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.0.0';
+  const VERSION = '0.18.0';
 
   overrides();
 
@@ -394,7 +394,6 @@
 
     wireUp('package.load.url', tw.core.packaging.loadPackageFromURL);
     wireUp('package.reload.url', tw.core.packaging.reloadPackageFromUrl);
-    wireUp('package.reload.bin', tw.core.packaging.reloadPackageFromJSONBin);
   }
   function wireUp(event, handler) {
     tw.events.subscribe(event, handler, 'core');

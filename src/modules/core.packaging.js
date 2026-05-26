@@ -6,8 +6,6 @@
   const exports = {
     loadPackageFromURL,
     reloadPackageFromUrl,
-    loadPackageFromJSONBin,
-    reloadPackageFromJSONBin,
   };
 
   return {name, version, exports};
@@ -24,19 +22,6 @@
     }
   }
 
-  async function loadPackageFromJSONBin({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
-    console.debug('Loading tiddler package from JSONBin', name, url, overWrite);
-    let settings = tw.call('getJSONObject', '$GeneralSettings');
-    if (!settings?.JSONBin?.accessKey) return tw.ui.notify('No JSONBin accessKey found in $GeneralSettings!', 'W');
-    try {
-      let obj = await httpGetJSON(url, name, {'X-Access-Key': settings.JSONBin.accessKey});
-      if (obj.record.all) throw new Error('You are trying to load a backup! This is for packages!');
-      return loadList(obj.record.tiddlers, {name, filter, overWrite, doNotSave, noOverWrite});
-    } catch (e) {
-      tw.ui.notify(`Failed to load tiddler package '${name}' from JSONBin ${url} (see log)`, 'E', e.stack);
-      return 0;
-    }
-  }
   function loadList(list, {name, filter, overWrite = false, doNotSave = false, noOverWrite = false} = {}) {
     let count = 0;
     if (!Array.isArray(list)) return tw.ui.notify(`packages.loadList(${name}): No tiddlers array returned!`, 'E');
@@ -83,11 +68,6 @@
 
   async function reloadPackageFromUrl(pck) {
     let count = await loadPackageFromURL(pck);
-    tw.events.send('ui.reload');
-    tw.ui.notify(`${count} tiddlers imported from package ${pck.name || pck.url}`, 'D');
-  }
-  async function reloadPackageFromJSONBin(pck) {
-    let count = await loadPackageFromJSONBin(pck);
     tw.events.send('ui.reload');
     tw.ui.notify(`${count} tiddlers imported from package ${pck.name || pck.url}`, 'D');
   }

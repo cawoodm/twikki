@@ -9,6 +9,6 @@ tw.macros.packages = {
   importBin({name, url, filter, overWrite, doNotSave}) {
     if (!name) throw new Error('ERROR: No name supplied to packages.importBin macro!');
     if (!url) throw new Error('ERROR: No url supplied to packages.importBin macro!');
-    return tw.ui.button(`Import: ${name} ${filter ? ' (' + filter + ')' : ''}`, 'package.reload.bin', {url, name, overWrite, doNotSave});
+    return tw.ui.button(`Import: ${name} ${filter ? ' (' + filter + ')' : ''}`, ' ', {url, name, overWrite, doNotSave});
   },
 };
