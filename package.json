@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "test": "node --test --watch ./tests/unit/*.test.js",
-    "compile": "pwsh ci/Compile-Packages.ps1",
+    "compile": "node .worktrees/vite-compile-plugin/vite-plugin-tiddler-compile.js",
     "watch": "npm-watch",
     "build": "vite build --emptyOutDir && cd dist && vite",
     "build-test": "vite build --emptyOutDir && cd dist && vite --open --host",
@@ -25,7 +25,7 @@
     "url": "https://github.com/cawoodm/twikki/issues"
   },
   "homepage": "https://cawoodm.github.io/twikki",
-  "main": "boot.js",
+  "main": "src/platform/twikki.latest.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cawoodm/twikki.git"
