@@ -7,20 +7,11 @@
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
   </head>
   <body>
-    <script src="boot.js"></script>
+    <script src="platform/twikki.latest.js"></script>
     <script>
-      window.addEventListener('load', () => {
-        window.boot({
-          os: {
-            name: "weboose.latest",
-            url: 'https://cawoodm.github.io/weboose',
-          },
-          platform: {
-            name: 'twikki.latest',
-            url: 'https://cawoodm.github.io/twikki',
-            packages: []
-          }
-        });
+      window.addEventListener('load', async () => {
+        await window.twikki.init();
+        await window.twikki.start();
       });
     </script>
   </body>

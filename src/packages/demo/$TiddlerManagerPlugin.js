@@ -60,7 +60,7 @@
   function managerDelete({title, tag, pck}) {
     let list = tw.call('tiddlerSearch')({title, tag, pck})
       .map(t => t.title);
-    if (!confirm(`Sure you want to delet these ${list.length} tiddlers?`)) return;
+    if (!confirm(`Sure you want to delete these ${list.length} tiddlers?`)) return;
     list.forEach(title => (tw.run.deleteTiddler(title, true)));
   }
 })();

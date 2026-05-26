@@ -23,19 +23,26 @@
   const autoSave = true;
 
   let qs;
-  let os;
-  let defaults;
   let baseUrl;
   let tw = {};
   window.tw = tw; // Export tw so plugins can use it
 
-  return {
+  function read(key, def) {
+    if (key[0] !== '/') key = '/' + key;
+    let res = localStorage.getItem(key);
+    return res === null ? def : res;
+  }
+  function write(key, value) {
+    if (key[0] !== '/') key = '/' + key;
+    return localStorage.setItem(key, value);
+  }
+
+  window.twikki = {
     name: NAME,
     version: VERSION,
-    async init(p) {
-      qs = p.qs;
-      os = p.os;
-      defaults = p.platform;
+    async init() {
+      qs = Object.fromEntries(new URLSearchParams(location.search));
+      Object.keys(qs).filter(q => qs[q] === '').forEach(q => (qs[q] = true)); // Empty params are switches => convert to true
       window.dp = () => {};
       if (qs.logfilter)
         // Output filtered loggsOverwridden console.log has advantage of filtering logs
@@ -49,22 +56,20 @@
       tw.tiddlers = {all: [], visible: [], trashed: []};
       tw.storage = {
         get(key) {
-          if (key[0] !== '/') key = '/' + key;
-          let res = os.read(key);
+          let res = read(key);
           if (res?.match(/^[\[\{]/)) return JSON.parse(res);
           return res;
         },
         set(key, value) {
-          if (key[0] !== '/') key = '/' + key;
-          if (typeof value === 'object') return os.write(key, JSON.stringify(value));
-          return os.write(key, value);
+          if (typeof value === 'object') return write(key, JSON.stringify(value));
+          return write(key, value);
         },
       };
 
       console.debug(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      baseUrl = qs.pUrl || qs.url || os.read('base.url') || p.base;
+      baseUrl = qs.pUrl || qs.url || read('base.url') || location.origin + location.pathname.replace(/\/[^\/]*$/, '');
 
       tw.logging = {
         logFilter: new RegExp(qs.logfilter || '.', 'i'),
@@ -95,7 +100,7 @@
       let modulesLoaded = await Promise.all(modulesToLoad.map(loadCoreModule));
       tw.modules = modulesToLoad.map((p, i) => ({name: p, res: modulesLoaded[i]}));
 
-      os.write('/base.url', baseUrl);
+      write('/base.url', baseUrl);
 
     },
     // eslint-disable-next-line require-await
@@ -1292,12 +1297,12 @@
     return res;
   }
   function readObject(item) {
-    let json = os.read(item);
+    let json = read(item);
     if (!json?.match(/^[\{\[]/)) return {};
     return JSON.parse(json);
   }
   function writeObject(item, value) {
-    return os.write(item, JSON.stringify(value));
+    return write(item, JSON.stringify(value));
   }
   function overrides() {
     // Overrides

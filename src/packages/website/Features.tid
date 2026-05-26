@@ -60,8 +60,3 @@ A package is just a list of tiddlers in JSON format `{"tiddlers": [...]}` which 
 ## Other/Tech
 * Basic pub/sub events
 * Vanilla JS, no complicated framework
-* Based on the Web OS called "weboose" which:
-  * Dynamically loads Twikki as a platform from a URL
-  * Caches loaded operatings systems and platforms in localStorage
-  * Lets you run and update multiple versions of twikki simultaneously
-  * See [github/weboose](https://github.com/cawoodm/weboose) for more details

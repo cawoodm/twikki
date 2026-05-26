@@ -126,7 +126,7 @@ export default function tiddlerCompile(sourceSets) {
 
 // Standalone CLI: node vite-plugin-tiddler-compile.js
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
-  const root = fileURLToPath(new URL('.', import.meta.url));
+  const root = process.cwd();
   compileAll([
     {sourceRoot: join(root, 'src/packages'), outputDir: join(root, 'public/packages')},
     {sourceRoot: join(root, 'src/modules'), outputDir: join(root, 'public/modules')},

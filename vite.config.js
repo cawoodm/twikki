@@ -1,9 +1,6 @@
 import {defineConfig} from 'vite';
-import {join} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
 import tiddlerCompile from './vite-plugin-tiddler-compile.js';
-
-const root = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   root: 'src',
@@ -20,8 +17,8 @@ export default defineConfig({
   },
   plugins: [
     tiddlerCompile([
-      {sourceRoot: join(root, 'src/packages'), outputDir: join(root, 'public/packages')},
-      {sourceRoot: join(root, 'src/modules'), outputDir: join(root, 'public/modules')},
+      {sourceRoot: resolve('src/packages'), outputDir: resolve('public/packages')},
+      {sourceRoot: resolve('src/modules'), outputDir: resolve('public/modules')},
     ]),
     {
       name: 'reload',
