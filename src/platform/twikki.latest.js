@@ -190,7 +190,7 @@
       tw.extend = {tiddlerDetails: {
         metaInfo(t) {
           return tw.core.markdown.render([
-            `${t.package ? '[pck:' + t.package + '](#msg:search:pck:' + t.package + ')' : ''}`,
+            `${t.package ? '[pck:' + t.package + '](#msg:search:$pck:' + t.package + ')' : ''}`,
             `${t.doNotSave ? 'doNotSave ✅' : ''}`,
             `${t.isRawShadow ? 'isRawShadow ✅' : ''}`,
           ].join(' '));

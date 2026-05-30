@@ -77,6 +77,24 @@ test('parseFile: auto-tags merged with metadata tags', () => {
   }
 });
 
+test('compilePackage: ignores files with unknown extensions (e.g. atomic-save temp files)', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
+  mkdirSync(srcDir);
+  mkdirSync(outDir);
+  try {
+    writeFileSync(join(srcDir, 'Real.tid'), 'hello\n');
+    writeFileSync(join(srcDir, 'Real.tid.tmp.34512.deadbeef'), 'transient garbage\n');
+    compilePackage('mypkg', srcDir, outDir);
+    const result = JSON.parse(readFileSync(join(outDir, 'mypkg.json'), 'utf8'));
+    assert.equal(result.tiddlers.length, 1);
+    assert.equal(result.tiddlers[0].title, 'Real');
+  } finally {
+    rmSync(srcDir, {recursive: true});
+    rmSync(outDir, {recursive: true});
+  }
+});
+
 test('compilePackage: writes JSON with correct tiddlers array', () => {
   const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
   const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());

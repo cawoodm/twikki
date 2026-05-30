@@ -17,3 +17,6 @@ We offer a backup/synch option available in TiddlyWiki which saves your data to 
 
 ## Overview
 What is special about twikki is that it's cloud-native - your data is stored in the cloud (wherever you choose) and synched to your browser which means it works offline. Whether you visit a web page hosting twikki or eve just open a small .html file in your browser you can synch up your data and get started.
+
+## Themes
+TWikki's appearance is driven by data, not a build step - a theme is just a tiddler that lists the stylesheets to apply, so themes switch and edit live with no reload. See [docs/THEMES.md](docs/THEMES.md) for a visual showcase of the built-in themes and a guide to creating your own (including web fonts).

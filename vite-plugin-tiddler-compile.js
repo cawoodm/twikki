@@ -73,8 +73,18 @@ export function compilePackage(packageName, sourceDir, outputDir) {
   if (!existsSync(outputDir)) mkdirSync(outputDir, {recursive: true});
   const files = readdirSync(sourceDir, {withFileTypes: true})
     .filter(e => e.isFile())
-    .map(e => e.name);
-  const tiddlers = files.map(name => parseFile(join(sourceDir, name), packageName));
+    .map(e => e.name)
+    .filter(name => getType(extname(name)) !== ''); // skip temp/non-tiddler files (e.g. atomic-save *.tmp.*)
+  const tiddlers = files
+    .map(name => {
+      try {
+        return parseFile(join(sourceDir, name), packageName);
+      } catch (err) {
+        if (err.code === 'ENOENT') return null; // file vanished mid-compile (atomic-save race)
+        throw err;
+      }
+    })
+    .filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
   console.log(`[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`);
@@ -113,9 +123,14 @@ export default function tiddlerCompile(sourceSets) {
         server.watcher.add(sourceRoot);
       }
       const handler = (filePath) => {
+        if (getType(extname(filePath)) === '') return; // ignore temp/non-tiddler files
         const info = findPackageForFile(filePath, sourceSets);
         if (!info) return;
-        compilePackage(info.packageName, info.sourceDir, info.outputDir);
+        try {
+          compilePackage(info.packageName, info.sourceDir, info.outputDir);
+        } catch (err) {
+          console.warn(`[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`);
+        }
       };
       server.watcher.on('change', handler);
       server.watcher.on('add', handler);

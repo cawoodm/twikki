@@ -1,0 +1,124 @@
+/* ---- Web fonts ---- */
+@font-face {
+  font-family: 'Syne';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/syne/files/syne-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/sora/files/sora-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/sora/files/sora-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --colbg1: #0d0f17;
+  --colbg2: #161a26;
+  --colbg3: #1b2030;
+  --colbgi: #0c0f18;
+  --colfg:  #dfe3ee;
+  --colfgi: #eef1f8;
+  --col0:   #05060a;
+  --col1:   #7f8aa3;
+  --col3:   #222a3d;
+  --col4:   #2b3346;
+  --col6:   #c6f24e;
+  --notify-rgba: 198, 242, 78;
+  --rad1: 16px;
+  --rad2: 16px;
+  --rad3: 16px;
+  --rad4: 16px;
+}
+
+* {
+  font-family: 'Sora', system-ui, sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(820px 420px at 92% -12%, rgba(198, 242, 78, 0.12), transparent 60%),
+    radial-gradient(680px 480px at -8% 0%, rgba(86, 110, 200, 0.18), transparent 55%),
+    #0d0f17;
+}
+
+/* Header → floating glass bar, search centered, buttons collapsed into a pill */
+div#header {
+  background: rgba(22, 26, 38, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid #2b3346;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+  border-radius: 18px;
+  padding: 12px 18px;
+  margin: 8px;
+  align-items: center;
+}
+#header-col1 { order: 0; }
+#header-col3, #header .col3 { order: 1; flex: 1 1 auto; flex-basis: auto; }
+#header-col2 {
+  order: 2;
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  background: #10131d;
+  border: 1px solid #2b3346;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+#site-title h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+}
+
+#header-col2 > div:has(#open-all),
+#header-col2 > div:has(#close-all),
+#header-col2 > div:has(#btn-synch-pull),
+#header-col2 > div:has(#btn-synch-push),
+#header-col2 > div:has(#trashCanIcon) { display: none; }
+button.icon { fill: #c6f24e; }
+button.icon:hover svg { fill: #e6ff8a; }
+
+#search {
+  width: 100%;
+  background: #0c0f18;
+  border: 1px solid #2b3346;
+  border-radius: 999px;
+  color: #eef1f8;
+  padding: 9px 18px;
+  font-size: 1rem;
+}
+
+#visible-tiddlers { max-width: 880px; margin: 0 auto; width: 100%; }
+
+div.tiddler {
+  background: linear-gradient(180deg, #171c2a, #12151f);
+  outline: none;
+  border: 1px solid #283149;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+  padding: 2.4rem 2.8rem;
+}
+div.tiddler div.title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: #eaf0ff;
+  background: transparent;
+  letter-spacing: -0.5px;
+}
+h1, h2, h3, h4 {
+  font-family: 'Syne', sans-serif;
+  color: #dfe6f5;
+}
+a:not([class]) { color: #c6f24e; }
+code { color: #d7f59a; }

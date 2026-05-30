@@ -1,0 +1,88 @@
+## Plugins
+
+In TWikki there is no special "plugin" format — **a plugin is just a tiddler**. Because *code is data*, any tiddler of type `script/js` is executable, so **installing a plugin means adding a tiddler** and uninstalling means deleting it.
+
+See [[Concepts]] for how tiddler types work, and [[Packages]] for how plugins are shared.
+
+## How code tiddlers run
+
+* A `script/js` tiddler is executed with `eval()` in the **global context**:
+  * once when TWikki starts, and
+  * again whenever you edit and save it, so changes take effect immediately
+* Code tiddlers are run as part of validation on save — if the code throws, the save reports the error
+* Tag a code tiddler with `$CodeDisabled` to stop it from executing
+
+## The basic shape
+
+A plugin is usually an immediately-invoked function that hooks into the global `tw` namespace:
+
+```js
+(function() {
+  tw.events.subscribe('ui.loaded', () => {
+    tw.ui.notify('Hello from my plugin!', 'D');
+  }, 'MyPlugin');
+})();
+```
+
+## The `tw` namespace
+
+Everything hangs off the global `tw` object:
+
+* `tw.events` — pub/sub: `subscribe(event, handler, name)` and `send(event, payload)`
+* `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
+* `tw.run` — read and update tiddlers, e.g. `tw.run.getTiddler(title)`
+* `tw.ui` — UI helpers such as `tw.ui.notify(...)` and `tw.ui.button(...)`
+* `tw.macros` / `tw.extensions` — register macros and widgets (see below)
+* `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, ...)
+* `tw.storage` — the localStorage wrapper
+
+## Adding macros and widgets
+
+Register a macro so it can be used as `<<namespace.name args>>` inside any markdown or `x-twikki` tiddler:
+
+```js
+tw.extensions.registerMacro('greet', 'hello', (name) => {
+  return `Hello ${name}!`;
+}, {version: '1.0.0'});
+```
+
+You can then write `<<greet.hello "Marc">>` anywhere. A macro returns a string of markdown/HTML that is rendered in place. (You may also assign directly, e.g. `tw.macros.greet = { hello: ... }`.)
+
+See [[ExamplePlugin]] for a fuller worked example, and [[$GeneralWidgets]] for the built-in widgets.
+
+## Reacting to events
+
+Subscribe to lifecycle events to extend behaviour. Some useful ones:
+
+* `ui.loaded` — the UI has finished its first render
+* `tiddler.rendered` — a tiddler was (re)rendered; the handler receives its element
+* `tiddler.updated` / `tiddler.deleted` — the store changed
+* `script.loaded` — an external script you added has finished loading
+* `theme.switch` — the active theme changed
+
+```js
+tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
+  // decorate freshly-rendered tiddlers here
+}, 'MyPlugin');
+```
+
+Always pass a **name** as the third argument so your handler is identifiable and is not registered twice when the tiddler re-runs.
+
+## Loading external libraries
+
+Need a third-party library or stylesheet? Load it from a CDN and react when it is ready:
+
+```js
+tw.events.subscribe('ui.loaded', () => {
+  tw.core.dom.addScript('my-lib', 'https://cdn.example.com/lib.min.js');
+  tw.events.subscribe('script.loaded', (name) => {
+    if (name === 'my-lib') tw.lib.myLib = window.MyLib;
+  }, 'MyPlugin');
+}, 'MyPlugin');
+```
+
+This is exactly how the built-in syntax-highlighting plugin pulls in Highlight.js.
+
+## Distributing plugins
+
+A plugin is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget. A whole plugin can even live in a single multi-section tiddler — see [[ExamplePlugin]].

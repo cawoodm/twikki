@@ -10,6 +10,7 @@ When you create a new "entry" it can be data (like a note) or code which actuall
 Checkout these cool topics:
 * [[Themes]]
 * [Packages](#$CorePackagesHelp)
+* [[Plugins]]
 
 ---
 NOTE: This 'Welcome' tiddler is part of the [package](#$CorePackagesHelp) [website](#msg:search:$pck:website).

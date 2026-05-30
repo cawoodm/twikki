@@ -3,3 +3,4 @@ type: list
 * https://cawoodm.github.io/twikki/packages/icons.json force
 * https://cawoodm.github.io/twikki/packages/demo.json force
 * https://cawoodm.github.io/twikki/packages/website.json nooverwrite
+* https://cawoodm.github.io/twikki/packages/themes.json force

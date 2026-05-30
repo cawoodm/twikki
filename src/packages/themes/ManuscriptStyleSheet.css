@@ -1,0 +1,71 @@
+:root {
+  --colbg1: #efe7d3;
+  --colbg2: #fbf6ea;
+  --colbg3: #e8dcc2;
+  --colbgi: #fffdf6;
+  --colfg:  #2c2620;
+  --colfgi: #2c2620;
+  --col0:   #cdbfa0;
+  --col1:   #8a7f68;
+  --col3:   #c8b48a;
+  --col4:   #d8cba9;
+  --col6:   #8c2f2f;
+  --notify-rgba: 140, 47, 47;
+  --rad1: 2px;
+  --rad2: 2px;
+  --rad3: 2px;
+  --rad4: 2px;
+}
+
+* {
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+}
+
+body {
+  background: #efe7d3;
+}
+
+div#header {
+  background: #e8dcc2;
+  border: 1px solid #d8cba9;
+  box-shadow: none;
+}
+
+div#sidebar {
+  background: #e8dcc2;
+  border: 1px solid #d8cba9;
+}
+
+div.tiddler {
+  background: #fbf6ea;
+  outline: none;
+  border: 1px solid #e0d3b3;
+  border-top: 3px solid #8c2f2f;
+  box-shadow: 0 1px 0 #e8dcc2;
+  padding: 2.5rem 3rem;
+}
+
+div.tiddler div.title {
+  font-weight: 700;
+  color: #2c2620;
+  background: transparent;
+  border-bottom: 1px solid #ddd0b0;
+  letter-spacing: 0.3px;
+}
+
+h1, h2, h3, h4 {
+  font-family: Georgia, "Palatino Linotype", serif;
+  color: #463a2a;
+}
+
+a:not([class]) {
+  color: #8c2f2f;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+blockquote {
+  background: #f1e8d2;
+  border-left: 6px solid #8c2f2f;
+  font-style: italic;
+}
