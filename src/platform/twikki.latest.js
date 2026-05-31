@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.18.0';
+  const VERSION = '0.19.0';
 
   overrides();
 
@@ -503,6 +503,7 @@
     tw.core.dom.divVisibleTiddlers.innerHTML = '';
     tw.tiddlers.visible.forEach(showTiddler);
     // searchShowResults();
+    tw.events.send('story.rendered', tw.tiddlers.visible);
   }
   function createTiddlerElement(t, template) {
   // TODO: If $TiddlerDisplay breaks TW is unusable!
@@ -818,7 +819,10 @@
     showTiddler(title);
   }
   function showTiddler(title) {
-    if (getTiddlerElement(title)) return scrollToTiddler(title);
+    if (getTiddlerElement(title)) {
+      tw.events.send('tiddler.refocus', title); // already open: let the tabs layer focus it
+      return scrollToTiddler(title);
+    }
     // if (getTiddlerElement(title)) hideTiddler(title);
     let tiddler = getTiddler(title);
     if (!tiddler) tiddler = nonExistentTiddler(title); // throw new Error(`showTiddler '${title}' failed!`, 'E');
@@ -919,6 +923,7 @@
     if (visibleTiddlerElement) visibleTiddlerElement.outerHTML = ''; // else console.warn('hideTiddler', title, 'failed!');
     tw.tiddlers.visible = tw.tiddlers.visible.filter(t => t !== title);
     saveVisible();
+    tw.events.send('story.changed', title);
   }
 
   function deleteTiddler(title, automation) {

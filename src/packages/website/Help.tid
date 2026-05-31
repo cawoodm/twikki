@@ -1,3 +1,50 @@
+# Help
+
+A quick guide to getting things done in TWikki. See [[Welcome]], [[FAQ]] and [[Features]] for the bigger picture, and [[Concepts]] for how it all fits together.
+
+## Opening & creating notes
+* Click any link to open that note (tiddler) alongside the others.
+* Press `Ctrl`/`Cmd`+`K` to open the **command palette**: type to search commands and notes, use the arrow keys to move, `Enter` to open, `Escape` to close. Prefix with `>` to list commands only.
+* Create a new note from the command palette (*New note*) or the <<New>> button.
+
+## Editing & saving
+* **Double-click** a note to edit it.
+* Press `Ctrl`+`Enter` to finish editing (save the note).
+* Notes are validated when you save: markdown is checked, JSON must parse, and code tiddlers are run (see [[Features]]).
+* Press the save <<Save>> button (or run *Save all*) to write your changes to the browser's `localStorage`.
+* Notes tagged `$NoEdit` are read-only and cannot be edited; see [[Tags]] for all the special tags.
+
 ## Searching
-* To search hidden tiddlers type `$` followed by your search query
-* To search by tag type `$tag:Styling`
+* Type in the search box to find notes by title and text.
+* To search hidden (system) tiddlers, type `$` followed by your query, e.g. `$theme`.
+* Filter your search with fields, which can be combined with each other and with free text:
+  * `tag:Styling` — only notes carrying that tag
+  * `pck:website` — only notes from that package
+  * `type:markdown` — only notes of that type
+* Examples: [`msg:search:welcome`](#msg:search:welcome), [`msg:search:"tag:$Theme"`](#msg:search:"tag:$Theme").
+
+## Linking & including
+* `[[Note Name]]` creates a link to another note.
+* `#Note Name` is a hash link that opens a note; `#msg:event:param` fires an action (e.g. `#msg:search:welcome`).
+* `{{Note Name}}` includes (transcludes) another note's content inline. Pass parameters with `{{SayHello|"John Smith"}}` — see [[Parameters]].
+* `<<macroName>>` runs a macro and inserts its output.
+
+## Backup & sync
+* Your data is saved locally in `localStorage` out of the box.
+* Use the backup <<backup.backupButton>> button to save a snapshot to a remote (a private GitHub Gist).
+* Use the synch <<synch.full>> button to keep a remote in sync with your local store.
+* Notes tagged `$NoBackup` are never sent to the remote and are kept across a restore — useful for secrets and machine-local settings. See [[Tags]].
+
+## Deleting & restoring
+* Delete a note from its edit form. Deleted notes go to the trash, not away for good.
+* Restore deleted notes from the [[$TrashManager]].
+
+## Themes
+* Switch theme with the selector: <<ThemeSelector>>
+* See [[Themes]] to learn how themes and stylesheets work, and [[Tags]] for the `$StyleSheet`/`$Theme` tags.
+
+## Learn more
+* [[Concepts]] — types of tiddlers and how behaviour is decided
+* [[Tags]] — every special `$` system tag
+* [[Plugins]] and [Packages](#$CorePackagesHelp) — extending TWikki
+* [[Features]] — a tour of everything TWikki can do

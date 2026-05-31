@@ -1,7 +1,30 @@
 <<AllTagsLinked   \n>>
 
 
-Special System Tags:
-* `$Shadow`: Indicates tiddler is a shadow tiddler
-* `$NoEdit`: Protects a tiddler against changes
-* `$NoImport`: Will not be overwritten by a package import (unless package is imported with force)
+## Special System Tags
+
+By convention, tags beginning with `$` are *special system tags*. Some are purely a convention to make tiddlers easier to find (e.g. [$StyleSheet](#msg:search:$tag:$StyleSheet)); others change how the platform treats a tiddler. To list every tiddler carrying a given tag, search for `$tag:<TagName>` (system tiddlers are hidden unless your search starts with `$`).
+
+### Tags that change behaviour
+
+* `$Shadow`: Marks a built-in (shadow) tiddler that ships with the platform source. Shadow tiddlers are expected to always be present, are hidden from normal searches, and are not written to your `localStorage` until you edit and save them. Files under `src/modules/core.defaults/` are auto-tagged `$Shadow` at compile time.
+* `$NoEdit`: Protects a tiddler against changes. The edit form is disabled, attempts to update it throw a "read-only" error, and deleting it prompts for extra confirmation. Files under `src/packages/base/` are auto-tagged `$NoEdit` at compile time. (Saving with *force* bypasses the protection.)
+* `$NoImport`: Prevents a tiddler from being overwritten by a package import. When a package would replace an existing `$NoImport` tiddler, the import is skipped (unless the package is imported with *force*).
+* `$NoBackup`: Excludes a tiddler from backup and sync. `$NoBackup` tiddlers are never pushed to the remote (e.g. the GitHub Gist used by [[$GistBackupPlugin]] / [[$SynchDataPlugin]]) and are preserved locally across a restore, since the remote holds no copy of them. Useful for secrets and machine-local settings.
+* `$NoSynch`: Legacy alias of `$NoBackup`, still honoured by [[$SynchDataPlugin]]. Prefer `$NoBackup` for new tiddlers.
+* `$CodeDisabled`: Disables a code tiddler (`script/js`) so its body is *not* evaluated/run on load. Editing such a tiddler warns you that it is inactive; remove the tag to re-activate it.
+* `$StyleSheet`: A *convention only* — it marks a tiddler as a stylesheet so it is easy to find (`$tag:$StyleSheet`); the tag itself does **not** cause the CSS to be applied. A stylesheet is applied only when it is listed in the active theme (see [[$Theme]] / [[$CoreThemeManager]]), which concatenates the text of its listed stylesheets into the page. Editing a stylesheet that belongs to the active theme updates the page live (no reload); editing one that isn't listed has no effect until a theme references it. Any `.css` source file is auto-tagged `$StyleSheet` at compile time.
+* `$Theme`: Marks a tiddler as a selectable theme. Theme tiddlers are a list of stylesheets that the [[$CoreThemeManager]] applies as CSS; the active theme is named in the [[$Theme]] tiddler.
+* `$Template`: Marks a tiddler as a template (an HTML fragment used to render other content rather than read on its own).
+
+### Compile-time auto-tags
+
+When sources are packed into runtime JSON (see the compile step), tags are added automatically based on the source location and file type. Tags stack:
+
+| Source | Auto-tag |
+|---|---|
+| `src/modules/core.defaults/` | `$Shadow` |
+| `src/packages/base/` | `$NoEdit` |
+| any `.css` file | `$StyleSheet` |
+
+So a `.css` file under `src/packages/base/` is tagged both `$NoEdit` and `$StyleSheet`.

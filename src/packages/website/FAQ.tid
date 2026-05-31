@@ -1,0 +1,13 @@
+# FAQ
+
+## Are `.css` files automatically applied?
+
+**No.** A `.css` file (or any tiddler tagged [$StyleSheet](#msg:search:$tag:$StyleSheet)) is *not* applied just because it exists. The `$StyleSheet` tag is only a findability convention — it is never read when CSS is applied.
+
+A stylesheet takes effect only when it is **listed in the active theme**:
+
+* The [[$Theme]] tiddler names the active theme (e.g. its text is `[[$CoreTheme]]`).
+* A theme tiddler is a bullet list of stylesheet links. The [[$CoreThemeManager]] reads that list, concatenates the text of each listed stylesheet, and injects it into the page via `adoptedStyleSheets`.
+* Editing a stylesheet that belongs to the active theme updates the page live (no reload). Editing one that isn't listed has no effect until a theme references it.
+
+See [[Themes]] and [[Tags]] for more.

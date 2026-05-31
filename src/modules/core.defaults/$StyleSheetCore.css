@@ -1,4 +1,6 @@
-/* CSS Reset */
+/* ============================================================
+   CSS Reset
+   ============================================================ */
 html {
   box-sizing: border-box;
   font-size: 16px;
@@ -8,6 +10,12 @@ html {
 *:before,
 *:after {
   box-sizing: inherit;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
 }
 
 body,
@@ -41,165 +49,143 @@ a[data-msg]:hover {
   cursor: pointer;
 }
 
-/* Responsive */
-.flex {
-  display: flex;
-  align-content: flex-start;
-}
-
-#header.flex {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-}
-
-#header .col1 div {
+/* ============================================================
+   App shell — 3-pane grid (sidebar | main)
+   Structural only; colours/typography come from the theme.
+   ============================================================ */
+#app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w, 280px) 1fr;
   width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
-#titlebar.flex {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-#body.flex {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-}
-
-div#visible-tiddlers {
+/* ---- Left sidebar ---- */
+#sidebar {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin: 0.3rem;
-}
-
-div#sidebar {
-  margin: 0.3rem;
-  padding: 0.5rem;
+  min-height: 0;
+  overflow: hidden;
   background-color: var(--colbg3);
-  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
-  outline: 1px solid var(--col1);
-  box-shadow: 1px 1px 0.5rem var(--col0);
 }
 
-#header-col3 {
+#sidebar > #header {
+  flex: 0 0 auto;
+}
+
+#explorer-search {
+  flex: 0 0 auto;
   position: relative;
 }
 
-#search {
-  font-size: 1rem;
-  line-height: 1.2rem;
+#explorer-search #search {
+  width: 100%;
 }
 
 #search-results {
-  background: var(--colbg3);
   position: absolute;
-  top: 30px;
-  left: 15px;
-  padding: 1rem;
-  border-radius: var(--rad1) var(--rad2) var(--rad3) var(--rad4);
-  outline: 1px solid var(--col1);
-  box-shadow: 1px 1px 0.5rem var(--col0);
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 5;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--colbg2);
 }
 
-#header .col1 {
-  flex-wrap: wrap;
+#explorer {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-#header .col2 {
-  gap: 10px;
-  flex-wrap: wrap;
+#sidebar-footer {
+  flex: 0 0 auto;
 }
 
-#header .col3 input {
-  width: 100%;
-  border: solid 1px var(--col1)
+/* ---- Main pane ---- */
+#main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
-@media (min-width: 0px) {
+#main-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+}
+
+#tab-strip {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#visible-tiddlers {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#menu-toggle {
+  display: none;
+  flex: 0 0 auto;
+}
+
+/* Tabbed story: show only the active note. Gated behind `.tabbed`
+   (added by the tabs plugin) so this is a no-op when the plugin is
+   absent — notes then simply stack as before. */
+#visible-tiddlers.tabbed > .tiddler {
+  display: none;
+}
+
+#visible-tiddlers.tabbed > .tiddler.tab-active {
+  display: block;
+}
+
+/* ============================================================
+   Responsive — sidebar collapses to a slide-in drawer
+   ============================================================ */
+@media (max-width: 600px) {
   html {
-    font-size: 10px;
+    font-size: 14px;
   }
 
-  #header .col1,
-  #header .col2,
-  #header .col3 {
-    flex-grow: 1;
-  }
-
-  #search {
-    font-size: 2rem;
-  }
-
-  #site-title,
-  #site-subtitle {
-    text-align: center;
-  }
-
-  #site-title h1,
-  #site-subtitle div {
-    margin: 2px;
-    padding: 2px;
-  }
-
-  #body.flex {
-    flex-wrap: wrap;
+  #app {
+    grid-template-columns: 1fr;
   }
 
   #sidebar {
-    display: none;
-    flex-grow: 1;
+    position: fixed;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(85vw, var(--sidebar-w, 280px));
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 12px var(--col0);
   }
 
-  div#visible-tiddlers {
-    flex-grow: 1;
-    max-width: 100%;
+  #sidebar.open {
+    transform: translateX(0);
   }
 
-  h1 {
-    font-size: 1rem;
-  }
-}
-
-@media (min-width: 600px) {
-  html {
-    font-size: 16px;
-  }
-
-  #header .col1 {
-    flex-grow: 1;
-  }
-
-  #header .col2 {
-    flex-grow: 3;
-  }
-
-  #header .col3 {
-    flex-basis: 100%;
-  }
-
-  #body.flex {
-    flex-wrap: nowrap;
-    flex-direction: row;
-  }
-
-  #sidebar {
-    flex-grow: 1;
-  }
-
-  div#visible-tiddlers {
-    flex-grow: 4;
-  }
-
-  h1 {
-    font-size: 1.7rem;
+  #menu-toggle {
+    display: inline-flex;
+    align-items: center;
   }
 }
 
-/* Fallback Colors in case Themes forget them */
+/* ============================================================
+   Fallback design tokens (in case a theme forgets them)
+   ============================================================ */
 :root {
   --colbg1: #fdeeee;
   --colbg2: #efefef;
@@ -217,4 +203,10 @@ div#sidebar {
   --rad2: 0.3rem;
   --rad3: 0.3rem;
   --rad4: 0.3rem;
+  /* New layout tokens */
+  --sidebar-w: 280px;
+  --accent: #6db193;
+  --accent-2: #8fbfdf;
+  --tab-bg: #dfdfdf;
+  --tab-active-bg: #efefef;
 }

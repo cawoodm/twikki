@@ -1,0 +1,157 @@
+/**
+ * ## Description
+ * Obsidian-style tabs for open notes. The platform keeps rendering every
+ * visible note as a `.tiddler` element inside `#visible-tiddlers`; this plugin
+ * adds a tab strip (`#tab-strip`) and shows only the *active* note by toggling
+ * a `.tab-active` class (the show/hide CSS lives in `$StyleSheetCore`, gated
+ * behind the `.tabbed` class this plugin adds — so without the plugin notes
+ * just stack as before).
+ *
+ * Exposes `tw.tabs = {active, rebuild(), activate(title)}`. Explorer / search /
+ * command-palette call `tw.tabs.activate(title)` after `tiddler.show` because
+ * re-opening an already-open note does not re-render it.
+ *
+ * Sync: render events are coalesced in a microtask. A single-note open
+ * activates that note; a bulk re-render (open-all / close) keeps the prior
+ * active tab, or — when the active note was closed — activates its neighbour.
+ */
+/**
+ * ## Data
+ * ```json
+ * {
+ *   "version": 1.0.0
+ * }
+ * ```
+ */
+// ## Code
+// ```javascript
+(function() {
+
+  let strip; // #tab-strip
+  let vis; // #visible-tiddlers
+  let lastVisible = [];
+  let batch = [];
+  let scheduled = false;
+  let scrollPos = {}; // remembered scrollTop per note title
+
+  wireUp('ui.loaded', init);
+  wireUp('ui.reloaded', init);
+
+  function init() {
+    strip = document.getElementById('tab-strip');
+    vis = document.getElementById('visible-tiddlers');
+    if (!strip || !vis) return;
+    vis.classList.add('tabbed');
+    scrollPos = {};
+
+    tw.tabs = {active: null, rebuild: () => schedule(), activate};
+
+    if (!strip._tabsBound) {
+      strip._tabsBound = true;
+      strip.addEventListener('click', onStripClick);
+    }
+    lastVisible = tw.tiddlers.visible.slice();
+    flush();
+  }
+
+  wireUp('tiddler.rendered', ({tiddler}) => {batch.push(tiddler.title); schedule();});
+  wireUp('story.rendered', schedule);
+  wireUp('story.changed', schedule);
+  // Focus a note's tab when it's requested while already open (link/hash/search):
+  // showTiddler early-returns in that case and emits `tiddler.refocus` instead of
+  // re-rendering. (Newly-opened notes are handled via `tiddler.rendered` above.)
+  wireUp('tiddler.refocus', activate);
+
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    Promise.resolve().then(flush);
+  }
+
+  function flush() {
+    scheduled = false;
+    if (!strip || !vis) return;
+    let rendered = batch; batch = [];
+    let visible = tw.tiddlers.visible;
+    let active = tw.tabs ? tw.tabs.active : null;
+
+    if (rendered.length === 1 && visible.includes(rendered[0])) {
+      // Single note just opened → make it active.
+      active = rendered[0];
+    } else if (!visible.includes(active)) {
+      // Active note is gone (closed) → activate its neighbour.
+      let idx = lastVisible.indexOf(active);
+      if (idx < 0) idx = visible.length - 1;
+      active = visible[Math.min(idx, visible.length - 1)] || visible[visible.length - 1] || null;
+    }
+
+    if (tw.tabs) tw.tabs.active = active;
+    rebuildStrip(visible, active);
+    applyActive(active);
+    restoreScroll(active);
+    // Forget scroll for notes that are no longer open.
+    Object.keys(scrollPos).forEach(t => {if (!visible.includes(t)) delete scrollPos[t];});
+    lastVisible = visible.slice();
+  }
+
+  function activate(title) {
+    if (!title) return;
+    saveScroll(); // capture the outgoing note's position before it hides
+    if (tw.tabs) tw.tabs.active = title;
+    applyActive(title);
+    rebuildStrip(tw.tiddlers.visible, title);
+    restoreScroll(title);
+  }
+
+  // Persist/restore scroll position so switching tabs and back keeps your place.
+  function saveScroll() {
+    if (vis && tw.tabs && tw.tabs.active != null) scrollPos[tw.tabs.active] = vis.scrollTop;
+  }
+
+  function restoreScroll(title) {
+    if (vis) vis.scrollTop = scrollPos[title] || 0;
+  }
+
+  function rebuildStrip(visible, active) {
+    if (!strip) return;
+    strip.innerHTML = visible.map(title => `
+      <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
+        <span class="tab-label">${esc(label(title))}</span>
+        <button class="tab-close icon" data-msg="tiddler.close" data-param="${attr(title)}" title="Close">✕</button>
+      </div>`).join('') +
+      '<button class="tab-new icon" data-msg="tiddler.new" title="New note">+</button>';
+  }
+
+  function applyActive(active) {
+    if (!vis) return;
+    vis.querySelectorAll(':scope > .tiddler').forEach(el => {
+      el.classList.toggle('tab-active', el.getAttribute('data-tiddler-title') === active);
+    });
+    if (strip) strip.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.getAttribute('data-tab') === active);
+    });
+  }
+
+  function onStripClick(e) {
+    if (e.target.closest('.tab-close')) return; // close handled by platform data-msg
+    let tab = e.target.closest('.tab');
+    if (tab) activate(tab.getAttribute('data-tab'));
+  }
+
+  function label(title) {
+    return title.replace(/^\$/, '');
+  }
+
+  function attr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
+
+  function esc(s) {
+    return tw.core.common.escapeHtml(String(s));
+  }
+
+  function wireUp(event, handler) {
+    tw.events.subscribe(event, handler, 'TabsPlugin');
+  }
+
+})();

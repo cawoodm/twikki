@@ -25,10 +25,21 @@
           el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
         });
     }, 'HighlightPlugin');
+    // Apply the correct light/dark highlight for the current theme on load.
+    // The sheets were just added above, so themeSwitch's disableStyleSheet won't throw.
+    tw.events.send('theme.switch', currentTheme());
   }, 'HighlightPlugin');
+
+  // Re-apply on soft reload too (the highlight <link>s persist in <head>).
+  tw.events.subscribe('ui.reloaded', () => tw.events.send('theme.switch', currentTheme()), 'HighlightPlugin');
+
   tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
     newElement.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
   }, 'HighlightPlugin');
+
+  function currentTheme() {
+    return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // strip [[ ]]
+  }
 
   function languageFromTiddlerType(type) {
     switch (type) {
