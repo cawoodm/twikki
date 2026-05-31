@@ -29,6 +29,8 @@
 
   let strip; // #tab-strip
   let vis; // #visible-tiddlers
+  let app; // #app (carries the mode-tabs / mode-river class)
+  let mode = 'tabs'; // 'tabs' | 'river' — from $GeneralSettings.layout.mode
   let lastVisible = [];
   let batch = [];
   let scheduled = false;
@@ -40,18 +42,48 @@
   function init() {
     strip = document.getElementById('tab-strip');
     vis = document.getElementById('visible-tiddlers');
+    app = document.getElementById('app');
     if (!strip || !vis) return;
-    vis.classList.add('tabbed');
+    mode = layoutMode();
     scrollPos = {};
-
     tw.tabs = {active: null, rebuild: () => schedule(), activate};
 
+    if (app) {
+      app.classList.toggle('mode-river', mode !== 'tabs');
+      app.classList.toggle('mode-tabs', mode === 'tabs');
+    }
+
+    if (mode === 'river') {
+      // No tabs: let every open note stack (the .tabbed show/hide rule is off).
+      vis.classList.remove('tabbed');
+      strip.innerHTML = '';
+      vis.querySelectorAll(':scope > .tiddler.tab-active').forEach(el => el.classList.remove('tab-active'));
+      return;
+    }
+
+    vis.classList.add('tabbed');
     if (!strip._tabsBound) {
       strip._tabsBound = true;
       strip.addEventListener('click', onStripClick);
     }
     lastVisible = tw.tiddlers.visible.slice();
     flush();
+  }
+
+  function layoutMode() {
+    try {
+      return tw.run.getJSONObject('$GeneralSettings')?.layout?.mode === 'tabs' ? 'tabs' : 'river';
+    } catch {
+      return 'tabs';
+    }
+  }
+
+  // Re-apply when the layout mode changes (raw edit emits tiddler.modified; the
+  // settings form saves via updateTiddlerHard + save.silent). Cheap; only re-inits
+  // when the mode actually flips.
+  ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach(ev => wireUp(ev, refreshMode));
+  function refreshMode() {
+    if (layoutMode() !== mode) init();
   }
 
   wireUp('tiddler.rendered', ({tiddler}) => {batch.push(tiddler.title); schedule();});
@@ -70,7 +102,7 @@
 
   function flush() {
     scheduled = false;
-    if (!strip || !vis) return;
+    if (mode !== 'tabs' || !strip || !vis) {batch = []; return;}
     let rendered = batch; batch = [];
     let visible = tw.tiddlers.visible;
     let active = tw.tabs ? tw.tabs.active : null;
@@ -95,7 +127,7 @@
   }
 
   function activate(title) {
-    if (!title) return;
+    if (mode !== 'tabs' || !title) return;
     saveScroll(); // capture the outgoing note's position before it hides
     if (tw.tabs) tw.tabs.active = title;
     applyActive(title);

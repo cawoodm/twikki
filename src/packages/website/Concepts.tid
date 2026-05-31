@@ -3,7 +3,6 @@ The `type` field of a tiddler determines what it's content means and how it is d
 
 * System tiddlers:
   * In general tiddler titles beginning with `$` are considered SystemTiddlers and hidden by default.
-  * Tiddlers tagged with *$Shadow* are also hidden from normal searches
   * To view hidden tiddlers just prefix your search with `$`
 * Rendering is based on the tiddler type:
   * `css`, `html/template` or `scripts/js` are displayed as code with highlighting

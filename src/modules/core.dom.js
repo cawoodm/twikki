@@ -8,6 +8,7 @@
   exports.addStyleSheet = addStyleSheet;
   exports.addScript = addScript;
   exports.disableStyleSheet = disableStyleSheet;
+  exports.enableStyleSheet = enableStyleSheet;
   exports.$ = $;
   exports.$$ = $$;
   exports.htmlToNode = htmlToNode;
@@ -36,6 +37,11 @@
     let el = document.querySelector(`link[title=${title}]`);
     if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
     el.disabled = true;
+  }
+  function enableStyleSheet(title) {
+    let el = document.querySelector(`link[title=${title}]`);
+    if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
+    el.disabled = false;
   }
   function $() {
     return document.getElementById(...arguments);

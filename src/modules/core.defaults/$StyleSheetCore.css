@@ -149,6 +149,18 @@ a[data-msg]:hover {
   display: block;
 }
 
+/* River mode: no tabs — every open note stacks (the .tabbed rule above is off).
+   Hide the strip and collapse the now-empty top bar (the mobile menu-toggle
+   still keeps it visible on small screens). */
+.mode-river #tab-strip {
+  display: none;
+}
+
+.mode-river #main-topbar {
+  min-height: 0;
+  border-bottom: none;
+}
+
 /* ============================================================
    Responsive — sidebar collapses to a slide-in drawer
    ============================================================ */
@@ -209,4 +221,100 @@ a[data-msg]:hover {
   --accent-2: #8fbfdf;
   --tab-bg: #dfdfdf;
   --tab-active-bg: #efefef;
+}
+
+/* ============================================================
+   Settings form ($SettingsDialogPlugin) — in-place editable form
+   rendered over the $GeneralSettings JSON. Namespaced so it does
+   not collide with the global tab strip (.tab / .tab-active).
+   ============================================================ */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--col4);
+}
+.settings-tab {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.settings-tab:hover {
+  background: var(--tab-bg);
+}
+.settings-tab-active {
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.settings-tab-panel.is-hidden {
+  display: none;
+}
+.settings-section {
+  margin: 0.5rem 0 1rem;
+}
+.settings-section-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--colbg3);
+}
+.settings-field {
+  display: grid;
+  grid-template-columns: minmax(8rem, 30%) 1fr;
+  gap: 0.5rem 1rem;
+  align-items: start;
+  margin: 0.4rem 0;
+}
+.settings-field-label {
+  font-weight: 500;
+  padding-top: 0.3rem;
+}
+.settings-field-help {
+  font-weight: 400;
+  font-size: 0.85em;
+  color: var(--col1);
+  margin-top: 0.15rem;
+}
+.settings-field-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+input.settings-field-input[type="checkbox"] {
+  width: auto;
+}
+.settings-text {
+  min-height: 3rem;
+}
+.settings-json {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: monospace;
+  min-height: 5rem;
+}
+.settings-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding-top: 0.3rem;
+}
+.settings-option {
+  font-weight: 400;
+}
+.settings-error {
+  color: #b00;
+  background: var(--colbg1);
+  border: 1px solid #b00;
+  border-radius: var(--rad1);
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
 }

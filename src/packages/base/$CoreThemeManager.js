@@ -42,8 +42,13 @@
     tiddler.text = `[[${theme}]]`;
     delete tiddler.doNotSave;
     tw.run.updateTiddlerHard('$Theme', tiddler);
-    if (theme.match(/Dark/)) tw.core.dom.disableStyleSheet('highlight-light');
-    else tw.core.dom.disableStyleSheet('highlight-dark');
+    if (theme.match(/Dark/)) {
+      tw.core.dom.enableStyleSheet('highlight-dark');
+      tw.core.dom.disableStyleSheet('highlight-light');
+    } else {
+      tw.core.dom.enableStyleSheet('highlight-light');
+      tw.core.dom.disableStyleSheet('highlight-dark');
+    }
     tw.events.send('tiddler.refresh', '$Theme');
     themeUpdate(theme);
     tw.events.send('save.silent');

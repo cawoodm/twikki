@@ -1,10 +1,20 @@
 {
   "backup": {
     "Gist": {
-      "comment": "Add your github PAT (classic) here",
       "accessToken": "***",
-      "gistId": "***"
+      "accessToken~": "GitHub Personal Access Token (classic) with the gist scope (secret, max:100)",
+      "gistId": "***",
+      "gistId~": "Id of the gist to back up to; created automatically on first push (string)"
     },
-    "backupInSeconds": 60
+    "backupInSeconds": 60,
+    "backupInSeconds~": "Time in seconds between autobackups (number)"
+  },
+  "layout": {
+    "mode": "river",
+    "mode~": "How open notes are displayed: tabs (one note at a time) or river (all stacked) (option:tabs,river)"
+  },
+  "themes": {
+    "importUrl": "https://gist.githubusercontent.com/cawoodm/c43037e0370393ef2928848fee64e95d/raw/themes.json",
+    "importUrl~": "URL of the themes manifest JSON imported by the Theme Importer (string)"
   }
 }

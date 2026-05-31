@@ -1171,13 +1171,9 @@
     return result;
   }
   function scrollToTiddler(title) {
-  // getTiddlerElement(title)?.scrollIntoView({behavior: 'smooth', block: 'start'});
-    let top = getTiddlerElement(title).offsetTop;
-    if (!top)
-      if (tw.logging.debugMode) return console.warn('Cannot scroll to tiddler', title);
-      else return;
-    let topOfElement = top - tw.core.dom.$('header').offsetHeight;
-    window.scroll({top: topOfElement, behavior: 'smooth'});
+    // Scroll within the actual scroll container (#visible-tiddlers). window.scroll
+    // is a no-op in the 3-pane layout, so use scrollIntoView on the element.
+    getTiddlerElement(title)?.scrollIntoView({behavior: 'smooth', block: 'start'});
   }
   function handleHashLink(hash) {
     if (!hash) return;
