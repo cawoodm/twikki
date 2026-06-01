@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Obsidian-style tabs for open notes. The platform keeps rendering every

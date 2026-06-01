@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Renders an editable FORM in place of the raw JSON whenever the

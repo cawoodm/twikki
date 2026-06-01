@@ -21,7 +21,12 @@
   function addStyleSheet(title, url) {
     var link = document.createElement('link');
     link.type = 'text/css';
-    link.title = title;
+    // NB: identify via data-stylesheet, NOT title. A <link rel="stylesheet"> with a
+    // title joins an HTML "alternate style-sheet set" — the browser keeps the first
+    // titled sheet as the preferred set and ignores per-link .disabled toggling, which
+    // left atom-one-light applied on dark themes. A data attribute keeps each sheet a
+    // plain persistent stylesheet whose .disabled works independently.
+    link.setAttribute('data-stylesheet', title);
     link.rel = 'stylesheet';
     link.href = url;
     document.head.appendChild(link);
@@ -34,12 +39,12 @@
     document.head.appendChild(script);
   }
   function disableStyleSheet(title) {
-    let el = document.querySelector(`link[title=${title}]`);
+    let el = document.querySelector(`link[data-stylesheet="${title}"]`);
     if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
     el.disabled = true;
   }
   function enableStyleSheet(title) {
-    let el = document.querySelector(`link[title=${title}]`);
+    let el = document.querySelector(`link[data-stylesheet="${title}"]`);
     if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
     el.disabled = false;
   }

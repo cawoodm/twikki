@@ -17,11 +17,18 @@
   //         ':' - Used in search queries and parameters
   //         '!' - Used to negate logic (e.g. msg:search:!tag:$Shadow)
   const reTiddlerTitle = /[a-z0-9_\-\.\(\):\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
+  // A reference is a title, optionally followed by /Section, so links/inclusions
+  // can address into a tiddler: [[Title/Section]] / {{Title/Section}}. The slash
+  // only ever SEPARATES two title segments \u2014 it can never lead \u2014 so templater
+  // {{/block}} close tags and {{=field}} substitutions are not captured as
+  // inclusions. Title validation (reTiddlerTitleComplete) stays strict on
+  // reTiddlerTitle, so '/' is never valid in a real title.
+  const reTiddlerRef = new RegExp(`${reTiddlerTitle.source}(?:/${reTiddlerTitle.source})?`, 'gi');
   const reTiddlerTitleComplete = RegExp.compose(/^reTiddlerTitle$/gi, {reTiddlerTitle});
   const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
-  const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerTitle)\|?([^\}]+)?}}/gi, {reTiddlerTitle});
+  const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerRef)\|?([^\}]+)?}}/gi, {reTiddlerRef});
   const reInclusionParams = /\##([\$0-9a-z]+)\#([^\#]+)?#/gi;
-  const reLinks = RegExp.compose(/\[\[(reTiddlerTitle)]]/gi, {reTiddlerTitle});
+  const reLinks = RegExp.compose(/\[\[(reTiddlerRef)]]/gi, {reTiddlerRef});
   // Events are alphanumeric with "." e.g. 'foo.bar' (lowercase only)
   const reEventName = /[a-z0-9\.]+/g;
   const reCommand = RegExp.compose(/(reEventName):?(.+)?/, {reEventName});
@@ -91,8 +98,9 @@
       console.debug('Looking for local TWikki.Core modules...');
 
       let modulesToLoad = [
-        '/core.js', 
+        '/core.js',
         '/core.common.js',
+        '/core.sections.js',
         '/core.workspaces.js',
         '/core.defaults.json', 
         '/core.packaging.js',
@@ -212,6 +220,7 @@
         addTiddlerHard,
         deleteTiddler,
         getTiddler,
+        getSection,
         getTiddlerList,
         getTiddlersByTag,
         getTiddlerTextList,
@@ -421,7 +430,7 @@
 
   function validateTiddlerText(t) {
     if (t.type === 'json') return jsonValidator(t.text);
-    if (isActiveCodeTiddler(t)) executeText(t.text);
+    tiddlerCodeBlocks(t).forEach(b => executeText(b.text, b.title)); // validate by executing (as code tiddlers do)
     if (isCodeTiddler(t) && t.tags.includes('$CodeDisabled')) alert('This code tiddler is disabled and will not run. Remove the $CodeDisabled tag to activate.');
   }
   function tiddlerValidation(t) {
@@ -440,20 +449,20 @@
   }
   function runCoreTiddlers() {
     tw.tiddlers.all
-      .filter(isActiveCodeTiddler)
       .filter(isCoreTiddler)
-      .forEach(t => (executeCodeTiddler(t.text, t.title)));
+      .forEach(runTiddlerCode);
   }
   function runExtensionTiddlers() {
     tw.tiddlers.all
-      .filter(isActiveCodeTiddler)
       .filter(t => !isCoreTiddler(t))
       .forEach(t => {
-        if (qs.trace) return executeCodeTiddler(t.text, t.title);
+        let blocks = tiddlerCodeBlocks(t);
+        if (!blocks.length) return;
+        if (qs.trace) return blocks.forEach(b => executeCodeTiddler(b.text, b.title));
         try {
-          executeCodeTiddler(t.text, t.title);
+          blocks.forEach(b => executeCodeTiddler(b.text, b.title));
         } catch (e) {
-          tw.ui.notify(`Extension Tiddler '${t.title} failed (see log)`, 'E', e.stack);
+          tw.ui.notify(`Extension Tiddler '${t.title} failed (see console log)`, 'E', e.stack);
           console.error(`Extension Tiddler '${t.title} failed: ${e.message}`, e.stack);
           if (confirm(`Extension Tiddler '${t.title} failed. Would you like to disable it?`)) {
             t.tags.push('$CodeDisabled');
@@ -611,8 +620,10 @@
           result = replaceFrom(result, indexOfMacro, m[0], newText);
         } catch (e) {
           let errmsg = `Macro '${macroName}' failed in tiddler '${title}'!`;
-          console.warn(errmsg, e.message, e.stack);
-          result = result.replace(macroCommand, `<span class="error">${errmsg}: ${e.message.substr(0, 200)} (see log)</span>`);
+          if (e.message === 'macroFunction is not a function') errmsg += ` The macro is unknown or not registered!`; 
+          else errmsg += e.message;
+          console.warn(errmsg, e.stack);
+          result = result.replace(macroCommand, `<span class="error">${errmsg} (see console log)</span>`);
           if (validation) throw e;
           return;
         }
@@ -832,7 +843,7 @@
       return scrollToTiddler(title);
     }
     // if (getTiddlerElement(title)) hideTiddler(title);
-    let tiddler = getTiddler(title);
+    let tiddler = getTiddler(title) || sectionTiddler(title);
     if (!tiddler) tiddler = nonExistentTiddler(title); // throw new Error(`showTiddler '${title}' failed!`, 'E');
     let newElement = createTiddlerElement(tiddler);
     // TODO: If it's a code tiddler run it (if !Disabkled) and show error message in red
@@ -840,6 +851,18 @@
     if (tw.tiddlers.visible.indexOf(tiddler.title) === -1) tw.tiddlers.visible.push(tiddler.title);
     tw.events.send('tiddler.rendered', {tiddler, newElement});
     saveVisible();
+  }
+  // For a `Title/Section` reference, synthesize a display-only tiddler holding
+  // just that section (rendered by its own type via makeTiddlerText). Never added
+  // to tw.tiddlers.all — the parent stays the single store entry.
+  function sectionTiddler(title) {
+    if (typeof title !== 'string' || !title.includes('/')) return null;
+    let slash = title.indexOf('/');
+    let base = getTiddler(title.slice(0, slash));
+    if (!base) return null;
+    let sec = tw.core.sections.getSection(base.text, title.slice(slash + 1));
+    if (!sec) return null;
+    return {title, text: sec.text, type: sec.type || base.type, tags: [], doNotSave: true};
   }
   function emptyTiddler() {
     return {title: '', text: '', type: 'x-twikki', tags: []};
@@ -850,14 +873,15 @@
     return t;
   }
   function tiddlerDeleted(t) {
-    if (isActiveCodeTiddler(t))
+    if (isRunnableTiddler(t))
       if (confirm('Code tiddler deleted - would you like to reload?')) rebootHard();
   }
   function tiddlerUpdated(title) {
     let t = getTiddler(title);
-    if (isActiveCodeTiddler(t))
+    let codeBlocks = tiddlerCodeBlocks(t);
+    if (codeBlocks.length)
     // TODO: Try, catch, return error <span class="error">
-      return executeCodeTiddler(t.text, title);
+      return codeBlocks.forEach(b => executeCodeTiddler(b.text, b.title));
     if (['$SiteTitle', '$SiteSubTitle', '$TitleBar'].includes(title))
       tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
     else if (tiddlerIsATemplate(t))
@@ -1026,12 +1050,36 @@
   }
 
   // Functions to extract data from structured tiddlers
+
+  // Resolve a tiddler reference to {text, type}, honouring `Title/Section`
+  // addressing into a tiddler's sections. Falls back to whole-tiddler text when
+  // the `/`-form does not resolve, so it is a strict superset of getTiddler().
+  function resolveRef(ref) {
+    if (typeof ref === 'string' && ref.includes('/')) {
+      let slash = ref.indexOf('/');
+      let base = getTiddler(ref.slice(0, slash));
+      if (base) {
+        let sec = tw.core.sections.getSection(base.text, ref.slice(slash + 1));
+        if (sec) return {text: sec.text, type: sec.type || base.type};
+      }
+    }
+    let t = getTiddler(ref);
+    return {text: t?.text || '', type: t?.type};
+  }
+  // {name,type,text} | null — a section of a tiddler, with type filled from the
+  // parent when the section is not a fenced (typed) block.
+  function getSection(title, sectionName) {
+    let base = getTiddler(title);
+    if (!base) return null;
+    let sec = tw.core.sections.getSection(base.text, sectionName);
+    return sec ? {...sec, type: sec.type || base.type} : null;
+  }
   function getTiddlerTextRaw(title) {
-    return getTiddler(title)?.text || '';
+    return resolveRef(title).text;
   }
   // 'this #$1# and that #$2#'[foo, bar] => 'this foo and that bar'
   function getTiddlerTextReplaced(title, params) {
-    let res = getTiddler(title)?.text || '';
+    let res = resolveRef(title).text;
     Array.from(res.matchAll(reInclusionParams) || []).forEach(m => {
       let all = m[0];
       let key = m[1];
@@ -1044,7 +1092,12 @@
     return getTiddlerTextRaw(title).split('\n');
   }
   function getTiddlerList(title) {
+    let inFence = false;
     return getTiddlerTextLines(title)
+      .filter(l => { // Skip lines inside ``` fences (e.g. a `* { }` CSS selector is not a list item)
+        if (/^```/.test(l)) {inFence = !inFence; return false;}
+        return !inFence;
+      })
       .filter(l => (l.match(/^[-*] /))) // Only bullet-points
       .map(l => (l.replace(/^[-*] /, ''))) // Remove bullet-point prefix
       .map(l => (l.replace(/[\[\]]/g, ''))) // Remove possible [[links]]
@@ -1091,6 +1144,26 @@
   }
   function isActiveCodeTiddler(t) {
     return ['script/js'].includes(t.type) && !t.tags.includes('$CodeDisabled');
+  }
+  // The JS to execute for a tiddler: the whole text when it is a script/js
+  // tiddler (as today), otherwise each of its `script/js` sections (a ```js /
+  // ```javascript fenced section). Sections run exactly like code tiddlers; a
+  // `$CodeDisabled` tag (on the tiddler or the section) opts out.
+  function tiddlerCodeBlocks(t) {
+    if (!t || t.tags?.includes('$CodeDisabled')) return [];
+    if (t.type === 'script/js') return [{text: t.text || '', title: t.title}];
+    if (!t.text || !t.text.includes('# ')) return []; // fast path: no h1 sections
+    const parsed = tw.core.sections.parseSections(t.text);
+    return parsed.order
+      .map(n => parsed.sections[n.toLowerCase()])
+      .filter(s => s && s.type === 'script/js' && !(s.tags || []).includes('$CodeDisabled'))
+      .map(s => ({text: s.text, title: `${t.title}/${s.name}`}));
+  }
+  function runTiddlerCode(t) {
+    tiddlerCodeBlocks(t).forEach(b => executeCodeTiddler(b.text, b.title));
+  }
+  function isRunnableTiddler(t) {
+    return tiddlerCodeBlocks(t).length > 0;
   }
   function isCoreTiddler(t) {
     return t.package === 'core';

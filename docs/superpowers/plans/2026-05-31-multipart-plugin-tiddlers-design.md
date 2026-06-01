@@ -1,5 +1,23 @@
 # Multi-Part Plugin Tiddlers (one tiddler → a runnable plugin)
 
+> **Revision (2026-06-01): sections are foundational, not `$Plugin`-gated.**
+> Sections are a general, tiddler-wide feature; `$Theme` and `$Plugin` are just
+> *consumers* of one shared parser (`core.sections.js`). Grammar settled with the
+> user: the delimiter is **`#` (h1)** (`/^# (.+)$/m`); a section is *content under
+> a heading* and is a **mini-tiddler** — optional leading `key: value` meta lines
+> (`tags:` comma-split, like the compile plugin) then a body. A body that is a
+> single fenced ```lang block is typed from the fence (stripped); otherwise type
+> falls back to an explicit `type:` meta or the parent's type.
+>
+> **Phase 1 shipped** (see `~/.claude/plans/look-at-auroratheme-tid-which-lexical-newt.md`):
+> the `core.sections.js` parser, `resolveRef`/`getSection` + section-aware text
+> helpers, `[[Title/Section]]` links / `{{Title/Section}}` inclusions / `#Title/Section`
+> navigation (render-by-type via `makeTiddlerText` on a synthesized section
+> tiddler — no separate `renderSectionHtml`), and the `$Theme` consumer
+> (`AuroraTheme.tid` packs its CSS as an `AuroraStyleSheet` section, referenced
+> from its theme list as `[[AuroraTheme/AuroraStyleSheet]]`; the theme manager
+> needed no change). **Phase 2 (below) — the `$Plugin` loader — is still pending.**
+
 ## Context
 `src/packages/website/ExamplePlugin.tid` describes an unimplemented concept: a **single** tiddler holding multiple named sections of different types (Code, StyleSheet, Data, Config, Settings, Theme, …) that behaves like a self-contained plugin — its script runs, its styles apply, and its data is readable. Today this is purely aspirational: there is no section parser, `/` is disallowed in titles (`twikki.latest.js:14`, with a `// TODO` at `:9` reserving `/` for "blocks within multipart tiddlers"), and the runtime only ever treats one tiddler as one unit of a single `type`.
 

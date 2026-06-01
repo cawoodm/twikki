@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * $SynchDataFunctions
@@ -109,7 +111,7 @@ tw.macros.synch = (function(){
       let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('SynchData fetch', await readError(res));
-        return tw.ui.notify(`Fetch remote failed '${res.status}' (see log)`, 'E');
+        return tw.ui.notify(`Fetch remote failed '${res.status}' (see console log)`, 'E');
       }
       let gist = await res.json();
       let rebuilt = rebuildTiddlersFromGist(gist);
@@ -246,7 +248,7 @@ tw.macros.synch = (function(){
         logTiddler.title = 'Failed: ' + logTiddler.title;
         tw.run.previewTiddler(logTiddler);
         console.error('SynchData push', await readError(res));
-        return tw.ui.notify(`Synch (push) to remote failed '${res.status}' (see log)`, 'E');
+        return tw.ui.notify(`Synch (push) to remote failed '${res.status}' (see console log)`, 'E');
       }
       if (!cfg.gistId) {
         let created = await res.json();

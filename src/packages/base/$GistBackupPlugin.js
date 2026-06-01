@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Backup your data to a private [GitHub Gist](https://gist.github.com).
@@ -56,7 +58,7 @@
       let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('GistBackup restore', await readError(res));
-        return tw.ui.notify(`Restore failed '${res.status}' (see log)`, 'E');
+        return tw.ui.notify(`Restore failed '${res.status}' (see console log)`, 'E');
       }
       let gist = await res.json();
       let rebuilt = rebuildTiddlersFromGist(gist);
@@ -112,7 +114,7 @@
       }
       if (!res.ok) {
         console.error('GistBackup save', await readError(res));
-        return tw.ui.notify(`Backup failed '${res.status}' (see log)`, 'E');
+        return tw.ui.notify(`Backup failed '${res.status}' (see console log)`, 'E');
       }
       if (!cfg.gistId) {
         let created = await res.json();
@@ -144,7 +146,7 @@
     let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
     if (!res.ok) {
       console.error('GistBackup fetch-before-patch', await readError(res));
-      tw.ui.notify(`Backup failed '${res.status}' (see log)`, 'E');
+      tw.ui.notify(`Backup failed '${res.status}' (see console log)`, 'E');
       return null;
     }
     let gist = await res.json();

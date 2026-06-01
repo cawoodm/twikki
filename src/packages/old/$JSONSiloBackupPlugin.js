@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Backup your data to [JSONSilo.com](https://jsonsilo.com)
@@ -28,7 +30,7 @@ tw.macros.backup = {
         'Content-Type': 'application/json',
       },
     });
-    if (!res.ok) return tw.ui.notify(`Restore failed '${res.status}' (see log)`, 'E');
+    if (!res.ok) return tw.ui.notify(`Restore failed '${res.status}' (see console log)`, 'E');
     let result = await res.json();
     Object.assign(tw.tiddlers, result.record);
     tw.run.save();
@@ -51,8 +53,8 @@ tw.macros.backup = {
       },
       body,
     });
-    if (!res.status === 403) return tw.ui.notify(`Backup failed '${res.status}': Unauthorized (see log)!`, 'E');
-    if (!res.ok) return tw.ui.notify(`Backup failed '${res.status}' (see log)`, 'E');
+    if (!res.status === 403) return tw.ui.notify(`Backup failed '${res.status}': Unauthorized (see console log)!`, 'E');
+    if (!res.ok) return tw.ui.notify(`Backup failed '${res.status}' (see console log)`, 'E');
     tw.ui.notify(`Backup complete! (${body.length / 1000} KB)`, 'S');
   },
 };

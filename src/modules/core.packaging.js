@@ -17,7 +17,7 @@
       return loadList(obj.tiddlers, {name, overWrite, filter, doNotSave, noOverWrite}); // tw.events.send('package.loaded');
     } catch (e) {
       // TODO: Replace notify with throw new Error()
-      tw.ui.notify(`Failed to load tiddler package '${name}' from ${url} (see log)`, 'E', e.stack);
+      tw.ui.notify(`Failed to load tiddler package '${name}' from ${url} (see console log)`, 'E', e.stack);
       return 0;
     }
   }
@@ -84,7 +84,7 @@
       obj = await res.json();
       return obj;
     } catch (e) {
-      throw new Error(`Failed to load package '${name}' with invalid JSON (see log) from ${url}: ${e.message}`);
+      throw new Error(`Failed to load package '${name}' with invalid JSON (see console log) from ${url}: ${e.message}`);
     }
   }
 });

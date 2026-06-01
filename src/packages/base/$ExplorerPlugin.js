@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Fills the left sidebar with an Obsidian-style explorer: a list of notes

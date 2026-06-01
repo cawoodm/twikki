@@ -17,3 +17,6 @@
 # Toolbars
 * Close other tiddlers
 * ⭐ Add to Favorites
+
+# Compiler
+* Allow .css files to be tagged via meta comments /* tags: $StyleSheet */

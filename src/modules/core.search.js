@@ -12,9 +12,9 @@
   const EXACT_TITLE_MATCH = 4;
   const TITLE_MATCH = 3;
   const TEXT_MATCH = 1;
-  const reTag = /tag:(\S+)\s?/;
-  const rePck = /pck:(\S+)\s?/;
-  const reType = /type:(\S+)\s?/;
+  const reTag = /tag:\s*(\S+)\s?/;
+  const rePck = /pck:\s*(\S+)\s?/;
+  const reType = /type:\s*(\S+)\s?/;
 
   // Run
   const run = () => {
@@ -67,9 +67,16 @@
   // TODO: Apply tw.templates.TiddlerSearchResult
     let newElement = document.createElement('div');
     newElement.className = 'tiddler-list'; // + (type ? ' line-clamp' : '');
-    // BUG: If tiddlers have no type we don't display a link!
-    if (type) newElement.appendChild(newTiddlerLink({title, type}));
-    else newElement.innerHTML = title;
+    if (type) {
+      // Make the whole highlighted row clickable, not just the text: the global
+      // click handler resolves data-msg from the nearest ancestor, so the data
+      // attributes live on the row itself. The inner link is kept for styling.
+      newElement.setAttribute('data-msg', 'tiddler.show');
+      newElement.setAttribute('data-param', title);
+      newElement.appendChild(newTiddlerLink({title, type}));
+    } else {
+      newElement.innerHTML = title; // placeholder (e.g. "No results!") — not clickable
+    }
     target = target || tw.core.dom.divSearchResults;
     target.insertAdjacentElement('beforeend', newElement);
   }

@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Import themes from a fixed, public [GitHub Gist](https://gist.github.com).
@@ -141,7 +143,7 @@
     if (!url) return status(box, 'Enter a themes.json URL.');
     status(box, 'Loading…');
     let tiddlers = await fetchPackage(url);
-    if (!tiddlers) return status(box, 'Failed to load themes (see log).', true);
+    if (!tiddlers) return status(box, 'Failed to load themes (see console log).', true);
     state.byTitle = new Map(tiddlers.map(t => [t.title, t]));
     let themes = tiddlers.filter(t => t.tags?.includes('$Theme'));
     if (!themes.length) return status(box, 'No themes found in this package.');

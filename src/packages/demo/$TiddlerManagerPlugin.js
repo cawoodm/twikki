@@ -1,3 +1,5 @@
+// tags: $Plugin
+
 /**
  * ## Description
  * Provide <<favorites.toggle>> widget

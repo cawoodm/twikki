@@ -1,3 +1,4 @@
+// tags: $Plugin
 
 /**
  * TestFramework
