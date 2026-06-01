@@ -1,5 +1,170 @@
 tags: $Theme
 
+A bold high-contrast brutalist theme with hard offset shadows.
+
+# KontrastTheme
+tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[KontrastStyleSheet]]
+* [[KontrastTheme/KontrastStyleSheet]]
+
+# KontrastStyleSheet
+tags: $StyleSheet
+```css
+/* ---- Web fonts ---- */
+@font-face {
+  font-family: 'Anton';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/anton/files/anton-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --colbg1: #f4f4f2;
+  --colbg2: #ffffff;
+  --colbg3: #ffffff;
+  --colbgi: #ffffff;
+  --colfg:  #0a0a0a;
+  --colfgi: #0a0a0a;
+  --col0:   #0a0a0a;
+  --col1:   #6b6b6b;
+  --col3:   #ffffff;
+  --col4:   #0a0a0a;
+  --col6:   #e5322d;
+  --notify-rgba: 229, 50, 45;
+  --rad1: 0;
+  --rad2: 0;
+  --rad3: 0;
+  --rad4: 0;
+}
+
+* {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+body {
+  background: #f4f4f2;
+}
+
+/* Header → bold bordered bar with hard offset shadow */
+div#header {
+  background: #ffffff;
+  border: 2px solid #0a0a0a;
+  box-shadow: 6px 6px 0 #0a0a0a;
+  border-radius: 0;
+  padding: 12px 18px;
+  margin: 10px;
+  align-items: center;
+}
+#header-col1 { order: 0; }
+#header-col3, #header .col3 { order: 1; flex: 1 1 auto; flex-basis: auto; }
+#header-col2 { order: 2; flex: 0 0 auto; }
+
+#site-title h1 {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #0a0a0a;
+}
+
+#header #header-col2 > div:has(#open-all),
+#header #header-col2 > div:has(#close-all),
+#header #header-col2 > div:has(#btn-synch-pull),
+#header #header-col2 > div:has(#btn-synch-push),
+#header #header-col2 > div:has(#trashCanIcon) { display: none; }
+
+/* Toolbar: uniform square icon boxes, centered, evenly spaced.
+   (#header #header-col2 = two ids, beats core's #header .col2 gap rule) */
+#header #header-col2 {
+  gap: 8px;
+  align-items: center;
+}
+#header #header-col2 > div {
+  margin: 0;
+  border: none;
+}
+#header #header-col2 button.icon,
+#header #header-col2 > div > a {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 2px solid #0a0a0a;
+  border-radius: 0;
+  background: #fff;
+  fill: #0a0a0a;
+  text-decoration: none;
+  cursor: pointer;
+}
+#header #header-col2 button.icon svg,
+#header #header-col2 > div > a svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+#header #header-col2 button.icon:hover,
+#header #header-col2 > div > a:hover {
+  background: #0a0a0a;
+  fill: #fff;
+}
+#header #header-col2 button.icon:hover svg,
+#header #header-col2 > div > a:hover svg {
+  fill: #fff;
+}
+
+#search {
+  width: 100%;
+  border: 2px solid #0a0a0a;
+  border-radius: 0;
+  background: #fff;
+  padding: 8px 14px;
+  font-size: 1rem;
+}
+
+#visible-tiddlers { max-width: 900px; margin: 0 auto; width: 100%; }
+
+div.tiddler {
+  background: #fff;
+  outline: none;
+  border: 2px solid #0a0a0a;
+  box-shadow: 6px 6px 0 #0a0a0a;
+  border-radius: 0;
+  padding: 2.4rem 2.6rem;
+}
+div.tiddler div.title {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 2.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #0a0a0a;
+  background: transparent;
+  line-height: 1.05;
+}
+h1, h2, h3, h4 {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #0a0a0a;
+}
+a:not([class]) { color: #e5322d; font-weight: 600; }
+blockquote { border-left: 6px solid #e5322d; background: #faf2f1; }
+```

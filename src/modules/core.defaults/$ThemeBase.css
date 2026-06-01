@@ -385,6 +385,10 @@ select:focus {
   background-color: var(--colbg3);
 }
 
+#search-results .tiddler-list[data-msg] {
+  cursor: pointer;
+}
+
 #search-results a {
   color: var(--colfg);
 }

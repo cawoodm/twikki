@@ -1,5 +1,83 @@
 tags: $Theme
 
+A green-on-black monospace terminal theme.
+
+# TerminalThemeDark
+tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[TerminalStyleSheet]]
+* [[TerminalThemeDark/TerminalStyleSheetDark]]
+
+# TerminalStyleSheetDark
+tags: $StyleSheet
+```css
+:root {
+  --colbg1: #050806;
+  --colbg2: #0a0f0b;
+  --colbg3: #0f140f;
+  --colbgi: #02050a;
+  --colfg:  #33ff66;
+  --colfgi: #9dffb0;
+  --col0:   #000000;
+  --col1:   #1f7a3a;
+  --col3:   #0c2a16;
+  --col4:   #1c3d28;
+  --col6:   #39ff14;
+  --notify-rgba: 57, 255, 20;
+  --rad1: 0;
+  --rad2: 0;
+  --rad3: 0;
+  --rad4: 0;
+}
+
+* {
+  font-family: "Cascadia Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+}
+
+body {
+  background:
+    repeating-linear-gradient(0deg, rgba(57, 255, 20, 0.03) 0 1px, transparent 1px 3px),
+    #050806;
+}
+
+div#header {
+  background: #0a0f0b;
+  border: 1px solid #1c3d28;
+  box-shadow: none;
+}
+
+div#sidebar {
+  background: #0a0f0b;
+  border: 1px solid #1c3d28;
+}
+
+div.tiddler {
+  background: #0a0f0b;
+  outline: none;
+  border: 1px solid #1c3d28;
+  box-shadow: none;
+}
+
+div.tiddler div.title {
+  background: transparent;
+  color: #39ff14;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+a:not([class]) {
+  color: #39ff14;
+  text-decoration: underline;
+}
+
+button {
+  background: #0c2a16;
+  color: #39ff14;
+  border: 1px solid #1c3d28;
+}
+
+code {
+  color: #9dffb0;
+  border-color: #1c3d28;
+}
+```

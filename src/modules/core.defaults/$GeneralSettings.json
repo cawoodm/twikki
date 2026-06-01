@@ -1,10 +1,11 @@
+// tags: $Shadow $NoSynch $NoBackup
 {
   "backup": {
     "Gist": {
       "accessToken": "***",
       "accessToken~": "GitHub Personal Access Token (classic) with the gist scope (secret, max:100)",
       "gistId": "***",
-      "gistId~": "Id of the gist to back up to; created automatically on first push (string)"
+      "gistId~": "Id of the gist to back up to"
     },
     "backupInSeconds": 600,
     "backupInSeconds~": "Time in seconds between auto-backups (number)"

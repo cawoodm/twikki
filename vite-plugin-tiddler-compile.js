@@ -1,5 +1,5 @@
-import {readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync} from 'node:fs';
-import {join, extname, basename, resolve, relative, isAbsolute} from 'node:path';
+import {existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync} from 'node:fs';
+import {basename, extname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 export function getType(ext) {
@@ -45,14 +45,20 @@ export function parseFile(filePath, packageName) {
       textLines.push(line);
       continue;
     }
-    if (/^[a-z]+: /.test(line)) {
-      const colon = line.indexOf(':');
-      const field = line.slice(0, colon).trim();
-      let value = line.slice(colon + 1).trim();
+    // A leading metadata line is `field: value`, optionally behind a `//` comment so
+    // that .js/.json sources (which can't carry a bare header) can still declare tags,
+    // e.g. `// tags: $Shadow $NoSynch $NoBackup`. The comment line is consumed (not
+    // emitted into text), keeping .json bodies valid.
+    const metaLine = line.replace(/^\/\/\s*/, '');
+    if (/^[a-z]+: /.test(metaLine)) {
+      const colon = metaLine.indexOf(':');
+      const field = metaLine.slice(0, colon).trim();
+      let value = metaLine.slice(colon + 1).trim();
       if (value === 'true') value = true;
       else if (value === 'false') value = false;
       if (field === 'tags') {
-        const vals = String(value).split(',').map(v => v.trim()).filter(Boolean);
+        // Split on commas and/or whitespace (matches the runtime's own tag parsing).
+        const vals = String(value).split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
         tiddler.tags = [...tiddler.tags, ...vals];
       } else {
         tiddler[field] = value;
@@ -66,6 +72,7 @@ export function parseFile(filePath, packageName) {
   // Remove trailing empty lines
   while (textLines.length && textLines[textLines.length - 1] === '') textLines.pop();
   tiddler.text = textLines.join('\n');
+  tiddler.tags = [...new Set(tiddler.tags)]; // dedupe (auto-tag may repeat a header tag)
   return tiddler;
 }
 

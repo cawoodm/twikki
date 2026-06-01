@@ -77,6 +77,65 @@ test('parseFile: auto-tags merged with metadata tags', () => {
   }
 });
 
+test('parseFile: .json with // tags header is tagged and the comment line is stripped (valid JSON)', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, '$GeneralSettings.json');
+    writeFileSync(filePath, '// tags: $NoSynch $NoBackup\n{\n  "a": 1\n}\n');
+    const t = parseFile(filePath, 'demo');
+    assert.equal(t.type, 'json');
+    assert.deepEqual(t.tags, ['$NoSynch', '$NoBackup']);
+    assert.equal(t.text, '{\n  "a": 1\n}');
+    assert.doesNotThrow(() => JSON.parse(t.text)); // body must remain valid JSON
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: .js with // tags header is tagged and the comment line is stripped', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'MyPlugin.js');
+    writeFileSync(filePath, '// tags: $Shadow\n(function(tw){})(tw);\n');
+    const t = parseFile(filePath, 'demo');
+    assert.equal(t.type, 'script/js');
+    assert.deepEqual(t.tags, ['$Shadow']);
+    assert.equal(t.text, '(function(tw){})(tw);');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: // tags header in core.defaults dedupes the auto-added $Shadow', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, '$GeneralSettings.json');
+    writeFileSync(filePath, '// tags: $Shadow $NoSynch $NoBackup\n{}\n');
+    const t = parseFile(filePath, 'core.defaults');
+    assert.deepEqual(t.tags, ['$Shadow', '$NoSynch', '$NoBackup']);
+    assert.equal(t.text, '{}');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: .tid comma-separated tags still parse (regression)', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'ObsidianThemeDark.tid');
+    writeFileSync(filePath, 'tags: $Theme, $ThemeDark\n\n* [[$StyleSheetCore]]\n');
+    const t = parseFile(filePath, 'demo');
+    assert.deepEqual(t.tags, ['$Theme', '$ThemeDark']);
+    assert.equal(t.text, '* [[$StyleSheetCore]]');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
 test('compilePackage: ignores files with unknown extensions (e.g. atomic-save temp files)', () => {
   const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
   const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
