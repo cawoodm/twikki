@@ -2,6 +2,11 @@
 
   const NAME = 'twikki';
   const VERSION = '0.19.0';
+  // Default base URL the platform loads its core modules and packages from.
+  // Mirrors $GeneralSettings.urls.moduleUrl — kept as a constant because baseUrl
+  // is needed to fetch the very modules that carry $GeneralSettings (bootstrap
+  // chicken-and-egg), so the setting cannot be read before this point.
+  const MODULE_URL = 'https://cawoodm.github.io/twikki';
 
   overrides();
 
@@ -69,7 +74,9 @@
       console.debug(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      baseUrl = qs.pUrl || qs.url || read('base.url') || location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+      baseUrl = MODULE_URL;
+      // Local dev: serve modules/packages from the dev server, not the published copy
+      if (document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) baseUrl = document.location.origin;
 
       tw.logging = {
         logFilter: new RegExp(qs.logfilter || '.', 'i'),
@@ -84,23 +91,21 @@
       console.debug('Looking for local TWikki.Core modules...');
 
       let modulesToLoad = [
-        '/core.js',
+        '/core.js', 
         '/core.common.js',
         '/core.workspaces.js',
-        '/core.defaults.json',
+        '/core.defaults.json', 
         '/core.packaging.js',
         '/core.params.js',
         '/core.dom.js',
         '/core.ui.js',
-        '/core.notifications.js',
+        '/core.notifications.js', 
         '/core.templater.js',
         '/core.search.js',
         '/core.markdown.js',
       ];
       let modulesLoaded = await Promise.all(modulesToLoad.map(loadCoreModule));
       tw.modules = modulesToLoad.map((p, i) => ({name: p, res: modulesLoaded[i]}));
-
-      write('/base.url', baseUrl);
 
     },
     // eslint-disable-next-line require-await

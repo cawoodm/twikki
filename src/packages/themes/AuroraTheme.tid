@@ -1,13 +1,12 @@
+tags: $Theme
+
 A nice theme
 
 # AuroraTheme
 tags: $Theme
-```markdown
-
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
 * [[AuroraTheme/AuroraStyleSheet]]
-```
 
 # AuroraStyleSheet
 tags: $StyleSheet

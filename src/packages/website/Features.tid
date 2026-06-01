@@ -12,6 +12,7 @@
 ## Great Search
 * [Search Tiddlers for the word 'welcome'](#msg:search:welcome) `msg:search:welcome`
 * [Search Tiddlers with the tag:$Theme 'welcome'](#msg:search:"tag:$Theme") `msg:search:"tag:$Theme"`
+* Hide whole groups of notes from results by tag (no renaming) with the `includeTags`/`excludeTags` settings — themes and stylesheets are hidden by default. See [[Help]] and [[Tags]].
 * Or create links to:
   * List all tiddlers
     * [All Normal Tiddlers](#msg:ui.open.all) `#msg:ui.open.all`

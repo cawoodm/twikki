@@ -54,8 +54,12 @@
 
   function notesHtml() {
     let open = new Set(tw.tiddlers.visible);
+    // Hide $-titled tiddlers (convention) AND tiddlers excluded by the search tag
+    // settings, so the Notes list matches what search shows (e.g. $Theme/$StyleSheet).
+    let visibleByTag = tw.core.search?.tagFilter ? tw.core.search.tagFilter() : () => true;
     let titles = tw.tiddlers.all
       .filter(tw.util.titleMatch('!^\\$'))
+      .filter(visibleByTag)
       .map(t => t.title)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     let rows = titles.map(title =>

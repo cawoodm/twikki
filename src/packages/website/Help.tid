@@ -23,6 +23,12 @@ A quick guide to getting things done in TWikki. See [[Welcome]], [[FAQ]] and [[F
   * `type:markdown` — only notes of that type
 * Examples: [`msg:search:welcome`](#msg:search:welcome), [`msg:search:"tag:$Theme"`](#msg:search:"tag:$Theme").
 
+### Hiding notes by tag
+* Whole groups of notes can be kept out of the search results *and* the sidebar Notes list by tag, without renaming them. Two settings on the **Search** tab of [[$GeneralSettings]] control this:
+  * `excludeTags` — notes carrying any of these tags are hidden. Default: `$NoSearch, $Theme, $StyleSheet`, so themes and stylesheets don't clutter your results.
+  * `includeTags` — a whitelist. When set, *only* notes carrying one of these tags appear (leave empty to show everything). The whitelist is applied first, then the exclude list.
+* These lists never trap a note: a `$`-prefixed search (e.g. `$aurora`) or an explicit `tag:` search (e.g. `tag:$Theme`) ignores both lists and always finds the match.
+
 ## Linking & including
 * `[[Note Name]]` creates a link to another note.
 * `#Note Name` is a hash link that opens a note; `#msg:event:param` fires an action (e.g. `#msg:search:welcome`).

@@ -97,6 +97,12 @@ icon boxes. Red `#e5322d` accent.
 3. Run `npm run dev` (the compile plugin regenerates `public/packages/themes.json`
    automatically) and pick your theme from the selector.
 
+> **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
+> the `$Theme` and `$StyleSheet` tags are in the `excludeTags` list on the **Search**
+> tab of `$GeneralSettings`. They still appear in the theme selector and in an explicit
+> `tag:$Theme` / `$`-prefixed search. Edit `includeTags`/`excludeTags` to change which
+> tags are hidden — no renaming required.
+
 ### Web fonts
 
 `@import` is stripped from constructable stylesheets, so the Google Fonts copy-paste

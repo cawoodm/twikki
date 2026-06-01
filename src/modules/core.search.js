@@ -6,6 +6,7 @@
   // Exports
   const exports = {
     search,
+    tagFilter,
   };
 
   const EXACT_TITLE_MATCH = 4;
@@ -114,8 +115,15 @@
     if (searchType) q = q.replace(reType, '');
     q = q.trim();
 
+    // Tag-based visibility (from $GeneralSettings.search). Computed once per search.
+    // Skipped for `$…` ("search all") queries and explicit tag: queries so neither
+    // ever traps a tiddler the user is asking for by name/tag.
+    const tagVisible = tagFilter();
+    const applyTagFilter = !searchAll && !searchTag;
+
     return (t) => {
       if (!searchAll && t.title[0] === '$') return;
+      if (applyTagFilter && !tagVisible(t)) return;
       let titleText = t.title.toLowerCase();
       let fullText = titleText + t.text.toLowerCase();
       if (searchAll) fullText += t.type;
@@ -151,6 +159,29 @@
   }
 
   function notEmpty(v){return !!v;}
+
+  function parseTagList(v) {
+    return String(v || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  }
+
+  /**
+   * Visibility predicate built from $GeneralSettings.search (whitelist first, then
+   * blacklist). Returns a function (tiddler) → true if it should be VISIBLE.
+   * Shared by search and the sidebar Notes list ($ExplorerPlugin) so tag-based
+   * hiding is consistent across the UI. Reads settings once; call per render/search.
+   */
+  function tagFilter() {
+    const cfg = tw.run.getJSONObject('$GeneralSettings')?.search || {};
+    const includeTags = parseTagList(cfg.includeTags);
+    const excludeTags = parseTagList(cfg.excludeTags);
+    if (!includeTags.length && !excludeTags.length) return () => true;
+    return (t) => {
+      const tags = (t.tags || []).map(x => x.toLowerCase());
+      if (includeTags.length && !includeTags.some(tag => tags.includes(tag))) return false;
+      if (excludeTags.some(tag => tags.includes(tag))) return false;
+      return true;
+    };
+  }
 
   function wireUIEvents() {
     tw.core.dom.$('search')?.addEventListener('keyup', searchNow);

@@ -22,7 +22,7 @@ todo...
 
 [src/index.html](src/index.html) loads [src/platform/twikki.latest.js](src/platform/twikki.latest.js) via a plain `<script>` tag and then calls `window.twikki.init()` followed by `window.twikki.start()` on `load`. There is no external bootloader or OS layer anymore.
 
-- **`init()`** — resolves `baseUrl` from query string (`?pUrl=` / `?url=`), `localStorage['/base.url']`, or `location` (around line 72 of `twikki.latest.js`), then fetches the hard-coded core modules listed in the `modulesToLoad` array (around line 86), each from `<baseUrl>/modules/<name>` (or returns cached copies from `localStorage`).
+- **`init()`** — resolves `baseUrl` from the `MODULE_URL` constant (which mirrors the `urls.moduleUrl` field of the `$GeneralSettings` shadow tiddler, default `https://cawoodm.github.io/twikki`); on a `localhost`/`IP:port` host it instead uses `location.origin` so the dev server serves local sources (around line 72 of `twikki.latest.js`). There is no `?pUrl`/`?url` query override and no `/base.url` localStorage key. It then fetches the hard-coded core modules listed in the `modulesToLoad` array (around line 86), each from `<baseUrl>/modules/<name>` (or returns cached copies from `localStorage`).
 - **`start()`** — `eval`s each `script/js` module, merges JSON modules into the in-memory tiddler store, then loads extension packages from the URL lists in the `$CorePackages` and `$ExtensionPackages` shadow tiddlers.
 
 The runtime never imports anything via ESM — modules are strings of JS loaded over HTTP and `eval`'d (the `(1, eval)(...)` indirect-eval pattern is intentional, to evaluate at global scope). **Do not add `import`/`export` statements to files under `src/modules/` or `src/packages/<pkg>/`** — they must remain plain IIFEs/scripts.
