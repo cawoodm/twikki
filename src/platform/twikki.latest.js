@@ -690,6 +690,9 @@
     tw.core.dom.frm.elements['new-type'].value = tiddler.type || 'x-twikki';
     if (!saveButton) tw.core.dom.$('new-save').disabled = true;
     tw.core.dom.$('new-dialog').showModal();
+    // Land the cursor where the user will type: the title input for a brand-new
+    // (untitled) tiddler, the body textarea when editing one that already has a title.
+    tw.core.dom.frm.elements[tiddler.title ? 'new-body' : 'new-title'].focus();
     setDirty(true);
     tw.core.dom.$('new-types').innerHTML = getKeyValuesArray('$TiddlerTypes').map(t => {
       return `<option value="${t.key}">${t.value}</option>`;
