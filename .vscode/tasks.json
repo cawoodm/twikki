@@ -34,7 +34,10 @@
       "runOptions": {
         "runOn": "folderOpen"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      }
     }
   ]
 }

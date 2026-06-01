@@ -1,5 +1,81 @@
+A nice theme
+
+# AuroraTheme
 tags: $Theme
+```markdown
 
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[AuroraStyleSheet]]
+* [[AuroraTheme/AuroraStyleSheet]]
+```
+
+# AuroraStyleSheet
+tags: $StyleSheet
+```css
+:root {
+  --colbg1: #0e1626;
+  --colbg2: #18233a;
+  --colbg3: #1f2d49;
+  --colbgi: #0b1220;
+  --colfg:  #dce6f5;
+  --colfgi: #eaf2ff;
+  --col0:   #02060d;
+  --col1:   #6f8bb5;
+  --col3:   #2a9d8f;
+  --col4:   #33507f;
+  --col6:   #5fe1c6;
+  --notify-rgba: 47, 157, 143;
+  --rad1: 14px;
+  --rad2: 14px;
+  --rad3: 14px;
+  --rad4: 14px;
+}
+
+* {
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(95, 225, 198, 0.10), transparent 60%),
+    radial-gradient(700px 500px at -10% 0%, rgba(51, 80, 127, 0.35), transparent 55%),
+    var(--colbg1);
+}
+
+div#header {
+  background: linear-gradient(135deg, #1f2d49, #142038);
+  border: 1px solid #33507f;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+div#sidebar {
+  background: rgba(31, 45, 73, 0.6);
+  border: 1px solid #2c4474;
+}
+
+div.tiddler {
+  background: linear-gradient(180deg, #1a2740, #162033);
+  outline: none;
+  border: 1px solid #2c4474;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+div.tiddler div.title {
+  background: transparent;
+  color: #bfe9df;
+  letter-spacing: 0.5px;
+}
+
+a:not([class]) {
+  color: #5fe1c6;
+}
+
+button {
+  background: #21507a;
+  color: #dce6f5;
+}
+
+code {
+  color: #9af0dc;
+}
+```

@@ -9,10 +9,10 @@ The `type` field of a tiddler determines what it's content means and how it is d
   * `x-twikki` or `markdown` are rendered as markdown and intended for reading
   *  `list`, `keyval` or `table` are rendered as markdown and intended for storing structured data
   * `json` is rendered as JSON and intended for storing data/objects
-* Behaviour can be based on type or name:
-  * Type:
+* Behaviour can be based on type or name: 
+  * Type: 
     * Code tiddlers (`scripts/js`) are executed with eval() in the global context
-  * Name:
+  * Name: 
     * The [[$Theme]] tiddler is a list of StyleSheets which are applied as CSS
     * The [[$CorePackages]] tiddler is a list of packages which are imported as tiddlers
     * The [[$TiddlerDisplay]] tiddler is an HTML template for customizing how tiddlers are displayed
