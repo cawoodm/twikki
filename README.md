@@ -3,6 +3,8 @@ TWikki is an extensible wiki and information platform inspired by TiddlyWiki.
 
 Demo: https://cawoodm.github.io/twikki/
 
+See [docs/USP.md](docs/USP.md) for why TWikki improves on TiddlyWiki (for both everyday and technical users), and the [CHANGELOG](CHANGELOG.md) for what's new.
+
 ## What can it do?
 TWikki is designed to run offline with cloud synch built-in. All libraries are cached in localStorage and updates are automatic.
 

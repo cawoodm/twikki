@@ -6,7 +6,7 @@
 * Only run when opened
 
 ## Links
-* Auto link CamelCase
+* Plugin to auto link CamelCase tiddlers if they exist
 * Browser history (back)
 
 ## Tabs:
@@ -15,8 +15,8 @@
 * Recent view of recently edited tiddlers
 
 # Toolbars
-* Close other tiddlers
-* ⭐ Add to Favorites
+* Close other tiddlers (fullscreen icon)
+* favorites.toggle macro should Add to Favorites and toggle visibility of icon ⭐
 
 # Compiler
 * Allow .css files to be tagged via meta comments /* tags: $StyleSheet */

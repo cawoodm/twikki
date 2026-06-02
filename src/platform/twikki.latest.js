@@ -146,10 +146,10 @@
             }
             console.debug(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
           } else if (pck.res.type === 'list') {
-            console.debug('Loading moduled list ', pck.name);
+            console.debug('Loading moduled list ', pck.name); // What is a moduled list? Example?
             pck.res.tiddlers.forEach(t => {
               t.doNotSave = true; // Don't save unless edited
-              t.isRawShadow = true;
+              t.isRawShadow = true; // TODO: What does this mean exactly?
             });
             /* pck.res.tiddlers.forEach(t => {
               if (tiddlerExists)
@@ -387,7 +387,8 @@
 
     wireUp('tiddler.new', formNewTiddler);
     wireUp('tiddler.edit', formEditTiddler);
-    wireUp('tiddler.show', showTiddler);
+    wireUp('tiddler.show', title => {showTiddler(title); scrollToTiddler(title);});
+    wireUp('section.edit', editTiddlerSection);
     wireUp('tiddler.close', closeTiddler);
     wireUp('tiddler.preview', previewTiddler);
     wireUp('tiddler.preview.close', closePreview);
@@ -528,6 +529,7 @@
       id,
       fullText: makeTiddlerText(t),
       editDisabled: t.tags.includes('$NoEdit') ? 'disabled' : '',
+      notSection: !t.isSection, // template uses {{!isSection}} / {{!notSection}} (negation blocks only)
       tagLinks: makeTiddlerTagLinks(t.tags),
       modified,
       ...tiddlerDetails(t),
@@ -551,7 +553,7 @@
   function makeTiddlerText({title, text, type}) {
     const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
     const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
-    if (type === 'x-twikki' || type === 'x-twiki') {
+    if (type === 'x-twikki') {
       return tw.core.markdown.render(renderTWikki({text, title}));
     } else if (markdownTypes.includes(type)) {
       return tw.core.markdown.render(text);
@@ -862,7 +864,16 @@
     if (!base) return null;
     let sec = tw.core.sections.getSection(base.text, title.slice(slash + 1));
     if (!sec) return null;
-    return {title, text: sec.text, type: sec.type || base.type, tags: [], doNotSave: true};
+    // isSection drives the read-only UI: no delete, and edit redirects to the parent.
+    return {title, text: sec.text, type: sec.type || base.type, tags: [], doNotSave: true, isSection: true};
+  }
+  // Edit button on a section card: close the section view and open its parent
+  // tiddler in the edit form (a section is not independently editable).
+  function editTiddlerSection(sectionTitle) {
+    if (typeof sectionTitle !== 'string' || !sectionTitle.includes('/')) return;
+    let parent = sectionTitle.slice(0, sectionTitle.indexOf('/'));
+    closeTiddler(sectionTitle);
+    formEditTiddler(parent);
   }
   function emptyTiddler() {
     return {title: '', text: '', type: 'x-twikki', tags: []};
@@ -1246,8 +1257,7 @@
     else
       params = param;
     dp('sendCommand', msg, 'params=', params);
-    let result = tw.events.send(msg, params);
-    if (msg === 'tiddler.show') scrollToTiddler(params);
+    let result = tw.events.send(msg, params); // scroll-on-show is handled by the tiddler.show subscriber
     location.hash = '';
     return result;
   }

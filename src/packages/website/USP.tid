@@ -1,0 +1,76 @@
+# Why TWikki?
+
+TWikki is inspired by [TiddlyWiki](https://tiddlywiki.com/) — it keeps the ideas that made TiddlyWiki great (small composable notes called *tiddlers*, "code is data", a single living document you can extend from the inside) and rethinks the parts that made it awkward in a modern, cloud-connected, multi-device world.
+
+This page explains what TWikki does better. It's split into a section for everyday users and a section for technical users.
+
+---
+
+## For everyday users
+
+### Saving just works
+TiddlyWiki's most infamous quirk is saving. Because an `.html` file can't write to your disk, classic TiddlyWiki re-generates the *entire* HTML file every time you save and hands it back to you as a download — so you end up repeatedly re-downloading the document you're editing, or wiring up a plugin/helper app to do it for you.
+
+TWikki removes that pain entirely. **Every change is saved automatically** to your browser's storage as you type. There's nothing to download and nothing to remember.
+
+### Your notes follow you between devices
+TWikki is cloud-native by design. Your data lives wherever you choose and is synced to whichever browser you open it in, so you can pick up on your phone where you left off on your laptop. Backup and sync to a private GitHub Gist is built in — one button to snapshot, one button to sync.
+
+### Works offline
+Everything TWikki needs is cached locally, so it keeps working on a plane, a train, or a flaky connection. It updates itself automatically when you're back online.
+
+### Looks the way you want — instantly
+Themes in TWikki switch and update **live, with no reload**. Pick a theme from a dropdown and the page changes immediately. Several polished themes ship in the box (light and dark), and you can tweak or build your own.
+
+### Find things fast
+Search is first-class. You can search by word or by tag, and you can hide whole groups of notes from results by tag — without renaming anything — using simple include/exclude settings. A built-in Settings dialog lets you configure this without touching any code.
+
+### Nothing is ever really lost
+Deleted notes go to a trash that you can restore from, and you can keep multiple separate stores ("workspaces") and switch between them.
+
+### Write in plain Markdown
+Notes are written in standard [Markdown](https://commonmark.org/), so the formatting you already know just works — headings, lists, links, tables, and automatically syntax-highlighted code.
+
+---
+
+## For technical users
+
+### Code is data — the platform *is* the IDE
+As in TiddlyWiki, everything lives in the store, including code. A tiddler of type `script/js` is executed (`eval`) in the global context when TWikki loads and again whenever you save it, so changes take effect immediately. **There is no separate plugin format: a plugin is just a tiddler.** Installing one means adding a tiddler; uninstalling means deleting it. Tag it `$CodeDisabled` to keep it dormant.
+
+### A clean, framework-free runtime
+TWikki is vanilla JavaScript — no React, no build-time framework, no bundler magic in the runtime. Modules are plain IIFEs loaded over HTTP and evaluated at global scope, hanging their exports off a single global `tw` namespace:
+
+* `tw.events` — pub/sub lifecycle (`ui.loaded`, `tiddler.rendered`, `theme.switch`, …)
+* `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
+* `tw.run` — read/update actions on tiddlers
+* `tw.core.*` — subsystems (`dom`, `markdown`, `search`, `sections`, …)
+* `tw.macros` / `tw.extensions` — register macros and widgets
+* `tw.storage` — the localStorage wrapper
+
+This makes the system easy to read, debug, and extend without learning a bespoke widget/filter language.
+
+### Data-driven theming, no build step
+A theme is just a tiddler listing the stylesheets to apply. The theme manager concatenates those stylesheets and injects them via `adoptedStyleSheets`, so editing a stylesheet in the active theme updates the page live. Themes are ordinary data you can ship, import, and version like anything else. See [THEMES.md](THEMES.md).
+
+### Single-file plugins and themes via sections
+A tiddler can be split into named **sections** addressed as `Parent/Section`. This means an entire plugin — or a theme plus its stylesheets — can live in a *single* multipart tiddler instead of being scattered across many. See the [CHANGELOG](../CHANGELOG.md) and the in-app `ExamplePlugin`.
+
+### Packages over URLs
+A package is simply a JSON list of tiddlers (`{"tiddlers": [...]}`), usually loaded from a URL. Core and extension packages are declared in the `$CorePackages` / `$ExtensionPackages` tiddlers and fetched on start; any package can be imported on demand with the `<<packages.import>>` widget. Distribution is just "host a JSON file somewhere."
+
+### Cloud-native storage model
+Rather than rewriting one giant HTML file, TWikki persists each change to `localStorage` and syncs to a remote you control (e.g. a private GitHub Gist). Tags like `$NoBackup` / `$NoImport` give per-tiddler control over what syncs and what survives an import — useful for secrets and machine-local settings.
+
+### Validation on save
+Tiddlers are validated when you save: Markdown is checked (so macros render), JSON must parse, and code tiddlers are run (unless `$CodeDisabled`), surfacing errors immediately instead of at some later mystery moment.
+
+### Macros, widgets, and transclusion
+Register a macro with `tw.extensions.registerMacro(ns, name, fn)` and call it anywhere as `<<ns.name args>>`. Transclude tiddler content with `{{Title}}`, including positional, default, and named parameters (`{{SayHello|name:"Marc"}}`). It's the composability of TiddlyWiki's transclusion without the custom filter syntax.
+
+### Built for debugging
+Query-string switches make the platform transparent when something breaks: `?trace` disables the try/catch wrapping so real stack traces surface, `?debug` enables debug logging, `?reload`/`?update` force a fresh download, `?safemode` skips extension packages, and `?clear` wipes local storage. See [CLAUDE.md](../CLAUDE.md) for the full list.
+
+---
+
+See the [CHANGELOG](../CHANGELOG.md) for what's new, and [MODULES.md](MODULES.md) / [THEMES.md](THEMES.md) / [COMPILER.md](COMPILER.md) for deeper technical docs.
