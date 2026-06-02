@@ -1,3 +1,5 @@
+tags: Help
+
 # TWikki Themes
 
 TWikki's look is driven entirely by stylesheets which you can change or replace. A theme consists of one or more stylesheets and a tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply:

@@ -203,11 +203,23 @@
       document.title = renderTiddler('$SiteTitle');
       tw.extend = {tiddlerDetails: {
         metaInfo(t) {
-          return tw.core.markdown.render([
-            `${t.package ? '[pck:' + t.package + '](#msg:search:$pck:' + t.package + ')' : ''}`,
-            `${t.doNotSave ? 'doNotSave ✅' : ''}`,
-            `${t.isRawShadow ? 'isRawShadow ✅' : ''}`,
-          ].join(' '));
+          // The package is a picker (see $PickerPlugin): clicking it lists every
+          // tiddler in that package (built lazily from data-source="package");
+          // picking one opens it. Raw HTML — the picker needs real markup.
+          const parts = [];
+          if (t.package) {
+            const arg = String(t.package).replace(/"/g, '&quot;');
+            const label = tw.core.common.escapeHtml(t.package);
+            parts.push(
+              `<span class="picker pck-picker" data-event="tiddler.show" data-source="package" data-source-arg="${arg}">` +
+                `<button class="picker-trigger pck-pill">pck:${label}</button>` +
+                `<div class="picker-menu" hidden></div>` +
+              `</span>`,
+            );
+          }
+          if (t.doNotSave) parts.push('doNotSave ✅');
+          if (t.isRawShadow) parts.push('isRawShadow ✅');
+          return parts.join(' ');
         },
       }};
 
@@ -224,6 +236,7 @@
         getSection,
         getTiddlerList,
         getTiddlersByTag,
+        getTiddlersByPackage,
         getTiddlerTextList,
         getTiddlerTextRaw,
         getJSONObject,
@@ -271,6 +284,8 @@
       tw.macros = {
         core: {
           showTiddlerList,
+          // <<Tag Foo>> — render tag "Foo" as a picker listing all tiddlers tagged Foo.
+          Tag: tag => tagPickerHtml(String(tag ?? '')),
           disabled: (...rest) => ('This macro is disabled!' + JSON.stringify(rest)),
         },
       };
@@ -567,11 +582,17 @@
     }
   }
   function makeTiddlerTagLinks(tags) {
-    return tw.core.markdown.render(tags.map(t => {
-      return `[${t}](#msg:ui.open.all:{tag:'${t}',title:'*'})`;
-    /* let link = `msg:ui.open.all:{tag:'${t}'}`;
-    return `<a href="#${escapeHtml(link)}">${escapeHtml(t)}</a>`;*/
-    }).join(', '));
+    return tags.map(tagPickerHtml).join('');
+  }
+  // A single tag rendered as a picker (see $PickerPlugin): clicking it lists every
+  // tiddler carrying that tag (built lazily from data-source="tag"); picking one
+  // opens it. Used by the tag row at the bottom of notes and the <<Tag>> macro.
+  function tagPickerHtml(tag) {
+    let label = tw.core.common.escapeHtml(tag);
+    let arg = label.replace(/"/g, '&quot;');
+    return `<span class="picker tag-picker" data-event="tiddler.show" data-source="tag" data-source-arg="${arg}">` +
+      `<button class="picker-trigger tag-pill">${label}</button>` +
+      '<div class="picker-menu" hidden></div></span>';
   }
   function renderTiddler(title) {
     return renderTWikki({text: getTiddlerTextRaw(title), title});
@@ -1165,6 +1186,9 @@
   }
   function getJSONObject(title) {
     return JSON.parse(getTiddlerTextRaw(title));
+  }
+  function getTiddlersByPackage(pck) {
+    return tw.tiddlers.all.filter(t => t.package === pck);
   }
   function getTiddlersByTag(tag) {
     return tw.tiddlers.all.filter(t => t.tags.includes(tag));

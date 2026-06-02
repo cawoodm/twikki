@@ -57,8 +57,44 @@
     closeAll(); // click outside any picker
   }
 
+  // Lazy menu sources: a `.picker[data-source]` builds its items on open (so the
+  // list is fresh and not baked into markup). Each returns [{value, label}].
+  const SOURCES = {
+    tag: arg => (tw.run.getTiddlersByTag(arg) || [])
+      .map(t => t.title)
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+      .map(title => ({value: title, label: title})),
+    package: arg => (tw.run.getTiddlersByPackage(arg) || [])
+      .map(t => t.title)
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+      .map(title => ({value: title, label: title})),
+  };
+
+  function populate(picker, menu) {
+    let src = SOURCES[picker.dataset.source];
+    if (!src) return;
+    let items = src(picker.dataset.sourceArg) || [];
+    menu.textContent = '';
+    if (!items.length) {
+      let empty = document.createElement('div');
+      empty.className = 'picker-empty';
+      empty.textContent = 'Nothing here';
+      menu.appendChild(empty);
+      return;
+    }
+    for (let it of items) {
+      let b = document.createElement('button');
+      b.className = 'picker-item';
+      b.dataset.value = it.value;
+      b.textContent = it.label;
+      menu.appendChild(b);
+    }
+  }
+
   function openMenu(trigger, menu) {
     closeAll();
+    let picker = trigger.closest('.picker');
+    if (picker?.dataset.source) populate(picker, menu);
     menu.hidden = false;
     let r = trigger.getBoundingClientRect();
     let mh = menu.offsetHeight;

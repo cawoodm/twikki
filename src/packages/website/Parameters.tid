@@ -1,3 +1,5 @@
+tags: Help
+
 Parameters are used to pass messages to objects or widgets.
 
 For example `<<example.greet Mr. Smith>>` passes 2 string parameters to the `greet` [[Widget]] in [[ExamplePlugin]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
