@@ -29,7 +29,7 @@
     {label: 'Close all notes', event: 'ui.close.all', payload: {tag: '*', title: '*'}},
     {label: 'Show favorites', event: 'ui.open.all', payload: {tag: 'Favorite', title: '*'}},
     {label: 'Reload UI', event: 'ui.reload'},
-    {label: 'Open Settings', event: 'tiddler.show', payload: '$Settings'},
+    {label: 'Open Settings', event: 'tiddler.show', payload: '$GeneralSettings'},
     {label: 'Toggle sidebar', run: () => document.getElementById('sidebar')?.classList.toggle('open')},
   ];
 

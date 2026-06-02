@@ -38,10 +38,25 @@
   function themeSwitch(theme) {
     if (!theme) return;
     if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
+    // A theme owns its layout via an optional `# MainLayout` section naming a shared
+    // layout tiddler. We persist the choice in the `$Layout` pointer (read at the
+    // first paint, before packages load). If it changes, a full reload re-renders the
+    // chrome from the pointer; a colour-only switch stays instant.
+    let newLayout = tw.core.ui.layoutTitleForTheme(theme);
+    let curLayout = (tw.run.getTiddlerTextRaw('$Layout') || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
+    let layoutChanges = newLayout !== curLayout;
     let tiddler = tw.run.getTiddler('$Theme');
     tiddler.text = `[[${theme}]]`;
     delete tiddler.doNotSave;
     tw.run.updateTiddlerHard('$Theme', tiddler);
+    if (layoutChanges) {
+      let lt = tw.run.getTiddler('$Layout');
+      if (lt) {
+        lt.text = `[[${newLayout}]]`;
+        delete lt.doNotSave;
+        tw.run.updateTiddlerHard('$Layout', lt);
+      }
+    }
     if (theme.match(/Dark/)) {
       tw.core.dom.enableStyleSheet('highlight-dark');
       tw.core.dom.disableStyleSheet('highlight-light');
@@ -49,9 +64,13 @@
       tw.core.dom.enableStyleSheet('highlight-light');
       tw.core.dom.disableStyleSheet('highlight-dark');
     }
+    tw.events.send('save.silent');
+    // A layout change needs a full reload: on the fresh boot initUI renders the
+    // chrome from the (now-persisted) $Layout pointer. (A soft reload would re-eval
+    // extension tiddlers and stack duplicate handlers — see core.js subscribe dedup.)
+    if (layoutChanges) return tw.events.send('reboot.hard');
     tw.events.send('tiddler.refresh', '$Theme');
     themeUpdate(theme);
-    tw.events.send('save.silent');
   }
 
   wireUp('ui.reloaded', themeUpdate);

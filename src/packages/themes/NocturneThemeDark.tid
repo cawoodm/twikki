@@ -136,3 +136,6 @@ h1, h2, h3, h4 {
 a:not([class]) { color: #c6f24e; }
 code { color: #d7f59a; }
 ```
+
+# MainLayout
+[[$MainLayoutHeader]]

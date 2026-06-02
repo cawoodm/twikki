@@ -1,0 +1,46 @@
+type: html/template
+tags: $Template
+
+<div id="app" class="layout-header">
+  <div id="header" class="flex">
+    <div id="header-col1" class="flex col1">
+      <div id="site-title" tiddler-include="$SiteTitle"><h1>TWikki</h1></div>
+      <div id="site-subtitle" tiddler-include="$SiteSubTitle">...</div>
+    </div>
+    <div id="header-col2" class="flex col2">
+      <span tiddler-include="$TitleBar"></span>
+      <span tiddler-include="$Workspaces"></span>
+      <span tiddler-include="$Themes"></span>
+    </div>
+    <div id="header-col3" class="flex col3">
+      <input id="search" type="search" placeholder="Search notes…" autocomplete="off"/>
+      <div id="search-results"></div>
+    </div>
+  </div>
+  <main id="main">
+    <div id="main-topbar">
+      <div id="tab-strip"></div>
+    </div>
+    <div id="visible-tiddlers">
+    </div>
+  </main>
+</div>
+<dialog id="preview-dialog">
+</dialog>
+<dialog id="new-dialog">
+  <form id="new-form">
+    <div class="toolbar">
+      <button class="icon" data-msg="form.done" tiddler-include="$IconDone" title="Done"></button>
+      <button class="icon" data-msg="form.cancel" tiddler-include="$IconCancel" title="Cancel"></button>
+    </div>
+    <input id="old-title" type="hidden" />
+    <div class="title"><input id="new-title" placeholder="Title" size /></div>
+    <div class="text"><textarea row="10" id="new-body" placeholder="Text"></textarea></div>
+    <div><input id="new-type" list="new-types" onfocus="this.value=null;" onchange="this.blur();" />
+      <datalist id="new-types">
+      </datalist>
+    </div>
+    <div><span macro="TagInput" params="id:new-tags"></span></div>
+  </form>
+</dialog>
+<div id="notify" class="notifyHidden"></div>

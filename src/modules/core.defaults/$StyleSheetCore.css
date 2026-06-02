@@ -162,6 +162,49 @@ a[data-msg]:hover {
 }
 
 /* ============================================================
+   Header-bar layout ($MainLayoutHeader) — structural only.
+   A top header bar over the main content (no left explorer pane;
+   navigation is via search + tabs). Scoped to #app.layout-header
+   so the default sidebar grid is untouched; visuals come from the theme.
+   ============================================================ */
+#app.layout-header {
+  display: flex;
+  flex-direction: column;
+}
+
+#app.layout-header > #header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#app.layout-header #header-col1 {
+  flex: 0 0 auto;
+}
+
+#app.layout-header #header-col2 {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+#app.layout-header #header-col3 {
+  flex: 1 1 auto;
+  position: relative;
+}
+
+#app.layout-header #header-col3 #search {
+  width: 100%;
+}
+
+#app.layout-header > #main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ============================================================
    Responsive — sidebar collapses to a slide-in drawer
    ============================================================ */
 @media (max-width: 600px) {

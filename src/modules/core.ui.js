@@ -7,6 +7,8 @@
     section,
     expand,
     expose,
+    renderLayout,
+    layoutTitleForTheme,
   };
 
   // Exports
@@ -14,16 +16,44 @@
 
   // Run
   const run = () => {
-    initUI();
+    renderLayout();
   };
 
   return {name, version, exports, run};
 
-  function initUI() {
-    let html = tw.run.getTiddler('$MainLayout').text;
-    document.body.innerHTML = html;
+  // Render the page chrome. The active layout is the tiddler named by the `$Layout`
+  // pointer (persisted like `$Theme`, so it is available at this first paint before
+  // any package has loaded). Falls back to `$MainLayout` if the pointer or its
+  // target is missing/empty — never renders an empty body.
+  function renderLayout() {
+    document.body.innerHTML = activeLayoutText();
     tw.core.dom.divVisibleTiddlers = tw.core.dom.$('visible-tiddlers');
     tw.core.dom.preview = tw.core.dom.$('preview-dialog');
+  }
+
+  function activeLayoutText() {
+    let title = currentLayoutTitle();
+    let t = title !== '$MainLayout' && tw.run.getTiddler(title);
+    if (t && t.text) return t.text;
+    return tw.run.getTiddler('$MainLayout').text;
+  }
+
+  // `$Layout` holds `[[LayoutTiddler]]`; strip the link brackets to get the title.
+  // Use getTiddler (not getTiddlerTextRaw): this runs at the first paint, when
+  // tw.run is still core.js's minimal version that only exposes getTiddler — the
+  // platform's fuller tw.run (with getTiddlerTextRaw/getSection) is installed later.
+  function currentLayoutTitle() {
+    return (tw.run.getTiddler('$Layout')?.text || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
+  }
+
+  // Which layout a theme wants: its `# MainLayout` section names a shared layout
+  // tiddler as a lone `[[ref]]` (the only form that can render at first paint, when
+  // the theme itself isn't loaded yet). No section → the default `$MainLayout`.
+  // Exposed so the theme manager can set the `$Layout` pointer on a theme switch.
+  function layoutTitleForTheme(theme) {
+    let sec = theme && tw.run.getSection(theme, 'MainLayout');
+    let m = sec && sec.text && sec.text.trim().match(/^\[\[(.+)\]\]$/);
+    return m ? m[1] : '$MainLayout';
   }
 
   function button(text, message, payload, id = '', attr = '', className = '') {

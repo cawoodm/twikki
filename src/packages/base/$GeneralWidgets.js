@@ -10,7 +10,7 @@ tw.macros.core.Save = () => {
   return tw.ui.button('{{$IconSave}}', 'save.all', null, '', 'title="Save"');
 };
 tw.macros.core.Settings = (size = '22') => {
-  return tw.ui.button(`{{$IconSettings|size:${size}px}}`, 'tiddler.show', '$Settings', '', 'title="Settings"');
+  return tw.ui.button(`{{$IconSettings|size:${size}px}}`, 'tiddler.show', '$GeneralSettings', '', 'title="Settings"');
 };
 tw.macros.core.Tag = (size = '22') => {
   return tw.ui.button(`{{$IconTag|${size}}}`, 'tiddler.show', 'Tags', '', 'title="Settings"');
