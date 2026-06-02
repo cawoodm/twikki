@@ -1,5 +1,7 @@
+<!--
 type: html/template
 tags: $Template
+-->
 
 <div id="app">
   <aside id="sidebar">
@@ -8,7 +10,12 @@ tags: $Template
       <div id="site-subtitle" tiddler-include="$SiteSubTitle">...</div>
     </div>
     <div id="explorer-search">
-      <input id="search" type="search" placeholder="Search notes…" autocomplete="off"/>
+      <input
+        id="search"
+        type="search"
+        placeholder="Search notes…"
+        autocomplete="off"
+      />
       <div id="search-results"></div>
     </div>
     <nav id="explorer">
@@ -25,27 +32,49 @@ tags: $Template
   </aside>
   <main id="main">
     <div id="main-topbar">
-      <button id="menu-toggle" class="icon" title="Toggle sidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <button
+        id="menu-toggle"
+        class="icon"
+        title="Toggle sidebar"
+        onclick="document.getElementById('sidebar').classList.toggle('open')"
+      >
+        ☰
+      </button>
       <div id="tab-strip"></div>
     </div>
-    <div id="visible-tiddlers">
-    </div>
+    <div id="visible-tiddlers"></div>
   </main>
 </div>
-<dialog id="preview-dialog">
-</dialog>
+<dialog id="preview-dialog"></dialog>
 <dialog id="new-dialog">
   <form id="new-form">
     <div class="toolbar">
-      <button class="icon" data-msg="form.done" tiddler-include="$IconDone" title="Done"></button>
-      <button class="icon" data-msg="form.cancel" tiddler-include="$IconCancel" title="Cancel"></button>
+      <button
+        class="icon"
+        data-msg="form.done"
+        tiddler-include="$IconDone"
+        title="Done"
+      ></button>
+      <button
+        class="icon"
+        data-msg="form.cancel"
+        tiddler-include="$IconCancel"
+        title="Cancel"
+      ></button>
     </div>
     <input id="old-title" type="hidden" />
     <div class="title"><input id="new-title" placeholder="Title" size /></div>
-    <div class="text"><textarea row="10" id="new-body" placeholder="Text"></textarea></div>
-    <div><input id="new-type" list="new-types" onfocus="this.value=null;" onchange="this.blur();" />
-      <datalist id="new-types">
-      </datalist>
+    <div class="text">
+      <textarea row="10" id="new-body" placeholder="Text"></textarea>
+    </div>
+    <div>
+      <input
+        id="new-type"
+        list="new-types"
+        onfocus="this.value = null"
+        onchange="this.blur()"
+      />
+      <datalist id="new-types"> </datalist>
     </div>
     <div><span macro="TagInput" params="id:new-tags"></span></div>
   </form>

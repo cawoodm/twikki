@@ -219,6 +219,12 @@ a.explorer-tag:hover {
   font-style: italic;
 }
 
+.picker-empty {
+  padding: 8px 12px;
+  color: var(--col1);
+  font-style: italic;
+}
+
 /* ============================================================
    Main pane — top bar, tabs
    ============================================================ */
@@ -369,9 +375,50 @@ div.tiddler div.text p {
 }
 
 div.tiddler div.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
   font-size: 0.78rem;
   color: var(--col1);
   margin-top: 16px;
+}
+
+/* Tag pills are picker triggers (see $PickerPlugin); style them like the
+   explorer's tag pills rather than the generic icon trigger. */
+.picker-trigger.tag-pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background-color: var(--colbg2);
+  border: 1px solid var(--col4);
+  color: var(--col1);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.picker-trigger.tag-pill:hover {
+  color: var(--col6);
+  border-color: var(--col6);
+  background-color: var(--colbg2);
+}
+
+/* The package pill (footer .meta) is a picker trigger too — a quieter pill that
+   fits the small meta line; clicking it lists the package's tiddlers. */
+.picker-trigger.pck-pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background-color: var(--colbg2);
+  border: 1px solid var(--col4);
+  color: var(--col1);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.picker-trigger.pck-pill:hover {
+  color: var(--col6);
+  border-color: var(--col6);
 }
 
 div.tiddler div.meta {

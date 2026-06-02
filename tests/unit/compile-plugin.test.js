@@ -136,6 +136,50 @@ test('parseFile: .tid comma-separated tags still parse (regression)', () => {
   }
 });
 
+test('parseFile: .html block HTML-comment frontmatter is parsed and consumed', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, '$MainLayout.html');
+    writeFileSync(filePath, '<!--\ntype: html/template\ntags: $Template\n-->\n\n<div>{{=title}}</div>\n');
+    const t = parseFile(filePath, 'core.defaults');
+    assert.equal(t.type, 'html/template');
+    assert.deepEqual(t.tags, ['$Shadow', '$Template']);
+    assert.equal(t.text, '<div>{{=title}}</div>');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: indented HTML-comment frontmatter (formatter-style) still parses', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'Layout.html');
+    writeFileSync(filePath, '<!--\n  type: html/template\n  tags: $Template\n-->\n\n<div></div>\n');
+    const t = parseFile(filePath, 'demo');
+    assert.equal(t.type, 'html/template');
+    assert.deepEqual(t.tags, ['$Template']);
+    assert.equal(t.text, '<div></div>');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseFile: single-line HTML-comment frontmatter is parsed and consumed', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, 'Widget.html');
+    writeFileSync(filePath, '<!-- tags: $Template -->\n\n<div></div>\n');
+    const t = parseFile(filePath, 'demo');
+    assert.deepEqual(t.tags, ['$Template']);
+    assert.equal(t.text, '<div></div>');
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
 test('compilePackage: ignores files with unknown extensions (e.g. atomic-save temp files)', () => {
   const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
   const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());

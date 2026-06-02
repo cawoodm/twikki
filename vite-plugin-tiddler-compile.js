@@ -39,30 +39,51 @@ export function parseFile(filePath, packageName) {
   const lines = raw.split('\n');
   const textLines = [];
   let mode = 'meta';
+  let inHtmlComment = false;
+
+  // Apply one `field: value` metadata line to the tiddler. `tags:` is split on
+  // commas and/or whitespace (matching the runtime's own tag parsing); `true`/
+  // `false` are coerced to booleans; any other field becomes a top-level field.
+  const applyMeta = metaLine => {
+    const colon = metaLine.indexOf(':');
+    const field = metaLine.slice(0, colon).trim();
+    let value = metaLine.slice(colon + 1).trim();
+    if (value === 'true') value = true;
+    else if (value === 'false') value = false;
+    if (field === 'tags') {
+      const vals = String(value).split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
+      tiddler.tags = [...tiddler.tags, ...vals];
+    } else {
+      tiddler[field] = value;
+    }
+  };
 
   for (const line of lines) {
     if (mode === 'text') {
       textLines.push(line);
       continue;
     }
-    // A leading metadata line is `field: value`, optionally behind a `//` comment so
-    // that .js/.json sources (which can't carry a bare header) can still declare tags,
-    // e.g. `// tags: $Shadow $NoSynch $NoBackup`. The comment line is consumed (not
-    // emitted into text), keeping .json bodies valid.
-    const metaLine = line.replace(/^\/\/\s*/, '');
+    // Inside a leading `<!-- … -->` HTML-comment frontmatter block: parse `field: value`
+    // lines (trimmed, so a formatter that indents the comment body is fine) until `-->`.
+    // The whole block is consumed (not emitted into text). Used by .html sources whose
+    // bare leading lines a formatter would otherwise reflow/squash together.
+    if (inHtmlComment) {
+      const trimmed = line.trim();
+      if (trimmed === '-->') inHtmlComment = false;
+      else if (/^[a-z]+: /.test(trimmed)) applyMeta(trimmed);
+      continue;
+    }
+    if (line.trim() === '<!--') {
+      inHtmlComment = true;
+      continue;
+    }
+    // A leading metadata line is `field: value`, optionally behind a `//` comment (so
+    // .js/.json sources can declare tags, e.g. `// tags: $Shadow`) or a single-line HTML
+    // comment (`<!-- tags: $Template -->`). The comment markers are consumed, keeping
+    // .json bodies valid.
+    const metaLine = line.replace(/^\s*<!--\s*/, '').replace(/\s*-->\s*$/, '').replace(/^\/\/\s*/, '');
     if (/^[a-z]+: /.test(metaLine)) {
-      const colon = metaLine.indexOf(':');
-      const field = metaLine.slice(0, colon).trim();
-      let value = metaLine.slice(colon + 1).trim();
-      if (value === 'true') value = true;
-      else if (value === 'false') value = false;
-      if (field === 'tags') {
-        // Split on commas and/or whitespace (matches the runtime's own tag parsing).
-        const vals = String(value).split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
-        tiddler.tags = [...tiddler.tags, ...vals];
-      } else {
-        tiddler[field] = value;
-      }
+      applyMeta(metaLine);
     } else {
       mode = 'text';
       if (line) textLines.push(line);

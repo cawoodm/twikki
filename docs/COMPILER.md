@@ -66,6 +66,16 @@ Every file inside a package directory becomes one tiddler. `parseFile` does the 
 The parser starts in "meta" mode. Each leading line matching `/^[a-z]+: /` is parsed as `field: value`. The first line that does **not** match flips the parser into "text" mode for the remainder of the file (line breaks preserved, trailing blank lines stripped). Special cases:
 
 - A leading `//` (with optional spaces) is stripped before matching, so `.js` and `.json` sources — which cannot carry a bare header — can declare metadata in a comment. e.g. a first line `// tags: $Shadow $NoSynch $NoBackup` tags the tiddler; the comment line is **consumed** (not emitted into `text`), so a `.json` body stays valid JSON.
+- **HTML comment frontmatter** — `.html` sources can wrap the header in an HTML comment so a formatter (Prettier) leaves it alone instead of reflowing the bare lines into one. A leading `<!-- … -->` block at the very top is reserved for frontmatter and is **consumed**; each line inside is parsed `field: value` (trimmed, so an indented comment body still works) until the closing `-->`. A single-line form `<!-- tags: $Template -->` also works. Example:
+  ```html
+  <!--
+  type: html/template
+  tags: $Template
+  -->
+
+  <div id="app">…</div>
+  ```
+  (Bare leading `field: value` lines still work too — the comment form is opt-in for files a formatter would otherwise mangle.)
 - `tags:` is split on commas **and/or** whitespace (matching the runtime's own tag parser), so `tags: foo, bar` and `tags: $Shadow $NoSynch` both work, and is merged with auto-tags.
 - The final tag list is de-duplicated (an auto-tag that the header repeats, e.g. `$Shadow` in `core.defaults`, appears once).
 - String values `true` / `false` are coerced to booleans.
