@@ -3,7 +3,7 @@
   const name = 'twikki.core';
   const version = '0.0.1';
 
-  console.log('TWikki Core started');
+  console.debug('TWikki Core started');
   tw.core = {};
   tw.events = (function() {
     const handlers = [];

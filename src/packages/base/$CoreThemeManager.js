@@ -108,9 +108,13 @@
 
   tw.macros.core.ThemeSelector = () => {
     let theme = getCurrentThemeName();
-    return `<select id="theme-select" onchange="tw.events.send('theme.switch', this.value);">
-    ${getThemeNames().sort().map(n => `<option value="${n}"${n === theme ? ' selected' : ''}>${n.replace(/(^\$)|(Theme)/g, '')}</option>`).join('\n')}
-  </select>`;
+    let items = getThemeNames().sort().map(n =>
+      `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`,
+    ).join('');
+    return `<span class="picker" data-event="theme.switch">
+    <button class="icon picker-trigger" title="Theme" aria-haspopup="true">◐</button>
+    <div class="picker-menu" hidden>${items}</div>
+  </span>`;
   };
 
   function wireUp(event, handler) {

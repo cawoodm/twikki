@@ -1,9 +1,15 @@
 tw.macros.core.WorkspaceSelect = () => {
   let workspace = tw.storage.get('workspace');
-  return `<select id="workspace-select" onchange="tw.events.send('workspace.load.prompt', this.value);">
-    <option value=""> - new workspace -</option>
-    ${tw.storage.get('workspaces').map(n => `<option value="${n}"${n === workspace ? ' selected' : ''}>${n}</option>`).join('\n')}
-  </select>`;
+  let items = (tw.storage.get('workspaces') || []).map(n =>
+    `<button class="picker-item${n === workspace ? ' active' : ''}" data-value="${n}">${n}</button>`,
+  ).join('');
+  return `<span class="picker" data-event="workspace.load.prompt">
+    <button class="icon picker-trigger" title="Workspace" aria-haspopup="true">▦</button>
+    <div class="picker-menu" hidden>
+      <button class="picker-item picker-action" data-value="">– new workspace –</button>
+      ${items}
+    </div>
+  </span>`;
 };
 tw.macros.core.WorkspaceCreate = () => {
   return tw.ui.button('Create Workspace', 'workspace.create.prompt');
@@ -22,8 +28,7 @@ if (!tw.tmp.workspaceEvents) {
       tw.events.send('workspace.clone', workspace);
     else
       tw.events.send('workspace.create', workspace);
-    tw.core.dom.$('workspace-select').innerHTML = tw.macros.core.WorkspaceSelect();
-    // tw.events.subscribe('tiddler.refresh', '$Workspaces'); // TODO: Dynamically get currentTiddler above?
+    tw.events.send('tiddler.refresh', '$Workspaces');
     return workspace;
   }, 'WorkspaceWidgets');
 }

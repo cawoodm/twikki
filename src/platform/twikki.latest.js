@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.19.0';
+  const VERSION = '0.20.1';
   // Default base URL the platform loads its core modules and packages from.
   // Mirrors $GeneralSettings.urls.moduleUrl — kept as a constant because baseUrl
   // is needed to fetch the very modules that carry $GeneralSettings (bootstrap
@@ -1193,6 +1193,7 @@
   function tiddlerCodeBlocks(t) {
     if (!t || t.tags?.includes('$CodeDisabled')) return [];
     if (t.type === 'script/js') return [{text: t.text || '', title: t.title}];
+    if (!t.tags?.includes('$Plugin')) return []; // Disable execution of inline code blocks for non-Plugins
     if (!t.text || !t.text.includes('# ')) return []; // fast path: no h1 sections
     const parsed = tw.core.sections.parseSections(t.text);
     return parsed.order
