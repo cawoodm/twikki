@@ -577,11 +577,14 @@
     return renderTWikki({text: getTiddlerTextRaw(title), title});
   }
   function renderTWikki({text, title, validation}) {
-    let result = text;
+    // Hide fenced/inline code from the wikitext transforms below so their
+    // contents render verbatim; restored before markdown parsing.
+    const {masked, restore} = maskCodeRegions(text);
+    let result = masked;
     try {
     // TODO: Label this tiddler to update when one of these macros change!
 
-      getMacros(text).forEach(m => {
+      getMacros(result).forEach(m => {
         let macroNameOrig = m[1];
         let macroName = macroNameOrig;
         const macroCommand = new RegExp(`(?<!\`)<<${macroNameOrig}`);
@@ -661,10 +664,28 @@
       if (validation) throw e;
       return `<span class="error">ERROR: renderTWikki '${title}' Failed: ${e.message}</span>`;
     }
-    return result;
+    return restore(result);
   }
   function replaceFrom(text, index, search, replace) {
     return text.substring(0, index) + text.substring(index).replace(search, replace);
+  }
+  // Mask fenced code blocks (```...```) and inline code spans (`...`) so the
+  // macro/inclusion/wikilink transforms in renderTWikki leave their contents
+  // verbatim; markdown-it renders the restored code literally. Sentinels use
+  // the Unicode Private-Use Area so they contain no `[[`/`{{`/`<<` delimiters
+  // and can never collide with real content (or stray digits) on restore.
+  function maskCodeRegions(text) {
+    const store = []; // holds masked code regions
+    const stash = m => {
+      const token = `${store.length}`;
+      store.push(m);
+      return token;
+    };
+    // Fenced blocks first (they may contain inline backticks), then inline spans.
+    let masked = text.replace(/```[\s\S]*?```/g, stash);
+    masked = masked.replace(/`[^`\n]*`/g, stash);
+    const restore = s => s.replace(/(\d+)/g, (_, i) => store[Number(i)]);
+    return {masked, restore};
   }
   function getMacros(text) {
     return Array.from(text.matchAll(reMacros));

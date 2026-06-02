@@ -1,14 +1,1 @@
-[{{$IconBackup}}](#Backup)
-
-<<synch.pull>>
-<<synch.push>>
-
-<<synch.full>>
-
-<<New>>
-
-<<Settings>>
-
-<<TrashCanIcon>>
-
-[{{$IconHelp}}](#Help)
+<<synch.pull>> <<synch.push>> <<synch.full>> <<New>> <<Settings>> 

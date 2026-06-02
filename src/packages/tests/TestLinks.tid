@@ -10,3 +10,17 @@
 * Link to search results: [😎Shadows](#msg:search:$tag:$Shadow)
 * Open all tagged with `Favorite`: [⭐Favorties](#msg:ui.open.all:{tag:'Favorite'})
 * [Favorite](#msg:ui.open.all:tag:Favorite)
+
+## Code-block escaping (must render literally, no links/macros/inclusions)
+
+Inline code, must stay literal: `[[$StyleSheetCore]]` `<<somemacro>>` `{{SomeTiddler}}`
+
+Fenced block, must stay literal:
+
+```
+* [[$StyleSheetCore]]
+* <<somemacro>>
+* {{SomeTiddler}}
+```
+
+And a real link outside code still works: [[$StyleSheetCore]]

@@ -1,3 +1,5 @@
+tags: $Plugin
+
 This plugin will do provide some examples of widgets and extensible functions.
 
 Feel free to customize it's [settings](#ExamplePlugin::Settings) or look at the [code](#ExamplePlugin::Code).
@@ -52,9 +54,10 @@ div.example {
 * [[$StyleSheetUser]]
 
 # Tests
-```javascript
-// ...
-```
+This should print out: "Hello John Smith"
+
+> <<example.hello "John Smith">>
+
 
 # Meta
 * Author: Marc Cawood
