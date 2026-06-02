@@ -1,3 +1,74 @@
+# TWikki Themes
+
+TWikki's look is driven entirely by stylesheets which you can change or replace. A theme consists of one or more stylesheets and a tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply:
+
+```
+tags: $Theme
+
+* [[$StyleSheetCore]]
+* [[$ThemeBase]]
+* [[AuroraDark::StyleSheet]]
+```
+
+In this case the theme loads the core styles (which every theme should do)
+
+Switching or editing a theme re-paints instantly with no reload. Colours, radii and spacing are exposed as CSS custom properties (`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about plus any structural rules it wants.
+
+## Example Themes
+
+### AuroraDark
+Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
+accents. A modern dark-dashboard feel.
+
+![AuroraDark](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
+
+### Manuscript
+Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
+card and hairline borders. Reads like print.
+
+![Manuscript](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/02-manuscript.png)
+
+### Terminal
+Near-black surface, phosphor-green monospace, zero border radius, hard 1px borders,
+uppercase titles and a subtle scanline texture.
+
+![Terminal](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/03-terminal.png)
+
+### Bubblegum
+Pastel pink wash, candy accents, chunky 24px rounded cards and soft glow shadows.
+Toy-like and friendly.
+
+![Bubblegum](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/04-bubblegum.png)
+
+### Broadsheet
+**DM Serif Display** titles over an **Outfit** body. The header flattens to a hairline
+bar with a centred pill search, the toolbar is trimmed to essentials, and content sits
+in a centred 820px reading column. Terracotta accent.
+
+![Broadsheet](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/06-broadsheet.png)
+
+### Nocturne
+**Syne** display titles with a **Sora** body. A floating glass header with a blurred
+backdrop, the toolbar collapsed into a rounded pill of chartreuse icons, and dark
+gradient cards. Lime `#c6f24e` accent.
+
+![Nocturne](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/07-nocturne.png)
+
+### Kontrast
+**Anton** condensed uppercase titles with an **IBM Plex Sans** body. Thick 2px black
+borders, hard 6px offset shadows, a square search box and a segmented row of bordered
+icon boxes. Red `#e5322d` accent.
+
+![Kontrast](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/09-kontrast-fixed.png)
+
+---
+
+> **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
+> the [$Theme](#msg:search:$tag:$Theme) and [$Theme](#msg:search:$tag:$StyleSheet) tags are in the `excludeTags` list on the **Search**
+> tab of [[$GeneralSettings]]. They still appear in the theme selector and in an explicit
+> `tag:$Theme` / `$`-prefixed search.
+
+# Technical
 Themes are collections of stylesheets.
 
 * A special [[$Theme]] stores name of the current [Theme](#msg:search:$tag:$Theme) e.g.:

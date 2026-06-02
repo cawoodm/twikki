@@ -6,7 +6,7 @@ A warm parchment theme with serif type.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[ManuscriptTheme/ManuscriptStyleSheet]]
+* [[ManuscriptTheme::ManuscriptStyleSheet]]
 
 # ManuscriptStyleSheet
 tags: $StyleSheet

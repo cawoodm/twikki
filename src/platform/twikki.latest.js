@@ -12,18 +12,19 @@
 
   // Constants
   // TODO: Warn about problematic characters in tiddler titles:
-  //         '/' - Could be used to point to blocks within multipart tiddlers
-  // TODO: Inadvisable but should work characters:
-  //         ':' - Used in search queries and parameters
+  //         '/' - Reserved for the (future) directories concept
   //         '!' - Used to negate logic (e.g. msg:search:!tag:$Shadow)
-  const reTiddlerTitle = /[a-z0-9_\-\.\(\):\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
-  // A reference is a title, optionally followed by /Section, so links/inclusions
-  // can address into a tiddler: [[Title/Section]] / {{Title/Section}}. The slash
-  // only ever SEPARATES two title segments \u2014 it can never lead \u2014 so templater
-  // {{/block}} close tags and {{=field}} substitutions are not captured as
-  // inclusions. Title validation (reTiddlerTitleComplete) stays strict on
-  // reTiddlerTitle, so '/' is never valid in a real title.
-  const reTiddlerRef = new RegExp(`${reTiddlerTitle.source}(?:/${reTiddlerTitle.source})?`, 'gi');
+  // The section delimiter: a reference may address into a tiddler's sections as
+  // `Title::Section`. ':' is therefore NOT a valid title character (so the '::'
+  // in a reference is unambiguous against the single-colon command/search syntax
+  // like msg:search:foo and tag:$Theme, which is parsed separately by reCommand).
+  const SECTION_DELIM = '::';
+  const reTiddlerTitle = /[a-z0-9_\-\.\(\)\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
+  // A reference is a title, optionally followed by ::Section, so links/inclusions
+  // can address into a tiddler: [[Title::Section]] / {{Title::Section}}. The
+  // delimiter only ever SEPARATES two title segments \u2014 it can never lead \u2014 and
+  // since ':' is not a valid title char it can never be confused with a title.
+  const reTiddlerRef = new RegExp(`${reTiddlerTitle.source}(?:${SECTION_DELIM}${reTiddlerTitle.source})?`, 'gi');
   const reTiddlerTitleComplete = RegExp.compose(/^reTiddlerTitle$/gi, {reTiddlerTitle});
   const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
   const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerRef)\|?([^\}]+)?}}/gi, {reTiddlerRef});
@@ -854,15 +855,23 @@
     tw.events.send('tiddler.rendered', {tiddler, newElement});
     saveVisible();
   }
-  // For a `Title/Section` reference, synthesize a display-only tiddler holding
+  // Split a `Title::Section` reference into {base, section}, or null when the ref
+  // holds no section delimiter. The single place that knows the delimiter width.
+  function splitSectionRef(ref) {
+    if (typeof ref !== 'string') return null;
+    let i = ref.indexOf(SECTION_DELIM);
+    if (i < 0) return null;
+    return {base: ref.slice(0, i), section: ref.slice(i + SECTION_DELIM.length)};
+  }
+  // For a `Title::Section` reference, synthesize a display-only tiddler holding
   // just that section (rendered by its own type via makeTiddlerText). Never added
   // to tw.tiddlers.all — the parent stays the single store entry.
   function sectionTiddler(title) {
-    if (typeof title !== 'string' || !title.includes('/')) return null;
-    let slash = title.indexOf('/');
-    let base = getTiddler(title.slice(0, slash));
+    let ref = splitSectionRef(title);
+    if (!ref) return null;
+    let base = getTiddler(ref.base);
     if (!base) return null;
-    let sec = tw.core.sections.getSection(base.text, title.slice(slash + 1));
+    let sec = tw.core.sections.getSection(base.text, ref.section);
     if (!sec) return null;
     // isSection drives the read-only UI: no delete, and edit redirects to the parent.
     return {title, text: sec.text, type: sec.type || base.type, tags: [], doNotSave: true, isSection: true};
@@ -870,10 +879,10 @@
   // Edit button on a section card: close the section view and open its parent
   // tiddler in the edit form (a section is not independently editable).
   function editTiddlerSection(sectionTitle) {
-    if (typeof sectionTitle !== 'string' || !sectionTitle.includes('/')) return;
-    let parent = sectionTitle.slice(0, sectionTitle.indexOf('/'));
+    let ref = splitSectionRef(sectionTitle);
+    if (!ref) return;
     closeTiddler(sectionTitle);
-    formEditTiddler(parent);
+    formEditTiddler(ref.base);
   }
   function emptyTiddler() {
     return {title: '', text: '', type: 'x-twikki', tags: []};
@@ -1062,15 +1071,15 @@
 
   // Functions to extract data from structured tiddlers
 
-  // Resolve a tiddler reference to {text, type}, honouring `Title/Section`
+  // Resolve a tiddler reference to {text, type}, honouring `Title::Section`
   // addressing into a tiddler's sections. Falls back to whole-tiddler text when
-  // the `/`-form does not resolve, so it is a strict superset of getTiddler().
+  // the `::`-form does not resolve, so it is a strict superset of getTiddler().
   function resolveRef(ref) {
-    if (typeof ref === 'string' && ref.includes('/')) {
-      let slash = ref.indexOf('/');
-      let base = getTiddler(ref.slice(0, slash));
+    let parts = splitSectionRef(ref);
+    if (parts) {
+      let base = getTiddler(parts.base);
       if (base) {
-        let sec = tw.core.sections.getSection(base.text, ref.slice(slash + 1));
+        let sec = tw.core.sections.getSection(base.text, parts.section);
         if (sec) return {text: sec.text, type: sec.type || base.type};
       }
     }
@@ -1168,7 +1177,7 @@
     return parsed.order
       .map(n => parsed.sections[n.toLowerCase()])
       .filter(s => s && s.type === 'script/js' && !(s.tags || []).includes('$CodeDisabled'))
-      .map(s => ({text: s.text, title: `${t.title}/${s.name}`}));
+      .map(s => ({text: s.text, title: `${t.title}${SECTION_DELIM}${s.name}`}));
   }
   function runTiddlerCode(t) {
     tiddlerCodeBlocks(t).forEach(b => executeCodeTiddler(b.text, b.title));

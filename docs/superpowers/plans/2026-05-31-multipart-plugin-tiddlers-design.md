@@ -1,5 +1,12 @@
 # Multi-Part Plugin Tiddlers (one tiddler → a runnable plugin)
 
+> **Superseded (2026-06-02): the reference delimiter is now `::`, not `/`.**
+> This document describes the original `/` addressing (`[[Title/Section]]`,
+> `{{Title/Section}}`, `#Title/Section`). The section delimiter was later changed
+> to `::` (`[[Title::Section]]`) to free `/` for a future directories concept, and
+> `:` was removed from the legal title charset so `::` parses unambiguously. The
+> design below is otherwise current; mentally read `/` as `::`. See the CHANGELOG.
+
 > **Revision (2026-06-01): sections are foundational, not `$Plugin`-gated.**
 > Sections are a general, tiddler-wide feature; `$Theme` and `$Plugin` are just
 > *consumers* of one shared parser (`core.sections.js`). Grammar settled with the

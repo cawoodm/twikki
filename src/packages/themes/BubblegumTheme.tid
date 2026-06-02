@@ -6,7 +6,7 @@ A playful pink theme with rounded cards.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[BubblegumTheme/BubblegumStyleSheet]]
+* [[BubblegumTheme::BubblegumStyleSheet]]
 
 # BubblegumStyleSheet
 tags: $StyleSheet

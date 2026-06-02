@@ -1,6 +1,6 @@
 This plugin will do provide some examples of widgets and extensible functions.
 
-Feel free to customize it's [settings](#ExamplePlugin/Settings) or look at the [code](#ExamplePlugin/Code).
+Feel free to customize it's [settings](#ExamplePlugin::Settings) or look at the [code](#ExamplePlugin::Code).
 
 # Examples
 ## Greet John Smith

@@ -6,7 +6,7 @@ A green-on-black monospace terminal theme.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[TerminalThemeDark/TerminalStyleSheetDark]]
+* [[TerminalThemeDark::TerminalStyleSheetDark]]
 
 # TerminalStyleSheetDark
 tags: $StyleSheet

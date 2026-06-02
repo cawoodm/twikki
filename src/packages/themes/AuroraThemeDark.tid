@@ -6,7 +6,7 @@ A nice theme
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[AuroraThemeDark/AuroraStyleSheet]]
+* [[AuroraThemeDark::AuroraStyleSheet]]
 
 # AuroraStyleSheet
 tags: $StyleSheet

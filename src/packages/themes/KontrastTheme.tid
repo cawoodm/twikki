@@ -6,7 +6,7 @@ A bold high-contrast brutalist theme with hard offset shadows.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[KontrastTheme/KontrastStyleSheet]]
+* [[KontrastTheme::KontrastStyleSheet]]
 
 # KontrastStyleSheet
 tags: $StyleSheet

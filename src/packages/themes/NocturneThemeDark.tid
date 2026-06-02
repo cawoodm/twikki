@@ -6,7 +6,7 @@ A dark theme with a floating glass header and lime accents.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[NocturneThemeDark/NocturneStyleSheetDark]]
+* [[NocturneThemeDark::NocturneStyleSheetDark]]
 
 # NocturneStyleSheetDark
 tags: $StyleSheet

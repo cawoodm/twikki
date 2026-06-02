@@ -1,9 +1,9 @@
 # CHANGELOG
 
-## 2 Jun 2026 (v0.20.0)
+## 2 Jun 2026 (v0.20.1)
 
 ### Sections
-* **Sections support** — a tiddler can now be split into named sections, addressed as `Parent/Section`. This enables:
+* **Sections support** — a tiddler can now be split into named sections, addressed as `Parent::Section` (the `::` delimiter keeps `/` free for a future directories concept). This enables:
   * **Single-file plugins** — a whole plugin can live in one multipart tiddler.
   * **Single-file themes** — a theme and its stylesheet(s) packaged in one tiddler.
 * New `core.sections` module (with unit tests) to parse and resolve sections from a parent tiddler's text.
@@ -26,4 +26,3 @@
 * Refactored the Favorites plugin and the test framework plugin.
 * Removed the legacy `x-twiki` type alias (use `x-twikki`).
 * Expanded docs: `MODULES.md`, `THEMES.md`, multipart-plugin design notes, and tag documentation.
-* Version bumped to 0.20.0.

@@ -5,7 +5,7 @@ A minimal Skeleton-framework starting-point theme.
 # SkeletonTheme
 tags: $Theme
 * [[$StyleSheetCore]]
-* [[SkeletonTheme/SkeletonStyleSheet]]
+* [[SkeletonTheme::SkeletonStyleSheet]]
 * [[$StyleSheetUser]]
 
 # SkeletonStyleSheet

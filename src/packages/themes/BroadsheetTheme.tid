@@ -6,7 +6,7 @@ A light editorial theme with serif headlines and a centered reading column.
 tags: $Theme
 * [[$StyleSheetCore]]
 * [[$ThemeBase]]
-* [[BroadsheetTheme/BroadsheetStyleSheet]]
+* [[BroadsheetTheme::BroadsheetStyleSheet]]
 
 # BroadsheetStyleSheet
 tags: $StyleSheet

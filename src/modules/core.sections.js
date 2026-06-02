@@ -2,8 +2,8 @@
  * Sections
  * A foundational, tiddler-wide feature (independent of the plugin layer):
  * any tiddler's `.text` can expose addressable sections so that
- *   - `[[Title/Section]]` links/includes render only that section, and
- *   - `getTiddlerTextRaw('Title/Section')` (in code or a theme's list) returns
+ *   - `[[Title::Section]]` links/includes render only that section, and
+ *   - `getTiddlerTextRaw('Title::Section')` (in code or a theme's list) returns
  *     only that section's text — e.g. a packed theme's CSS.
  *
  * Grammar:
