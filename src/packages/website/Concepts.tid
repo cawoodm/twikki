@@ -13,14 +13,17 @@ The `type` field of a tiddler determines what its content means and how it is di
 * Behaviour can be based on type or name:
   * Type:
     * Code tiddlers (`script/js`) are executed with `eval()` in the global context — on load and again whenever you save them
-    * Any `script/js` *section* inside a tiddler (a fenced JavaScript block under a `# Heading`) is executed the same way
-    * Add the `$CodeDisabled` tag (to the tiddler or the section) to stop it running
+    * Any `script/js` *section* inside active Plugin Tiddlers are executed the same way
+      * A Plugin tiddler must have the `$Plugin` tag
+    * The `$CodeDisabled` tag will prevent any code running
   * Name:
     * The [[$Theme]] tiddler names the active theme tiddler, which lists the StyleSheets applied as CSS
     * The [[$CorePackages]] and [[$ExtensionPackages]] tiddlers list packages which are imported as tiddlers
     * The [[$TiddlerDisplay]] tiddler is an HTML template for customizing how tiddlers are displayed
+    * The [[$MainLayout]] tiddler is an HTML template for customizing how the entire app is layed out (for themes with a sidebar)
+    * The [[$MainLayoutHeader]] tiddler is an HTML template for customizing how the entire app is layed out (for themes with a header)
 
-* $Shadow tiddlers are included in source, expected to be there and we cannot start without them
+* Shadow tiddlers (tagged with `$Shadow`) are included in source, expected to be there and we cannot start without them
 * Packages are loaded from URLs when we start — [[$CorePackages]] first, then [[$ExtensionPackages]]:
   * Core packages: `base` — adds the basic useful functionality every TWikki needs
   * Extension packages: `icons`, `demo`, `themes` and `website` (which provides the content and functionality for the TWikki website)
