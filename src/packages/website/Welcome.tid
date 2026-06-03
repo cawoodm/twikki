@@ -1,6 +1,6 @@
 # Welcome
 
-TWikki is, like TiddlyWiki, a cool way to manage semi-structured information with the core concept being "code is data". [[Features]]
+TWikki is, like TiddlyWiki, a cool way to manage semi-structured information as notes or "tiddlers". [[Features]]
 
 ## Introduction
 With TWikki everything is in the database including code meaning that the information platform is also the development environment.

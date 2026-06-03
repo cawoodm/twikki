@@ -5,10 +5,10 @@ tw.macros.core.WorkspaceSelect = () => {
   ).join('');
   return `<span class="picker" data-event="workspace.load.prompt">
     <button class="icon picker-trigger" title="Workspace" aria-haspopup="true">▦</button>
-    <div class="picker-menu" hidden>
+    <span class="picker-menu" hidden>
       <button class="picker-item picker-action" data-value="">– new workspace –</button>
       ${items}
-    </div>
+    </span>
   </span>`;
 };
 tw.macros.core.WorkspaceCreate = () => {

@@ -113,7 +113,7 @@
     ).join('');
     return `<span class="picker" data-event="theme.switch">
     <button class="icon picker-trigger" title="Theme" aria-haspopup="true">◐</button>
-    <div class="picker-menu" hidden>${items}</div>
+    <span class="picker-menu" hidden>${items}</span>
   </span>`;
   };
 

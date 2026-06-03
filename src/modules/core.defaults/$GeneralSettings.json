@@ -33,7 +33,7 @@
   "search": {
     "includeTags": "",
     "includeTags~": "Only show tiddlers with these tags in search (comma-separated; empty = all) (text)",
-    "excludeTags": "$NoSearch, $Theme, $StyleSheet",
+    "excludeTags": "$NoSearch, $Theme, $StyleSheet, $Template",
     "excludeTags~": "Hide tiddlers with these tags from search; applied after the include list (comma-separated) (text)"
   }
 }

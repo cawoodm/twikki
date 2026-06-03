@@ -1,14 +1,14 @@
-## Sections
+# Sectionsor]]
 
 A **section** lets a single tiddler hold several independently-addressable pieces of content. Any tiddler's text can expose sections, so you can pack — say — a stylesheet, a snippet of script and some notes into one tiddler and then link to, include, or read each part on its own.
 
 > This page is about addressable **content** sections (the core `core.sections` feature). Don't confuse them with the collapsible [[Sections]] UI widgets (`<<Section>>` / `<<Expand>>` / `<<Expose>>`), which are a different thing entirely.
 
-## Anatomy
+# Anatomy
 
 A tiddler's text is an optional **preamble** (everything before the first `# ` heading) followed by zero or more sections. A section starts at a `# Name` heading and runs until the next `# ` heading (or the end of the text):
 
-````
+````markdown
 Anything up here, before the first heading, is the preamble.
 
 # Intro
@@ -29,7 +29,7 @@ Each section behaves like a *mini-tiddler*:
 
 Only a level-1 `# ` heading (a single hash followed by a space) starts a section — `##`, `###` and deeper headings are ordinary headings *within* a section. A `#` line **inside a fenced code block is ignored**, so a `# comment` in your code never accidentally starts a new section.
 
-## Section types
+# Section types
 
 A section carries its own `type`, so it can render — or run — differently from its parent tiddler. The type is resolved like this:
 
@@ -49,7 +49,7 @@ A section carries its own `type`, so it can render — or run — differently fr
 2. Otherwise the type comes from an explicit `type:` metadata line.
 3. Failing both, the section **inherits the parent tiddler's type**.
 
-## Addressing a section
+# Addressing a section
 
 Reference a section with the `::` delimiter — `Title::Section` — anywhere a tiddler reference is accepted. (`:` is not a valid title character, so `::` is never ambiguous with the single-colon command syntax like `msg:search:...`.) Section names match **case-insensitively**.
 
@@ -59,13 +59,13 @@ Reference a section with the `::` delimiter — `Title::Section` — anywhere a 
 
 A section view is **read-only**: it has no delete, and its **Edit** button opens the *parent* tiddler instead (a section is never edited on its own). Section cards are also never added to the store — the parent tiddler stays the single saved entry.
 
-## What sections are for
+# What sections are for
 
 * **Packed themes** — a [[$Theme]] lists the stylesheets to apply, and a stylesheet can be a section. For example `[[AuroraDark::StyleSheet]]` pulls the CSS section out of the `AuroraDark` tiddler, letting one tiddler carry several typed sections. See [[Themes]].
 * **Runnable code** — a `js` (or `javascript`) fenced section is typed `script/js` and is executed exactly like a code tiddler: on load, and again every time you save it. Add the `$CodeDisabled` tag to the tiddler *or* to the section to stop it running. See [[Concepts]].
 * **Structured data** — `keyval`, `list`, `table` or `json` sections let one tiddler store several named, structured payloads.
 
-## Notes & limits
+# Notes & limits
 
 * Duplicate section names: the **last one wins** (a warning is logged to the console).
 * Only `# ` (level 1) starts a section; `##` and deeper headings stay inside the current section.

@@ -588,11 +588,13 @@
   // tiddler carrying that tag (built lazily from data-source="tag"); picking one
   // opens it. Used by the tag row at the bottom of notes and the <<Tag>> macro.
   function tagPickerHtml(tag) {
+    if (!tag) return '';
     let label = tw.core.common.escapeHtml(tag);
     let arg = label.replace(/"/g, '&quot;');
     return `<span class="picker tag-picker" data-event="tiddler.show" data-source="tag" data-source-arg="${arg}">` +
-      `<button class="picker-trigger tag-pill">${label}</button>` +
-      '<div class="picker-menu" hidden></div></span>';
+      `  <button class="picker-trigger pck-pill">${label}</button>` +
+      '  <span class="picker-menu" hidden></span>' +
+      '</span>';
   }
   function renderTiddler(title) {
     return renderTWikki({text: getTiddlerTextRaw(title), title});
@@ -980,20 +982,20 @@
   }
 
   /* TODO: Move to $GeneralCoreMacros.js */
-  function showAllTiddlers({tag, title, pck}) {
+  function showAllTiddlers({tag, title, pck}={}) {
     if (!title) title = '!^\\$';
     tiddlerList({title, tag, pck})
       .map(t => t.title)
       .forEach(showTiddler);
     renderAllTiddlers();
   }
-  function closeAllTiddlers({tag = '', title = '', pck}) {
+  function closeAllTiddlers({tag = '', title = '', pck}={}) {
     if (!title) title = '!^\\$';
     tiddlerList({title, tag, pck})
       .map(t => t.title)
       .forEach(hideTiddler);
   }
-  function tiddlerList({title, tag, pck}) {
+  function tiddlerList({title, tag, pck}={}) {
     return tw.tiddlers.all
       .filter(titleMatch(title))
       .filter(tagMatch(tag))

@@ -1,0 +1,12 @@
+## SayHello
+The macro is [[SayHello]] and we can call it with parameters:
+* `{{SayHello|Jack}}`: {{SayHello|Jack}}
+* `{{SayHello}}`: {{SayHello}}
+
+## SayHelloAdvanced
+The macro is [[SayHelloAdvanced]] and we can call it with named parameters:
+* `{{SayHelloAdvanced|name:"Marc"}}`: {{SayHelloAdvanced|name:"Marc" site:"Twikki"}}
+* `{{SayHelloAdvanced}}`: {{SayHelloAdvanced}}
+
+## Parameters
+* See [[Parameters]] for more examples of how parameters work
