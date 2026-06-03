@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3 Jun 2026 (v0.21.0)
+* Header based themes
+* Pills for tags and packages
+* Icons for workspace and theme selection
+
 ## 2 Jun 2026 (v0.20.1)
 
 ### Sections

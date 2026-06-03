@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "twikki",
-  "version": "0.20.1",
+  "version": "0.21.0",
   "description": "TiddlyWiki-Inspired Information Platform",
   "scripts": {
     "dev": "vite",

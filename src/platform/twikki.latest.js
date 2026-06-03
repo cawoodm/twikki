@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.20.1';
+  const VERSION = '0.21.0';
   // Default base URL the platform loads its core modules and packages from.
   // Mirrors $GeneralSettings.urls.moduleUrl — kept as a constant because baseUrl
   // is needed to fetch the very modules that carry $GeneralSettings (bootstrap
