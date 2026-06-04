@@ -49,7 +49,7 @@
     dialog = document.createElement('dialog');
     dialog.id = 'command-palette';
     dialog.innerHTML =
-      '<input id="palette-input" type="text" autocomplete="off" spellcheck="false" ' +
+      '<input id="palette-input" type="text" autofocus autocomplete="off" spellcheck="false" ' +
       'placeholder="Search commands and notes…  (&gt; for commands only)" />' +
       '<div id="palette-results"></div>';
     document.body.appendChild(dialog);
@@ -80,7 +80,10 @@
     selected = 0;
     render();
     if (!dialog.open) dialog.showModal();
-    input.focus();
+    // showModal() runs the dialog focusing steps, which in some engines fire
+    // after a synchronous focus() and steal it back to the dialog. Defer to the
+    // next frame so the input reliably ends up focused.
+    requestAnimationFrame(() => input.focus());
   }
 
   function buildItems() {

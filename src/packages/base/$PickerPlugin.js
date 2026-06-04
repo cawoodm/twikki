@@ -67,6 +67,9 @@
       .map(t => t.title)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
       .map(title => ({value: title, label: title})),
+    // Open notes that overflow the tab strip (the split is owned by $TabsPlugin).
+    taboverflow: () => (tw.tabs?.overflow || [])
+      .map(t => ({value: t, label: t.replace(/^\$/, '')})),
   };
 
   function populate(picker, menu) {

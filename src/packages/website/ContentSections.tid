@@ -1,4 +1,4 @@
-# Sectionsor]]
+# Content Sections
 
 A **section** lets a single tiddler hold several independently-addressable pieces of content. Any tiddler's text can expose sections, so you can pack — say — a stylesheet, a snippet of script and some notes into one tiddler and then link to, include, or read each part on its own.
 

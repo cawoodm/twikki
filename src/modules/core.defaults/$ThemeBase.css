@@ -254,6 +254,8 @@ a.explorer-tag:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 1 auto;
+  min-width: 96px; /* keep ≥3 chars + ellipsis legible (matches MIN_TAB in $TabsPlugin) */
   max-width: 200px;
   padding: 8px 12px;
   background-color: var(--tab-bg);
@@ -264,7 +266,14 @@ a.explorer-tag:hover {
   user-select: none;
 }
 
+/* A clear divider before the first tab so the strip reads as distinct cells. */
+.tab:first-child {
+  border-left: 1px solid var(--col4);
+}
+
 .tab .tab-label {
+  flex: 1 1 auto;
+  min-width: 0; /* allow the label to shrink and ellipsize inside the flex tab */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -277,6 +286,7 @@ a.explorer-tag:hover {
 }
 
 .tab .tab-close {
+  flex: 0 0 auto;
   padding: 0 2px;
   font-size: 0.85rem;
   line-height: 1;
@@ -308,6 +318,17 @@ a.explorer-tag:hover {
 
 .tab-new:hover {
   color: var(--col6);
+}
+
+/* Trailing controls keep their size — only the tabs shrink to fit. */
+.tab-new,
+.tab-overflow {
+  flex: 0 0 auto;
+}
+
+.tab-overflow {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ============================================================

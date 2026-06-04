@@ -29,6 +29,9 @@
 // ```javascript
 (function() {
 
+  const MAX_TABS = 30; // hard upper bound; the rest go in the overflow dropdown
+  const MIN_TAB = 96; // px — keeps ≥3 chars + ellipsis legible (matches .tab min-width in CSS)
+  const TRAILING = 40; // px reserved for the new-note button / overflow trigger
   let strip; // #tab-strip
   let vis; // #visible-tiddlers
   let app; // #app (carries the mode-tabs / mode-river class)
@@ -67,6 +70,12 @@
     if (!strip._tabsBound) {
       strip._tabsBound = true;
       strip.addEventListener('click', onStripClick);
+    }
+    // Re-split tabs vs. overflow when the available width changes. Bound once.
+    tw.tmp = tw.tmp || {};
+    if (!tw.tmp.tabsResizeBound) {
+      tw.tmp.tabsResizeBound = true;
+      window.addEventListener('resize', () => {if (mode === 'tabs') schedule();});
     }
     lastVisible = tw.tiddlers.visible.slice();
     flush();
@@ -146,13 +155,40 @@
     if (vis) vis.scrollTop = scrollPos[title] || 0;
   }
 
+  // How many tabs fit at the legible minimum width, leaving room for the
+  // trailing controls. Falls back to MAX_TABS before the strip has been laid
+  // out (clientWidth 0). When everything fits we only reserve for the new-note
+  // button; otherwise we also reserve for the overflow trigger.
+  function capacity(count) {
+    let width = strip ? strip.clientWidth : 0;
+    if (!width) return MAX_TABS;
+    let fitsAll = Math.floor((width - TRAILING) / MIN_TAB);
+    if (count <= fitsAll) return count;
+    return Math.max(1, Math.floor((width - TRAILING * 2) / MIN_TAB));
+  }
+
   function rebuildStrip(visible, active) {
     if (!strip) return;
-    strip.innerHTML = visible.map(title => `
+    // Show as many tabs as fit legibly (capped at MAX_TABS); the rest go in the
+    // overflow dropdown. Always keep the active tab in the visible set.
+    let shownCount = Math.min(visible.length, capacity(visible.length), MAX_TABS);
+    let shown = visible.slice(0, shownCount);
+    if (active && shownCount && !shown.includes(active)) shown[shownCount - 1] = active;
+    let overflow = visible.filter(t => !shown.includes(t));
+    if (tw.tabs) tw.tabs.overflow = overflow; // read by the `taboverflow` picker source
+
+    let more = overflow.length ? `
+      <span class="picker tab-overflow" data-source="taboverflow" data-event="tiddler.show">
+        <button class="icon picker-trigger" title="${overflow.length} more notes" aria-haspopup="true">⋯</button>
+        <span class="picker-menu" hidden></span>
+      </span>` : '';
+
+    strip.innerHTML = shown.map(title => `
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
         <button class="tab-close icon" data-msg="tiddler.close" data-param="${attr(title)}" title="Close">✕</button>
       </div>`).join('') +
+      more +
       '<button class="tab-new icon" data-msg="tiddler.new" title="New note">+</button>';
   }
 
