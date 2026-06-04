@@ -38,14 +38,23 @@
     script.src = url;
     document.head.appendChild(script);
   }
+  // Toggle via the `media` attribute, NOT `.disabled`. Setting link.disabled=true
+  // BEFORE the (CDN) sheet has loaded does not propagate to the freshly-loaded
+  // CSSStyleSheet — the sheet loads enabled (sheet.disabled===false) and its rules
+  // apply, so a sheet added-then-immediately-disabled (e.g. atom-one-dark on a light
+  // theme) still won the cascade. `media="not all"` is honoured by the cascade
+  // regardless of load timing and sticks across the load. We keep `.disabled` in
+  // sync as a harmless secondary signal.
   function disableStyleSheet(title) {
     let el = document.querySelector(`link[data-stylesheet="${title}"]`);
     if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
+    el.media = 'not all';
     el.disabled = true;
   }
   function enableStyleSheet(title) {
     let el = document.querySelector(`link[data-stylesheet="${title}"]`);
     if (!el) throw new Error(`Stylesheet with title '${title}' not found!`);
+    el.media = 'all';
     el.disabled = false;
   }
   function $() {
