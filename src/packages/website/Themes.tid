@@ -18,6 +18,8 @@ Switching or editing a theme re-paints instantly with no reload. Colours, radii 
 
 ## Example Themes
 
+Import Themes: <<themeImport.button>>
+
 ### AuroraDark
 Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
 accents. A modern dark-dashboard feel.

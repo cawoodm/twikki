@@ -43,6 +43,7 @@ tags: $StyleSheet
   --col3:   #222a3d;
   --col4:   #2b3346;
   --col6:   #c6f24e;
+  --accent: #c6f24e; /* selected-tab indicator — the theme's signature lime */
   --notify-rgba: 198, 242, 78;
   --rad1: 16px;
   --rad2: 16px;

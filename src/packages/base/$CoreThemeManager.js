@@ -112,7 +112,7 @@
       `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`,
     ).join('');
     return `<span class="picker" data-event="theme.switch">
-    <button class="icon picker-trigger" title="Theme" aria-haspopup="true">◐</button>
+    <button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button>
     <span class="picker-menu" hidden>${items}</span>
   </span>`;
   };

@@ -262,8 +262,12 @@ a[data-msg]:hover {
   --sidebar-w: 280px;
   --accent: #6db193;
   --accent-2: #8fbfdf;
-  --tab-bg: #dfdfdf;
-  --tab-active-bg: #efefef;
+  /* Derive tab colours from the palette so every theme (incl. dark ones) gets
+     appropriate tabs without redefining them: inactive matches the top-bar /
+     chrome (--colbg3), active matches the note pane (--colbg2). A theme can
+     still override these explicitly (e.g. ObsidianThemeDark). */
+  --tab-bg: var(--colbg3);
+  --tab-active-bg: var(--colbg2);
 }
 
 /* ============================================================
