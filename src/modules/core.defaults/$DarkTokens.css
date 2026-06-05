@@ -1,3 +1,6 @@
+/* Dark token overrides — the body of the built-in Dark theme
+   ($CoreThemeDark). Tokens only; everything else comes from the
+   shared layers. (Formerly $StyleSheetCoreDark.) */
 :root {
   --colbg1: #101f1f;
   --colbg2: #101f1f;

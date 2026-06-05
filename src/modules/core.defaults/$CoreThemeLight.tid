@@ -1,5 +1,3 @@
 tags: $Theme
 
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[$StyleSheetUser]]
+The built-in light theme — the token defaults in $Tokens are already light, so it contributes nothing of its own.

@@ -14,11 +14,24 @@ export function getType(ext) {
   }
 }
 
-export function getAutoTags(packageName, ext) {
+// The four core stylesheet layers are assigned by filename: a .css file with one
+// of these titles is tagged for its cascade layer ($CoreThemeManager collects the
+// layers by tag). Any other .css file is a plain $StyleSheet (theme-layer content).
+const LAYER_TAGS = {
+  $Reset: '$LayerReset',
+  $Structure: '$LayerStructure',
+  $Tokens: '$LayerTokens',
+  $Components: '$LayerComponents',
+};
+
+export function getAutoTags(packageName, ext, title) {
   const tags = [];
   if (packageName === 'core.defaults') tags.push('$Shadow');
   if (packageName === 'base') tags.push('$NoEdit');
-  if (ext === '.css') tags.push('$StyleSheet');
+  if (ext === '.css') {
+    tags.push('$StyleSheet');
+    if (LAYER_TAGS[title]) tags.push(LAYER_TAGS[title]);
+  }
   return tags;
 }
 
@@ -29,7 +42,7 @@ export function parseFile(filePath, packageName) {
   const tiddler = {
     title,
     text: '',
-    tags: getAutoTags(packageName, ext),
+    tags: getAutoTags(packageName, ext, title),
     type: getType(ext),
     created: stats.birthtime.toISOString(),
     updated: stats.mtime.toISOString(),

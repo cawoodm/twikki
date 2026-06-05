@@ -1,0 +1,48 @@
+/* ============================================================
+   @layer tokens — the design-token contract. Single source of
+   truth: every CSS variable used anywhere in core is declared
+   here with its light default. Themes recolour the app by
+   overriding these from the theme layer (usually nothing else).
+   ============================================================ */
+:root {
+  /* Backgrounds (layered) */
+  --colbg1: #fdeeee; /* main pane behind notes */
+  --colbg2: #efefef; /* note cards, dialogs, popovers */
+  --colbg3: #dfdfdf; /* sidebar, tab strip, raised chrome */
+  --colbgi: #efefef; /* form inputs */
+
+  /* Foreground */
+  --colfg: #323232; /* body text */
+  --colfgi: #373737; /* input text */
+
+  /* Neutrals & accents */
+  --col0: #323232; /* shadows */
+  --col1: #6e6e6e; /* muted text, icons */
+  --col3: #8fbfdf; /* filled controls (buttons, th) */
+  --col4: #8d8d8d; /* hairline borders */
+  --col6: #6db193; /* links, hover accent */
+
+  /* Semantic colours */
+  --col-on-accent: #fff; /* text/icons on filled accent surfaces (th, notify, palette selection) */
+  --col-error: #c0392b; /* error text/badges */
+
+  --notify-rgba: 210, 180, 90;
+
+  /* Radii (per-corner: tiddler cards use all four) */
+  --rad1: 0.3rem;
+  --rad2: 0.3rem;
+  --rad3: 0.3rem;
+  --rad4: 0.3rem;
+
+  /* Layout tokens */
+  --sidebar-w: 280px;
+  --accent: #6db193;
+  --accent-2: #8fbfdf;
+
+  /* Derive tab colours from the palette so every theme (incl. dark ones) gets
+     appropriate tabs without redefining them: inactive matches the top-bar /
+     chrome (--colbg3), active matches the note pane (--colbg2). A theme can
+     still override these explicitly (e.g. ObsidianThemeDark). */
+  --tab-bg: var(--colbg3);
+  --tab-active-bg: var(--colbg2);
+}
