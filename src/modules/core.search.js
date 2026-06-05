@@ -1,3 +1,12 @@
+/**
+ * Search
+ * Ranked substring search over the tiddler store: exact-title > title >
+ * fulltext, with `tag:`/`pck:`/`type:` field filters and a `$` prefix to
+ * include hidden/system tiddlers. Tag-based visibility comes from
+ * `$GeneralSettings.search` includeTags/excludeTags via `tagFilter` (also
+ * exported, so the sidebar Notes list hides the same tiddlers). Also wires
+ * the search box UI and renders the clickable results dropdown.
+ */
 (function(tw) {
 
   const name = 'core.search';

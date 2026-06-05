@@ -1,3 +1,11 @@
+/**
+ * DOM
+ * DOM helpers: `$`/`$$` query shorthands, `htmlToNode` (HTML string → element),
+ * the `nearest*` ancestor-attribute lookups used by the global click handler,
+ * and stylesheet/script injection — `addStyleSheet` tags links with
+ * `data-stylesheet` and enable/disableStyleSheet toggle via `media="not all"`
+ * so the cascade is honoured regardless of CDN load timing.
+ */
 (function(tw) {
 
   const name = 'core.dom';

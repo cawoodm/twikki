@@ -26,7 +26,7 @@
 > needed no change). **Phase 2 (below) — the `$Plugin` loader — is still pending.**
 
 ## Context
-`src/packages/website/ExamplePlugin.tid` describes an unimplemented concept: a **single** tiddler holding multiple named sections of different types (Code, StyleSheet, Data, Config, Settings, Theme, …) that behaves like a self-contained plugin — its script runs, its styles apply, and its data is readable. Today this is purely aspirational: there is no section parser, `/` is disallowed in titles (`twikki.latest.js:14`, with a `// TODO` at `:9` reserving `/` for "blocks within multipart tiddlers"), and the runtime only ever treats one tiddler as one unit of a single `type`.
+`src/packages/website/ExamplePlugin.tid` describes an unimplemented concept: a **single** tiddler holding multiple named sections of different types (Code, StyleSheet, Data, Config, Settings, Theme, …) that behaves like a self-contained plugin — its script runs, its styles apply, and its data is readable. Today this is purely aspirational: there is no section parser, `/` is disallowed in titles (`twikki.platform.js:14`, with a `// TODO` at `:9` reserving `/` for "blocks within multipart tiddlers"), and the runtime only ever treats one tiddler as one unit of a single `type`.
 
 We will implement it with the **no-split / on-demand** model: the parent stays the *single* object in `tw.tiddlers.all` (single source of truth — delete one tiddler = remove the whole plugin). `/` becomes pure **addressing into** a tiddler, never a way to mint new store entries. Nothing synthetic leaks into search, save, Gist sync, or package GC.
 
@@ -52,15 +52,15 @@ Fence info-string → tiddler type (`fenceToType`): `js`/`javascript`→`script/
 ## Architecture
 
 ### 1. Section parser — NEW `src/modules/core.sections.js` (core module)
-Register in `modulesToLoad` (`twikki.latest.js:86-99`) so it loads before everything as `tw.core.sections`. Pure, DOM-free, with exported functions for `node --test` (mirrors how `vite-plugin-tiddler-compile.js` exports `parseFile`/`getType`).
+Register in `modulesToLoad` (`twikki.platform.js:86-99`) so it loads before everything as `tw.core.sections`. Pure, DOM-free, with exported functions for `node --test` (mirrors how `vite-plugin-tiddler-compile.js` exports `parseFile`/`getType`).
 - `parseSections(text) → {preamble, order:[names], sections:{name:{type,text}}}` — split on `/^# (.+)$/m` while tracking ```` ``` ```` fence state; extract each section's single fenced block (strip fences); `type = fenceToType(info)`.
 - `getSection(text, name) → {name,type,text} | null`.
 - `fenceToType(info)` — the alias map above.
 - **Cache:** memoize `parseSections` keyed by `title`+`updated` timestamp; invalidated on `tiddler.updated`. Avoids re-parsing on every read.
 
 ### 2. Plugin loader & execution — NEW `src/modules/core.plugins.js` + reload hook
-- `runPluginTiddlers()`: for each `$Plugin` tiddler, set `tw.plugin = {title, data:(s)=>tw.run.getJSONObject(title+'/'+s), section:(s)=>tw.run.getSection(title,s)}`, then `executeText(getSection(text,'Code').text, title+'/Code')` (reuses the existing executor + error/notify path, `twikki.latest.js:490-499`), then reset `tw.plugin`. Eval `Tests` only when `qs.test`.
-- **Hook point:** in `reload()` (`twikki.latest.js:303-320`) call `runPluginTiddlers()` **after** `runExtensionTiddlers()` and **before** `initPlugins()`/`runPlugins()` (`:459-480`) so `tw.extensions.registerMacro/registerPlugin` results are present for the init/start phases. Expose `tw.run.runPluginTiddlers`.
+- `runPluginTiddlers()`: for each `$Plugin` tiddler, set `tw.plugin = {title, data:(s)=>tw.run.getJSONObject(title+'/'+s), section:(s)=>tw.run.getSection(title,s)}`, then `executeText(getSection(text,'Code').text, title+'/Code')` (reuses the existing executor + error/notify path, `twikki.platform.js:490-499`), then reset `tw.plugin`. Eval `Tests` only when `qs.test`.
+- **Hook point:** in `reload()` (`twikki.platform.js:303-320`) call `runPluginTiddlers()` **after** `runExtensionTiddlers()` and **before** `initPlugins()`/`runPlugins()` (`:459-480`) so `tw.extensions.registerMacro/registerPlugin` results are present for the init/start phases. Expose `tw.run.runPluginTiddlers`.
 - **Self-title for plugin code:** `tw.plugin.title` is valid synchronously during eval; async handlers must capture it at top. Document this.
 - **Re-run on edit:** in `tiddlerUpdated` (`:844-863`) add a `$Plugin` branch mirroring the `isActiveCodeTiddler` re-eval (`:846-848`): invalidate cache, re-eval Code, fire the plugin-style update.
 
@@ -70,12 +70,12 @@ The theme whitelist (`getThemeStyleSheets`, `:76-83`) won't apply plugin styles,
 - `pluginStyleUpdate()`: concatenate `getSection(t.text,'StyleSheet').text` over all `$Plugin` tiddlers; `replaceSync`.
 - Wire to `ui.loaded`/`ui.reloaded` (`:52`) and to `tiddlerChanged` (`:30-35`) when `tags.includes('$Plugin')`.
 
-### 4. Data & section API — MODIFY `tw.run` (`twikki.latest.js:200-234`, `:1016-1061`)
+### 4. Data & section API — MODIFY `tw.run` (`twikki.platform.js:200-234`, `:1016-1061`)
 - Add `getSection(title, section)` → `tw.core.sections.getSection(getTiddler(title)?.text, section)`.
 - Add one central `resolveRef(ref) → {text, type}`: if `ref` contains `/`, `Title` exists, and that section exists → return the section's text+type; **else fall back to whole-tiddler text** (fully backward compatible).
 - Route `getTiddlerTextRaw` (`:1016`) and `getTiddlerTextLines` (`:1030`) through `resolveRef`. The six list/json/keyval helpers (`getTiddlerList`, `getKeyValuesObject`, `getJSONObject`, …) inherit section-awareness for free, so `tw.run.getJSONObject('ExamplePlugin/Config')` works.
 
-### 5. Links, inclusions, rendering, navigation (`twikki.latest.js`)
+### 5. Links, inclusions, rendering, navigation (`twikki.platform.js`)
 - **Title regex (`:14`):** add `/` to `reTiddlerTitle`'s class so `reLinks`/`reInclusion` (`:17-19`) capture `Title/Section`. `/` is only meaningful when the LHS resolves to an existing tiddler+section; otherwise treated as a normal title (existing titles unaffected).
 - **Render-by-type reuse:** factor the type→HTML dispatch in `makeTiddlerText` (`:536-550`) into `renderSectionHtml({type,text,title})` (markdown/x-twikki → recurse `renderTWikki`; css/json/script-js/macro → `<pre><code>`; html → raw).
 - **Parent rendering:** `$Plugin` tiddlers render as preamble prose + each section under its `# Name` heading via `renderSectionHtml`, each wrapped in an anchor element (id from section name) so `#Title/Section` can scroll to it. Gives a readable "plugin card" and makes Code/StyleSheet show as highlighted code.
@@ -83,7 +83,7 @@ The theme whitelist (`getThemeStyleSheets`, `:76-83`) won't apply plugin styles,
 - **Links (`:632-637`):** `[[Title/Section]]` → `[Title/Section](#Title/Section)`.
 - **Navigation (`:1139-1188`, `showTiddler`/`scrollToTiddler` `:904-907`):** for `#Title/Section`, open parent `Title` and scroll to the section's anchor (fallback: parent top).
 
-### 6. Save-validation (`twikki.latest.js:417-421`, `formDone :719-733`)
+### 6. Save-validation (`twikki.platform.js:417-421`, `formDone :719-733`)
 Add a `$Plugin` branch to validation: parse sections, `jsonValidator` the Config/Data sections, and eval the Code section inside the existing try/catch "force save?" UX — never silently. (The parent is `x-twikki`, so its fenced JS is **not** auto-eval'd today — no surprise execution.)
 
 ## Edge cases
@@ -99,7 +99,7 @@ Add a `$Plugin` branch to validation: parse sections, `jsonValidator` the Config
 - `tests/unit/sections.test.js` — parser unit tests.
 
 **Modify**
-- `src/platform/twikki.latest.js` — register the two modules (`:86-99`); `/` in `reTiddlerTitle` (`:14`); `runPluginTiddlers()` in `reload()` (`:306-312`); `tw.run.getSection` + `resolveRef` + route text helpers (`:200-234`, `:1016-1032`); `renderSectionHtml` from `makeTiddlerText` (`:536-550`); section-aware inclusions (`:615-628`,`:1020-1028`); `$Plugin` parent rendering; `/Section` navigation (`:1139-1188`); `$Plugin` re-eval in `tiddlerUpdated` (`:844-863`); `$Plugin` save-validation (`:417-421`).
+- `src/platform/twikki.platform.js` — register the two modules (`:86-99`); `/` in `reTiddlerTitle` (`:14`); `runPluginTiddlers()` in `reload()` (`:306-312`); `tw.run.getSection` + `resolveRef` + route text helpers (`:200-234`, `:1016-1032`); `renderSectionHtml` from `makeTiddlerText` (`:536-550`); section-aware inclusions (`:615-628`,`:1020-1028`); `$Plugin` parent rendering; `/Section` navigation (`:1139-1188`); `$Plugin` re-eval in `tiddlerUpdated` (`:844-863`); `$Plugin` save-validation (`:417-421`).
 - `src/packages/base/$CoreThemeManager.js` — `tw.theme.stylesheets.plugins` + `pluginStyleUpdate()`.
 - `src/packages/website/ExamplePlugin.tid` — rewrite to the canonical fenced-section format; add `tags: $Plugin`.
 - `src/packages/website/Plugins.tid` — add a short "Multi-part plugins" section documenting the grammar (follow-up doc).

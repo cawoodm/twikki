@@ -1,3 +1,14 @@
+/**
+ * UI
+ * HTML-string UI builders and the page chrome: `button` (dispatches via the
+ * document-level data-msg handler, with base64-encoded payloads), `dialog`
+ * (consistent <dialog> chrome with title/content/toolbar and msg/onClick
+ * buttons), `section`/`expand`/`expose` <details> expanders, and layout
+ * rendering — `renderLayout` paints the tiddler named by the `$Layout`
+ * pointer (falling back to `$MainLayout`) at first paint, and
+ * `layoutTitleForTheme` resolves which layout a theme's MainLayout section
+ * names so the theme manager can update the pointer on a theme switch.
+ */
 (function(tw) {
 
   const name = 'core.ui';

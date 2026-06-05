@@ -1,3 +1,9 @@
+/**
+ * Common
+ * Pure, DOM-free utilities shared across modules: `hash` (MD5), `simpleSort`
+ * (case-insensitive title sort), `escapeHtml`, and the UTF-16-safe base64
+ * `encoder`/`decoder` pair used for `---enc:` message payloads.
+ */
 (function() {
 
   const name = 'core.common';

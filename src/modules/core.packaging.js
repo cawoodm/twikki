@@ -1,3 +1,11 @@
+/**
+ * Packaging
+ * Fetches tiddler packages — JSON `{tiddlers: [...]}` — over HTTP and merges
+ * them into the store: validates each tiddler, prunes tiddlers that were
+ * removed from the package, honours `$NoImport` and the `noOverWrite`/
+ * `overWrite`/`filter` options, and confirm()s before overwriting a tiddler
+ * the user has changed. `reloadPackageFromUrl` additionally reloads the UI.
+ */
 (function(tw) {
 
   const name = 'core.packaging';

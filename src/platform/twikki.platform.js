@@ -2,11 +2,6 @@
 
   const NAME = 'twikki';
   const VERSION = '0.22.0';
-  // Default base URL the platform loads its core modules and packages from.
-  // Mirrors $GeneralSettings.urls.moduleUrl — kept as a constant because baseUrl
-  // is needed to fetch the very modules that carry $GeneralSettings (bootstrap
-  // chicken-and-egg), so the setting cannot be read before this point.
-  const MODULE_URL = 'https://cawoodm.github.io/twikki';
 
   overrides();
 
@@ -94,7 +89,7 @@
       console.debug(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      baseUrl = MODULE_URL;
+      baseUrl = window.MODULE_URL || 'https://cawoodm.github.io/twikki';
       // Local dev: serve modules/packages from the dev server, not the published copy
       if (document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) baseUrl = document.location.origin;
 

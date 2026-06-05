@@ -1,3 +1,12 @@
+/**
+ * Core (twikki.core)
+ * First module loaded; bootstraps the `tw` global namespace skeleton:
+ *   - `tw.events` — the pub/sub bus (send/subscribe/override) with a
+ *     duplicate-handler guard and `---enc:` base64 param decoding.
+ *   - a minimal `tw.run` (just getTiddler) so the first paint can resolve
+ *     tiddlers before the platform installs the full action API later in boot.
+ *   - `tw.macros`, `tw.extensions.registerMacro` and `tw.call` (eval-by-name).
+ */
 (function(tw) {
 
   const name = 'twikki.core';

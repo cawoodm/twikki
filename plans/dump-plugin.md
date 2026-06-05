@@ -8,7 +8,7 @@ drag/drop infrastructure other plugins can reuse.
 
 Two layers:
 
-1. **Generic drop infrastructure** (`src/platform/twikki.latest.js`): a `dropHandlers` registry
+1. **Generic drop infrastructure** (`src/platform/twikki.platform.js`): a `dropHandlers` registry
    with glob-pattern matching, exposed as `tw.run.registerDropHandler(pattern, handler)`. Drag
    listeners (depth counter avoids flicker) show a full-window "drop to import" overlay during
    dragover. On drop, each file routes to the **most specific** matching handler (longer pattern
@@ -25,7 +25,7 @@ Docs: new `website/Dump.tid` demo page plus a `[[Dump]]` link in `base/Backup.ti
 
 | File | Change |
 |---|---|
-| `src/platform/twikki.latest.js` | **Modified** — drop-handler registry, `globToRegex`, `registerDropHandler` on `tw.run`, drag listeners + `handleDrop` + overlay in `wireEvents()` |
+| `src/platform/twikki.platform.js` | **Modified** — drop-handler registry, `globToRegex`, `registerDropHandler` on `tw.run`, drag listeners + `handleDrop` + overlay in `wireEvents()` |
 | `src/packages/base/$DumpWorkspacePlugin.js` | **New** — dump button macro, localStorage snapshot → download, `*.workspace.json` restore handler |
 | `src/packages/website/Dump.tid` | **New** — demo/help page using `<<dump.dumpButton>>` |
 | `src/packages/base/Backup.tid` | **Modified** — one line added linking to `[[Dump]]` |
@@ -64,13 +64,13 @@ workspace name is `tw.workspace`, and `tw.store.set(key,val)` writes `localStora
 
 Two layers, cleanly separated:
 
-1. **Generic drop infrastructure** — platform-level (`src/platform/twikki.latest.js`). Knows nothing
+1. **Generic drop infrastructure** — platform-level (`src/platform/twikki.platform.js`). Knows nothing
    about workspaces; matches dropped files to registered handlers by filename glob, and shows a
    generic "drop to import" overlay during drag.
 2. **DumpWorkspace plugin** — `base` package. Dump button + a `*.workspace.json` drop handler. Uses the
    generic API + raw localStorage.
 
-### 1. Generic drop infrastructure (`src/platform/twikki.latest.js`)
+### 1. Generic drop infrastructure (`src/platform/twikki.platform.js`)
 
 **Registry + registration** (near the other helpers):
 ```js
@@ -79,9 +79,9 @@ function globToRegex(p){ return new RegExp('^' + p.replace(/[.]/g,'\\$&').replac
 function registerDropHandler(pattern, handler){ dropHandlers.push({pattern, rx: globToRegex(pattern), handler}); }
 ```
 Expose `registerDropHandler` on the action API by adding it to the `tw.run = {...}` object
-(twikki.latest.js:226-262), so `base` plugins can call `tw.run.registerDropHandler(...)`.
+(twikki.platform.js:226-262), so `base` plugins can call `tw.run.registerDropHandler(...)`.
 
-**Listeners in `wireEvents()`** (twikki.latest.js:1339), matching the existing `addEventListener`
+**Listeners in `wireEvents()`** (twikki.platform.js:1339), matching the existing `addEventListener`
 style:
 ```js
 let dragDepth = 0;                                   // counter avoids child-element flicker
@@ -151,7 +151,7 @@ Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localSt
 Object.entries(data.keys).forEach(([rel,val]) => localStorage.setItem(prefix + rel, val));            // overwrite
 tw.events.send('reboot.hard');   // window.location.reload(); on boot everything loads from new localStorage
 ```
-No in-memory mutation needed — the hard reboot (twikki.latest.js:330,401) reloads the workspace
+No in-memory mutation needed — the hard reboot (twikki.platform.js:330,401) reloads the workspace
 entirely from the restored localStorage, and core shadows regenerate from modules as usual.
 
 ### 3. Demo page (`src/packages/website/Dump.tid`)
@@ -181,17 +181,17 @@ Append one line to the existing file:
 
 | File | Change |
 |---|---|
-| `src/platform/twikki.latest.js` | Add `dropHandlers` registry + `globToRegex` + `registerDropHandler`; add `registerDropHandler` to `tw.run` (line 226); add drag listeners, `handleDrop`, and `showDropOverlay`/`hideDropOverlay` in `wireEvents()` (line 1339). |
+| `src/platform/twikki.platform.js` | Add `dropHandlers` registry + `globToRegex` + `registerDropHandler`; add `registerDropHandler` to `tw.run` (line 226); add drag listeners, `handleDrop`, and `showDropOverlay`/`hideDropOverlay` in `wireEvents()` (line 1339). |
 | `src/packages/base/$DumpWorkspacePlugin.js` | **New.** Dump button macro, `workspace.dump` handler (localStorage snapshot → download), `*.workspace.json` drop handler (confirm → wipe → overwrite → `reboot.hard`). |
 | `src/packages/website/Dump.tid` | **New.** Demo page using `<<dump.dumpButton>>`. |
 | `src/packages/base/Backup.tid` | Add a `[[Dump]]` link. |
 
-`base`/`website` recompile via the Vite plugin on save (browser auto-reloads). `twikki.latest.js` is
+`base`/`website` recompile via the Vite plugin on save (browser auto-reloads). `twikki.platform.js` is
 served as-is and reloads on browser refresh.
 
 ## Reuse (don't reinvent)
 - `tw.workspace` + the `/ws/<workspace>/` localStorage prefix (core.workspaces.js:79-91).
-- `rebootHard()` via `tw.events.send('reboot.hard')` (twikki.latest.js:330,401).
+- `rebootHard()` via `tw.events.send('reboot.hard')` (twikki.platform.js:330,401).
 - `tw.ui.button(text, message, payload, id, attr)` (core.ui.js) — same shape as `tw.macros.backup.*`.
 - Existing `$IconPush` icon; `tw.ui.notify(msg, level)` for feedback.
 

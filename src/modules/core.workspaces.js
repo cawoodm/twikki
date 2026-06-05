@@ -1,3 +1,12 @@
+/**
+ * Workspaces
+ * Named workspaces — isolated tiddler stores living under the
+ * `/ws/<name>/` localStorage prefix. Installs `tw.store` (a get/set wrapper
+ * scoped to the current workspace) and `tw.workspace` (the current name),
+ * and handles the workspace.switch/load/create/clone/delete events.
+ * Switching prefixes only; `workspace.load` hard-reboots so the UI reloads
+ * from the new store. Falls back to 'default' if the saved name is unknown.
+ */
 (function(tw) {
 
   const name = 'core.workspaces';

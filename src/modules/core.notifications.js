@@ -1,3 +1,11 @@
+/**
+ * Notifications
+ * The `notify(msg, type, stack)` toast shown in the `#notify` div: type icons
+ * (S/E/W/D/I), 4s auto-hide with hover-to-pin and click-to-dismiss. Falls back
+ * to alert() while a modal dialog is open (the toast would be hidden) and to
+ * plain console logging before the UI exists. Debug ('D') messages respect
+ * `?debug`, and all messages respect the `?logfilter` regex.
+ */
 (function(tw) {
 
   const name = 'core.notifications';

@@ -1,3 +1,10 @@
+/**
+ * Templater
+ * Tiny mustache-style template engine (based on t.js). `new Templater(str)
+ * .render(vars)` supports `{{=key}}` raw / `{{%key}}` HTML-escaped value
+ * interpolation (dot-paths allowed), `{{key}}…{{:key}}…{{/key}}` if/else
+ * blocks, `{{!key}}` negation, and `{{@key}}` iteration exposing `_key`/`_val`.
+ */
 (function(tw) {
 
   const name = 'core.templater';
