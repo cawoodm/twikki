@@ -3,16 +3,42 @@
  * Provides all theme logic
  * Provides <<ThemeSelector>> widget
  *   listing all tiddlers tagged with $Theme
+ *
+ * Stylesheets are composed as CSS cascade layers:
+ *   @layer reset, structure, tokens, components, theme, user;
+ * Layers 1-4 are collected from tiddlers tagged $LayerReset/$LayerStructure/
+ * $LayerTokens/$LayerComponents (auto-prepended — themes never list them).
+ * The `theme` layer is the active theme's own list; the `user` layer is
+ * $StyleSheetUser, always applied last. Cross-layer, a later layer wins
+ * regardless of selector specificity, so theme/user rules always beat core.
  */
 /**
  * ## Data
  * ```json
  * {
- *   "version": 1.0.1
+ *   "version": 1.1.0
  * }
  * ```
  */
 (function(){
+
+  const LAYER_TAGS = {
+    reset: '$LayerReset',
+    structure: '$LayerStructure',
+    tokens: '$LayerTokens',
+    components: '$LayerComponents',
+  };
+  // Pre-layer themes listed the core sheets explicitly; those titles no longer
+  // exist (their contents are the auto-prepended layers above), so they're
+  // dropped from theme lists. Keeps old gist imports / saved themes working.
+  const LEGACY_SHEETS = ['$StyleSheetCore', '$StyleSheetCoreDark', '$ThemeBase', '$StyleSheetUser'];
+  // Dark themes were renamed to drop the "Dark" suffix (darkness is now the
+  // $ThemeDark tag); map stale $Theme pointers and theme.switch payloads.
+  const LEGACY_THEME_NAMES = {
+    AuroraThemeDark: 'AuroraTheme',
+    TerminalThemeDark: 'TerminalTheme',
+    NocturneThemeDark: 'NocturneTheme',
+  };
 
   wireUp('ui.loaded', () => {
     tw.theme = {
@@ -37,6 +63,7 @@
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
     if (!theme) return;
+    theme = resolveThemeName(theme);
     if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
     // A theme owns its layout via an optional `# MainLayout` section naming a shared
     // layout tiddler. We persist the choice in the `$Layout` pointer (read at the
@@ -57,7 +84,7 @@
         tw.run.updateTiddlerHard('$Layout', lt);
       }
     }
-    if (theme.match(/Dark/)) {
+    if (themeIsDark(theme)) {
       tw.core.dom.enableStyleSheet('highlight-dark');
       tw.core.dom.disableStyleSheet('highlight-light');
     } else {
@@ -75,12 +102,39 @@
 
   wireUp('ui.reloaded', themeUpdate);
   function themeUpdate() {
-    let css = getThemeStyleSheets().map(tw.run.getTiddlerTextRaw).join('\n');
-    tw.theme.stylesheets.custom.replaceSync(css);
+    tw.theme.stylesheets.custom.replaceSync(buildLayeredCss());
+  }
+
+  function buildLayeredCss() {
+    const layers = {
+      reset: collectByTag(LAYER_TAGS.reset),
+      structure: collectByTag(LAYER_TAGS.structure),
+      tokens: collectByTag(LAYER_TAGS.tokens),
+      components: collectByTag(LAYER_TAGS.components),
+      theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
+      user: [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
+    };
+    const header = `@layer ${Object.keys(layers).join(', ')};`;
+    const body = Object.entries(layers)
+      .map(([name, bodies]) => `@layer ${name} {\n${bodies.filter(Boolean).join('\n')}\n}`)
+      .join('\n\n');
+    return header + '\n\n' + body;
+  }
+
+  // Raw text of every tiddler carrying `tag`, alphabetical by title (intra-layer
+  // order barely matters — the normal cascade still applies within a layer).
+  function collectByTag(tag) {
+    return tw.run.getTiddlersByTag(tag)
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(t => tw.run.getTiddlerTextRaw(t.title));
   }
 
   function tiddlerIsATheme(title) {
     return tw.run.getTiddler(title)?.tags.includes('$Theme');
+  }
+
+  function themeIsDark(theme) {
+    return !!tw.run.getTiddler(theme)?.tags.includes('$ThemeDark');
   }
 
   function themesUpdate() {
@@ -88,11 +142,22 @@
   }
 
   function tiddlerIsThemeRelevant(title) {
+    if (title === '$Theme' || title === '$StyleSheetUser') return true;
+    let tags = tw.run.getTiddler(title)?.tags || [];
+    if (Object.values(LAYER_TAGS).some(tag => tags.includes(tag))) return true;
     let themeName = getCurrentThemeName();
-    return title === '$Theme' || title === themeName || getThemeStyleSheets().includes(title);
+    // List entries may be `Title::Section` refs — the edited tiddler is the base title.
+    return title === themeName || getThemeStyleSheets().some(ref => ref === title || ref.split('::')[0] === title);
   }
   function getCurrentThemeName() {
-    return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]
+    return resolveThemeName(tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, '')); // Remove possible [[links]]
+  }
+  // Map a renamed (formerly "Dark"-suffixed) theme to its new title when the old
+  // one is gone — stale localStorage pointers and old imports keep resolving.
+  function resolveThemeName(name) {
+    if (tw.call('tiddlerExists', name)) return name;
+    let renamed = LEGACY_THEME_NAMES[name];
+    return renamed && tw.call('tiddlerExists', renamed) ? renamed : name;
   }
   function getThemeNames() {
     return tw.run.getTiddlersByTag('$Theme').map(t => t.title);
@@ -100,10 +165,10 @@
   function getThemeStyleSheets() {
     let theme = getCurrentThemeName();
     if (!tw.call('tiddlerExists', theme)) {
-      tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreTheme', 'W');
-      theme = '$CoreTheme';
+      tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreThemeLight', 'W');
+      theme = '$CoreThemeLight';
     }
-    return tw.run.getTiddlerList(theme);
+    return tw.run.getTiddlerList(theme).filter(t => !LEGACY_SHEETS.includes(t));
   }
 
   tw.macros.core.ThemeSelector = () => {
