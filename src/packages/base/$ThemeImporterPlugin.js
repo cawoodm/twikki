@@ -94,51 +94,46 @@
   }
 
   function showDialog(url) {
-    let existing = document.getElementById(DIALOG_ID);
-    if (existing) existing.remove();
-
-    let dialog = document.createElement('dialog');
-    dialog.id = DIALOG_ID;
-    dialog.innerHTML = dialogHtml(url);
-    document.body.appendChild(dialog);
-
-    let form = dialog.querySelector('form');
-    let urlInput = form.querySelector('#theme-import-url');
     let state = {byTitle: new Map()}; // re-populated by refreshList on every load
-    let close = () => {dialog.close(); dialog.remove();};
-    let refresh = () => refreshList(form, urlInput.value.trim(), state);
+    let dlg = tw.ui.dialog({
+      id: DIALOG_ID,
+      title: 'Import Themes',
+      html: dialogBodyHtml(url),
+      buttons: [
+        {text: 'Import', onClick: (e, api) => importSelected(api, state)},
+        {text: 'Cancel', close: true},
+      ],
+    });
+    let root = dlg.content;
+    let urlInput = root.querySelector('#theme-import-url');
+    let refresh = () => refreshList(root, urlInput.value.trim(), state);
 
     // Reload the theme list whenever the URL changes.
     urlInput.addEventListener('change', refresh);
     urlInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {e.preventDefault(); refresh();}
     });
-    form.querySelector('#theme-import-load').addEventListener('click', e => {
+    root.querySelector('#theme-import-load').addEventListener('click', e => {
       e.preventDefault();
       refresh();
     });
 
-    form.querySelector('#theme-import-go').addEventListener('click', e => {
-      e.preventDefault();
-      let toImport = [...form.querySelectorAll('input[name="import"]:checked')].map(i => i.value);
-      let applyTitle = form.querySelector('input[name="apply"]:checked')?.value || '';
-      if (applyTitle && !toImport.includes(applyTitle)) toImport.push(applyTitle);
-      close();
-      if (!toImport.length) return tw.ui.notify('No themes selected', 'W');
-      doImport(toImport, applyTitle, state.byTitle);
-    });
-    form.querySelector('#theme-import-cancel').addEventListener('click', e => {
-      e.preventDefault();
-      close();
-    });
-
-    dialog.showModal();
     refresh(); // initial load
   }
 
+  function importSelected(api, state) {
+    let root = api.content;
+    let toImport = [...root.querySelectorAll('input[name="import"]:checked')].map(i => i.value);
+    let applyTitle = root.querySelector('input[name="apply"]:checked')?.value || '';
+    if (applyTitle && !toImport.includes(applyTitle)) toImport.push(applyTitle);
+    api.close();
+    if (!toImport.length) return tw.ui.notify('No themes selected', 'W');
+    doImport(toImport, applyTitle, state.byTitle);
+  }
+
   // Fetch the package at `url` and (re)render the theme list inside the dialog.
-  async function refreshList(form, url, state) {
-    let box = form.querySelector('#theme-import-listbox');
+  async function refreshList(root, url, state) {
+    let box = root.querySelector('#theme-import-listbox');
     state.byTitle = new Map();
     if (!url) return status(box, 'Enter a themes.json URL.');
     status(box, 'Loading…');
@@ -149,10 +144,10 @@
     if (!themes.length) return status(box, 'No themes found in this package.');
     box.innerHTML = listHtml(themes);
     // Applying a theme implies importing it.
-    form.querySelectorAll('input[name="apply"]').forEach(radio => {
+    root.querySelectorAll('input[name="apply"]').forEach(radio => {
       radio.addEventListener('change', () => {
         if (!radio.value) return;
-        let cb = form.querySelector(`input[name="import"][value="${cssEscape(radio.value)}"]`);
+        let cb = root.querySelector(`input[name="import"][value="${cssEscape(radio.value)}"]`);
         if (cb) cb.checked = true;
       });
     });
@@ -162,19 +157,15 @@
     box.innerHTML = `<p class="theme-import-status${isError ? ' error' : ''}">${escapeHtml(msg)}</p>`;
   }
 
-  function dialogHtml(url) {
+  // Body only: the dialog title and Import/Cancel toolbar come from tw.ui.dialog.
+  function dialogBodyHtml(url) {
     return `
       <form id="theme-import-form">
-        <h3>Import Themes</h3>
         <div class="theme-import-url">
           <input type="url" id="theme-import-url" value="${attr(url)}" placeholder="themes.json URL" size="60">
           <button id="theme-import-load" formnovalidate>Load</button>
         </div>
         <div id="theme-import-listbox"></div>
-        <div class="toolbar">
-          <button id="theme-import-go">Import</button>
-          <button id="theme-import-cancel" formnovalidate>Cancel</button>
-        </div>
       </form>`;
   }
 

@@ -1,3 +1,15 @@
+## 5 Jun 2026 (v0.22.0)
+
+### Core dialog API
+* **`tw.ui.dialog()`** — new core dialog API so any plugin gets consistent dialog chrome: title, content region, toolbar buttons, and automatic DOM cleanup on close (including Escape).
+* **Theme importer migrated** to the core dialog API as the first consumer.
+
+### Unsaved changes
+* **`$UnsavedChangesPlugin`** — shows which tiddlers have unsaved changes (new/modified/deleted) with a short change summary as a tooltip.
+* **Dirty indicator** — a `●` button in the header appears when there are unsaved changes and opens the dialog.
+* **Cancelled-leave detection** — cancelling the browser's leave-page warning automatically opens the unsaved-changes dialog.
+* **Escape now cancels the editor properly** — same as the Cancel button.
+
 ## 2 Jun 2026 (v0.20.0)
 
 ### Sections

@@ -1,0 +1,187 @@
+// tags: $Plugin
+
+/**
+ * ## Description
+ * Tracks unsaved changes and shows them in a dialog (built with the core
+ * `tw.ui.dialog` API). The changed set is computed live by diffing the
+ * in-memory tiddlers (`tw.tiddlers.all`, minus `doNotSave`) against the
+ * last-saved set in storage (`tw.store.get('tiddlers')`), so it is accurate
+ * even if the dirty flag under-reports. Each changed tiddler is listed as
+ * new/modified/deleted with a short summary (≤100 words) as a native tooltip.
+ *
+ * Surfaced three ways:
+ *   - a `●` dirty indicator in the header (toggled by the `dirty.changed`
+ *     event from the platform) which opens the dialog on click,
+ *   - the `unsaved.show` event (what the indicator's `data-msg` sends),
+ *   - automatically ~1s after the user cancels leaving the page: browsers
+ *     forbid custom UI inside `beforeunload`, so we schedule a timeout there;
+ *     if the page is still alive and visible afterwards, the user stayed.
+ */
+/**
+ * ## Data
+ * ```json
+ * {
+ *   "version": 1.0.0
+ * }
+ * ```
+ */
+// ## Code
+// ```javascript
+(function() {
+
+  const DIALOG_ID = 'unsaved-changes-dialog';
+
+  // --- Change detection (pure: store baseline vs in-memory) ---
+
+  function computeChanges() {
+    let saved = tw.store.get('tiddlers') || [];
+    let current = tw.tiddlers.all.filter(t => t.doNotSave !== true);
+    let savedByTitle = new Map(saved.map(t => [t.title, t]));
+    let currentTitles = new Set(current.map(t => t.title));
+    let changes = [];
+    current.forEach(cur => {
+      let old = savedByTitle.get(cur.title);
+      if (!old) changes.push({title: cur.title, status: 'new', summary: summarize(cur, null, 'new')});
+      else if (differs(cur, old)) changes.push({title: cur.title, status: 'modified', summary: summarize(cur, old, 'modified')});
+    });
+    saved.forEach(old => {
+      if (!currentTitles.has(old.title)) changes.push({title: old.title, status: 'deleted', summary: summarize(null, old, 'deleted')});
+    });
+    return changes;
+  }
+
+  // Compare content fields only — NOT `updated`: in-memory dates are Date
+  // objects while stored ones are ISO strings, and a metadata-only touch
+  // shouldn't count as a change.
+  function differs(a, b) {
+    return (a.text || '') !== (b.text || '')
+      || (a.type || '') !== (b.type || '')
+      || JSON.stringify(a.tags || []) !== JSON.stringify(b.tags || []);
+  }
+
+  // Short human summary of what changed, clamped to 100 words (tooltip text).
+  function summarize(cur, old, status) {
+    let parts = [];
+    if (status === 'new') {
+      parts.push(`New ${cur.type} tiddler, ${size(cur.text)}.`);
+      if (cur.tags?.length) parts.push(`Tags: ${cur.tags.filter(Boolean).join(', ')}.`);
+      if (cur.text?.trim()) parts.push(`"${excerpt(cur.text)}"`);
+    } else if (status === 'deleted') {
+      parts.push(`Deleted ${old.type} tiddler, ${size(old.text)}.`);
+      if (old.tags?.length) parts.push(`Tags: ${old.tags.filter(Boolean).join(', ')}.`);
+    } else {
+      if ((cur.text || '') !== (old.text || '')) parts.push(textDelta(old.text || '', cur.text || ''));
+      if ((cur.type || '') !== (old.type || '')) parts.push(`Type: ${old.type} → ${cur.type}.`);
+      let tagChange = tagDelta(old.tags || [], cur.tags || []);
+      if (tagChange) parts.push(tagChange);
+    }
+    return clampWords(parts.join(' '), 100);
+  }
+
+  function textDelta(oldText, newText) {
+    let chars = newText.length - oldText.length;
+    let lines = newText.split('\n').length - oldText.split('\n').length;
+    let out = `Text changed: ${signed(chars)} chars`;
+    if (lines) out += `, ${signed(lines)} lines`;
+    return out + '.';
+  }
+
+  function tagDelta(oldTags, newTags) {
+    let added = newTags.filter(t => t && !oldTags.includes(t));
+    let removed = oldTags.filter(t => t && !newTags.includes(t));
+    if (!added.length && !removed.length) return '';
+    let bits = [];
+    if (added.length) bits.push('+' + added.join(' +'));
+    if (removed.length) bits.push('−' + removed.join(' −'));
+    return `Tags: ${bits.join(' ')}.`;
+  }
+
+  function size(text) {
+    return `${(text || '').length} chars`;
+  }
+
+  function signed(n) {
+    return (n > 0 ? '+' : '') + n;
+  }
+
+  function excerpt(text, max = 80) {
+    let t = text.trim().replace(/\s+/g, ' ');
+    return t.length > max ? t.slice(0, max) + '…' : t;
+  }
+
+  function clampWords(text, max) {
+    let words = text.split(/\s+/);
+    return words.length > max ? words.slice(0, max).join(' ') + '…' : text;
+  }
+
+  // --- Dialog ---
+
+  function showDialog() {
+    let changes = computeChanges();
+    let html = changes.length
+      ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>`
+      : '<p>No unsaved changes.</p>';
+    let buttons = [{text: 'Close', close: true}];
+    if (changes.length) buttons.unshift({text: 'Save', msg: 'save.all', close: true});
+    tw.ui.dialog({
+      id: DIALOG_ID,
+      title: 'Unsaved Changes',
+      html,
+      buttons,
+    });
+  }
+
+  function rowHtml(c) {
+    let title = tw.core.common.escapeHtml(c.title);
+    let tip = attrEscape(c.summary);
+    // Deleted tiddlers can't be opened, render them as plain text.
+    // No href on the link: `#...` hrefs are intercepted as local links before data-msg dispatch.
+    let label = c.status === 'deleted'
+      ? `<span>${title}</span>`
+      : `<a data-msg="tiddler.show" data-param="---enc:${tw.core.common.encoder(c.title)}">${title}</a>`;
+    return `<li title="${tip}"><span class="tw-change-status ${c.status}">${c.status}</span>${label}</li>`;
+  }
+
+  // Escape for use inside a title="..." attribute (keep line breaks as &#10;).
+  function attrEscape(s) {
+    return tw.core.common.escapeHtml(String(s)).replace(/\n/g, '&#10;');
+  }
+
+  // --- Dirty indicator (in the header layouts) ---
+
+  function refreshIndicator(dirty) {
+    let el = document.getElementById('dirty-indicator');
+    if (!el) return;
+    el.toggleAttribute('hidden', !dirty);
+    if (dirty) {
+      let n = computeChanges().length;
+      el.title = `${n} unsaved change${n === 1 ? '' : 's'} — click to review`;
+    }
+  }
+
+  // --- Detect a cancelled leave: no custom UI is allowed in beforeunload,
+  // but if the page is still alive shortly after, the user chose to stay. ---
+
+  function onBeforeUnload() {
+    if (!tw.ui.isDirty) return;
+    setTimeout(() => {
+      if (document.visibilityState === 'hidden') return; // page actually left/backgrounded
+      if (!tw.ui.isDirty) return;
+      if (document.getElementById(DIALOG_ID)) return; // already open
+      showDialog();
+    }, 1000);
+  }
+
+  // --- One-time wiring ---
+
+  if (!tw.tmp.unsavedChanges) {
+    tw.tmp.unsavedChanges = 1;
+    tw.events.subscribe('unsaved.show', showDialog, 'UnsavedChanges');
+    tw.events.subscribe('dirty.changed', refreshIndicator, 'UnsavedChanges');
+    tw.events.subscribe('ui.loaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
+    tw.events.subscribe('ui.reloaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
+    window.addEventListener('beforeunload', onBeforeUnload); // platform's preventBrowserClose stays untouched
+  }
+
+})();
+// ```

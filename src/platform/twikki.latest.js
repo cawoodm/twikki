@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.21.0';
+  const VERSION = '0.22.0';
   // Default base URL the platform loads its core modules and packages from.
   // Mirrors $GeneralSettings.urls.moduleUrl — kept as a constant because baseUrl
   // is needed to fetch the very modules that carry $GeneralSettings (bootstrap
@@ -826,7 +826,6 @@
     save();
   }
   function setDirty(dirty) {
-  // TODO: Update UI/CSS
     if (dirty) {
       tw.ui.isDirty = true;
       window.addEventListener('beforeunload', preventBrowserClose);
@@ -834,6 +833,7 @@
       tw.ui.isDirty = false;
       window.removeEventListener('beforeunload', preventBrowserClose);
     }
+    tw.events.send('dirty.changed', dirty);
   }
   function preventBrowserClose(event) {
     event.preventDefault();
@@ -1358,6 +1358,8 @@
     // Edit Mode
     tw.core.dom.$('new-save')?.addEventListener('click', formDone);
     tw.core.dom.$('new-cancel')?.addEventListener('click', formCancel);
+    // Escape behaves like Cancel ('cancel' only fires for user-agent dismissal, not .close())
+    tw.core.dom.$('new-dialog').addEventListener('cancel', formCancel);
 
     document.addEventListener('click', event => {
       let el = event.target;

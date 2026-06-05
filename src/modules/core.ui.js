@@ -4,6 +4,7 @@
   const version = '0.0.1';
   const exports = {
     button,
+    dialog,
     section,
     expand,
     expose,
@@ -72,6 +73,54 @@
     }
     return `<button${id ? ' id="' + id + '"' : ''} class="${className}" data-msg="${message}" ${paramAttribute} ${attr}>${text}</button>`;
   }
+  // Core dialog: consistent chrome (title, content, toolbar) for any plugin.
+  //   tw.ui.dialog({id, title, html, className, buttons, onClose, modal}) -> {el, content, toolbar, close, setContent}
+  //   - title: plain text (escaped), rendered as <h3>
+  //   - html:  caller-escaped body HTML for the content region
+  //   - buttons: [{text, msg?, payload?, onClick?(ev, api), close?, id?, className?, attr?}]
+  //       msg buttons dispatch via the document-level data-msg handler (like tw.ui.button);
+  //       onClick buttons get a direct JS handler; close:true closes & removes the dialog after.
+  //   The dialog is removed from the DOM whenever it closes (incl. Escape).
+  function dialog(opts = {}) {
+    let {id, title = '', html = '', className = '', buttons = [], onClose, modal = true} = opts;
+    if (id) document.getElementById(id)?.remove();
+
+    let el = document.createElement('dialog');
+    if (id) el.id = id;
+    el.className = ('tw-dialog ' + className).trim();
+    let head = title ? `<h3 class="tw-dialog-title">${tw.core.common.escapeHtml(title)}</h3>` : '';
+    el.innerHTML = `${head}<div class="tw-dialog-content">${html}</div><div class="tw-dialog-toolbar toolbar"></div>`;
+    let content = el.querySelector('.tw-dialog-content');
+    let toolbar = el.querySelector('.tw-dialog-toolbar');
+
+    // Native 'close' fires for el.close() and Escape alike: clean up once, there.
+    let close = () => el.close();
+    el.addEventListener('close', () => {
+      el.remove();
+      if (onClose) onClose();
+    });
+
+    let api = {el, content, toolbar, close, setContent: h => (content.innerHTML = h)};
+
+    buttons.forEach(b => {
+      toolbar.insertAdjacentHTML('beforeend', button(b.text, b.msg || '', b.payload, b.id || '', b.attr || '', b.className || ''));
+      let btnEl = toolbar.lastElementChild;
+      btnEl.addEventListener('click', ev => {
+        // msg dispatch (if any) is handled by the document-level data-msg listener
+        if (b.onClick) {
+          ev.preventDefault();
+          b.onClick(ev, api);
+        }
+        if (b.close) close();
+      });
+    });
+
+    document.body.appendChild(el);
+    if (modal) el.showModal();
+    else el.show();
+    return api;
+  }
+
   // Block-style expander
   function section({name, content, id, attr = ''}) {
     if (!id) id = randstr();

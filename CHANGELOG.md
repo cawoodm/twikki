@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 5 Jun 2026 (v0.22.0)
+
+### Core dialog API
+* **`tw.ui.dialog()`** — new core dialog API so any plugin gets consistent dialog chrome: title, content region, toolbar buttons (event-dispatching or JS handlers), and automatic DOM cleanup on close (including Escape). Shared `dialog.tw-dialog` styling driven by theme CSS variables.
+* **Theme importer migrated** to the core dialog API as the first consumer (behavior unchanged).
+
+### Unsaved changes
+* **`$UnsavedChangesPlugin`** — shows which tiddlers have unsaved changes: diffs the in-memory store against the last-saved state, listing new/modified/deleted tiddlers with a short change summary (text/tags/type deltas) as a tooltip. Save and Close actions; rows open the tiddler.
+* **Dirty indicator** — a `●` button in the header (both layouts) appears when there are unsaved changes and opens the dialog; tooltip shows the change count.
+* **Cancelled-leave detection** — if the user tries to leave the page and cancels the browser warning, the unsaved-changes dialog opens automatically (custom UI is not allowed inside `beforeunload` itself).
+* `setDirty()` now publishes a `dirty.changed` event (resolves an old TODO).
+* **Escape now cancels the editor properly** — same as the Cancel button, so the dirty flag is cleared and a never-saved tiddler is hidden again.
+
 ## 3 Jun 2026 (v0.21.0)
 * Header based themes
 * Pills for tags and packages
