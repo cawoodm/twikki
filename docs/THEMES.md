@@ -1,22 +1,41 @@
 # TWikki Themes
 
 TWikki's look is driven entirely by **data, not a build step**. A theme is just a
-tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply:
+tiddler tagged `$Theme` whose body lists the theme's *own* stylesheet tiddlers:
 
 ```
 tags: $Theme
 
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[AuroraStyleSheet]]
+* [[AuroraTheme::AuroraStyleSheet]]
 ```
 
-`$CoreThemeManager` concatenates those stylesheets into a single
+That's the whole contract. The core styles are applied automatically *underneath*
+every theme as named [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer):
+
+```css
+@layer reset, structure, tokens, components, theme, user;
+```
+
+| Layer | Source | Contents |
+|---|---|---|
+| `reset` | `$Reset` | browser normalization |
+| `structure` | `$Structure` | app-shell grid, responsive drawer |
+| `tokens` | `$Tokens` | every CSS variable, with light defaults |
+| `components` | `$Components` | token-driven component looks |
+| `theme` | the active theme's list | your stylesheets |
+| `user` | `$StyleSheetUser` | personal overrides — always applied, always last |
+
+`$CoreThemeManager` assembles these into a single
 [constructable stylesheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet)
 and adopts it at runtime, so switching or editing a theme re-paints instantly with no
 reload. Colours, radii and spacing are exposed as CSS custom properties
-(`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about
-plus any structural rules it wants.
+(`--col*`, `--colbg*`, `--rad*` — see `$Tokens` for the full contract), and a theme
+simply overrides the ones it cares about plus any structural rules it wants.
+
+Because later layers win **regardless of selector specificity**, a theme rule like
+`a { color: teal }` beats the core's `a:not([class])` — you never need to mirror or
+out-rank core selectors. Dark themes carry the additional `$ThemeDark` tag, which
+selects the matching code-highlighting style.
 
 The themes below live in the `themes` package (`src/packages/themes/`). Switch between
 them with the theme selector in the sidebar, or from the console:
@@ -90,12 +109,28 @@ icon boxes. Red `#e5322d` accent.
 
 1. Add a stylesheet tiddler to `src/packages/themes/`, e.g. `MyStyleSheet.css`
    (`.css` files are auto-tagged `$StyleSheet`). Override the tokens you want and add
-   any structural rules.
-2. Add a theme tiddler `MyTheme.tid` tagged `$Theme` that lists
-   `$StyleSheetCore`, `$ThemeBase` and your stylesheet (in that order, so your rules
-   win).
+   any structural rules — your rules always win over core (cascade layers, not
+   specificity), so plain selectors like `a { … }` or `.title { … }` are enough.
+2. Add a theme tiddler `MyTheme.tid` tagged `$Theme` that lists just your stylesheet:
+
+   ```
+   tags: $Theme
+
+   * [[MyStyleSheet]]
+   ```
+
+   The core layers are prepended automatically — do **not** list them. If the theme
+   is dark, add the `$ThemeDark` tag so code blocks get the dark highlight style.
+   (Most built-in themes instead pack the stylesheet as a `# MyStyleSheet` section
+   inside the theme tiddler itself and list `[[MyTheme::MyStyleSheet]]` — one file
+   per theme.)
 3. Run `npm run dev` (the compile plugin regenerates `public/packages/themes.json`
    automatically) and pick your theme from the selector.
+
+> **`!important` gotcha:** inside `!important`, CSS layer priority *reverses* — an
+> `!important` rule in a core layer beats one in your theme. You should rarely need
+> `!important` at all now; if a rule doesn't stick, check intra-theme specificity
+> instead.
 
 > **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
 > the `$Theme` and `$StyleSheet` tags are in the `excludeTags` list on the **Search**
