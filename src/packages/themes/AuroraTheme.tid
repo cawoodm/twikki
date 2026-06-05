@@ -1,12 +1,10 @@
-tags: $Theme
+tags: $Theme,$ThemeDark
 
 A nice theme
 
 # AuroraTheme
-tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[AuroraThemeDark::AuroraStyleSheet]]
+tags: $Theme,$ThemeDark
+* [[AuroraTheme::AuroraStyleSheet]]
 
 # AuroraStyleSheet
 tags: $StyleSheet
