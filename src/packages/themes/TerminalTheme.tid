@@ -1,14 +1,12 @@
-tags: $Theme
+tags: $Theme,$ThemeDark
 
 A green-on-black monospace terminal theme.
 
-# TerminalThemeDark
-tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[TerminalThemeDark::TerminalStyleSheetDark]]
+# TerminalTheme
+tags: $Theme,$ThemeDark
+* [[TerminalTheme::TerminalStyleSheet]]
 
-# TerminalStyleSheetDark
+# TerminalStyleSheet
 tags: $StyleSheet
 ```css
 :root {

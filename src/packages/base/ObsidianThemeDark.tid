@@ -4,10 +4,7 @@ A modern dark theme with a violet accent (the TWikki default).
 
 # ObsidianThemeDark
 tags: $Theme,$ThemeDark
-* [[$StyleSheetCore]]
 * [[ObsidianThemeDark::ObsidianStyleSheetDark]]
-* [[$ThemeBase]]
-* [[$StyleSheetUser]]
 
 # ObsidianStyleSheetDark
 tags: $StyleSheet
