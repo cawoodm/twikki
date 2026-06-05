@@ -53,15 +53,15 @@ A section carries its own `type`, so it can render — or run — differently fr
 
 Reference a section with the `::` delimiter — `Title::Section` — anywhere a tiddler reference is accepted. (`:` is not a valid title character, so `::` is never ambiguous with the single-colon command syntax like `msg:search:...`.) Section names match **case-insensitively**.
 
-* **Link** — `[[AuroraDark::StyleSheet]]` opens just that section as a read-only card.
-* **Include** — `{{AuroraDark::StyleSheet}}` transcludes just that section into another tiddler.
-* **In code & lists** — `tw.run.getTiddlerTextRaw('AuroraDark::StyleSheet')` returns only that section's text. If the `::` form doesn't resolve, it falls back to the whole tiddler, so it is always safe to use.
+* **Link** — `[[AuroraTheme::AuroraStyleSheet]]` opens just that section as a read-only card.
+* **Include** — `{{AuroraTheme::AuroraStyleSheet}}` transcludes just that section into another tiddler.
+* **In code & lists** — `tw.run.getTiddlerTextRaw('AuroraTheme::AuroraStyleSheet')` returns only that section's text. If the `::` form doesn't resolve, it falls back to the whole tiddler, so it is always safe to use.
 
 A section view is **read-only**: it has no delete, and its **Edit** button opens the *parent* tiddler instead (a section is never edited on its own). Section cards are also never added to the store — the parent tiddler stays the single saved entry.
 
 # What sections are for
 
-* **Packed themes** — a [[$Theme]] lists the stylesheets to apply, and a stylesheet can be a section. For example `[[AuroraDark::StyleSheet]]` pulls the CSS section out of the `AuroraDark` tiddler, letting one tiddler carry several typed sections. See [[Themes]].
+* **Packed themes** — a [[$Theme]] lists the stylesheets to apply, and a stylesheet can be a section. For example `[[AuroraTheme::AuroraStyleSheet]]` pulls the CSS section out of the `AuroraTheme` tiddler, letting one tiddler carry several typed sections. See [[Themes]].
 * **Runnable code** — a `js` (or `javascript`) fenced section is typed `script/js` and is executed exactly like a code tiddler: on load, and again every time you save it. Add the `$CodeDisabled` tag to the tiddler *or* to the section to stop it running. See [[Concepts]].
 * **Structured data** — `keyval`, `list`, `table` or `json` sections let one tiddler store several named, structured payloads.
 

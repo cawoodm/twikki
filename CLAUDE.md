@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `npm run compile` | Runs `node vite-plugin-tiddler-compile.js` standalone — regenerates `public/packages/*.json` and `public/modules/*.json` from sources in `src/packages/<pkg>/` and `src/modules/<pkg>/`. Cross-platform (pure Node). Only needed outside the dev server, e.g. to seed `public/` before a `vite build` in a one-shot environment. |
 | `npm run build` / `npm run build-test` | Vite production build into `dist/`, then runs `vite` from inside `dist/` (the trailing `vite` previews the built output). `build-test` adds `--open --host`. |
 | `npm run publish` | Declared as `pwsh ci/publish.ps1`: assemble `dist/`, then commit & push to a sibling checkout at `../cawoodm.github.io/twikki/` (the GitHub Pages target). |
-| `npm test` | `node --test --watch ./tests/unit/*.test.js`. Coverage is currently limited to the compile plugin ([tests/unit/compile-plugin.test.js](tests/unit/compile-plugin.test.js)); the runtime platform itself has no unit tests. |
+| `npm test` | `node --test --watch ./tests/unit/*.test.js`. Coverage is currently limited to the compile plugin ([tests/unit/compile-plugin.test.js](tests/unit/compile-plugin.test.js)) and the design-token contract ([tests/unit/tokens.test.js](tests/unit/tokens.test.js)); the runtime platform itself has no unit tests. |
 
 Lint is configured ([eslint.config.mjs](eslint.config.mjs)) but is not wired into an `npm` script. Notable rule overrides: `no-eval` off (the runtime evaluates module strings), single quotes, `object-curly-spacing: never`, `complexity` warns at 40, `require-await` error. Globals `tw` and `dp` are declared.
 
@@ -52,9 +52,13 @@ Tiddler file format (parsed by [vite-plugin-tiddler-compile.js](vite-plugin-tidd
 - Filename (without extension) becomes the tiddler `title`.
 - Leading lines matching `^[a-z]+: value` are parsed as metadata fields (`tags:` is comma-split, `true`/`false` are coerced to booleans). The first non-matching line begins the `text` body.
 - Type is derived from the extension: `.tid → x-twikki`, `.js → script/js`, `.md → markdown`, `.json → json`, `.css → css`, `.html → html`.
-- Auto-tags are keyed on the **package directory name**: files in `src/packages/base/` get `$NoEdit`; files in `src/modules/core.defaults/` get `$Shadow`; any `.css` file gets `$StyleSheet` (and tags stack — a `.css` file in `base/` gets both).
+- Auto-tags are keyed on the **package directory name**: files in `src/packages/base/` get `$NoEdit`; files in `src/modules/core.defaults/` get `$Shadow`; any `.css` file gets `$StyleSheet` (and tags stack — a `.css` file in `base/` gets both). The four core stylesheet layers are additionally tagged by **filename**: `$Reset.css → $LayerReset`, `$Structure.css → $LayerStructure`, `$Tokens.css → $LayerTokens`, `$Components.css → $LayerComponents`.
 
 A leading `$` in a tiddler title is a convention for shadow/system tiddlers (e.g. `$MainLayout`, `$CorePackages`, `$Theme`).
+
+### Theming: CSS cascade layers
+
+`$CoreThemeManager` ([src/packages/base/$CoreThemeManager.js](src/packages/base/$CoreThemeManager.js)) composes one constructable stylesheet as `@layer reset, structure, tokens, components, theme, user`. Layers 1–4 are collected by their `$Layer*` tags from `src/modules/core.defaults/` (`$Reset.css`, `$Structure.css`, `$Tokens.css`, `$Components.css`) and auto-prepended; the `theme` layer is the active theme's own list (a `$Theme` tiddler lists **only its own** stylesheets — never the core ones); the `user` layer is `$StyleSheetUser`, applied unconditionally and last. Cross-layer, later layers win regardless of selector specificity. Every CSS variable must have a default in `$Tokens.css` ([tests/unit/tokens.test.js](tests/unit/tokens.test.js) enforces this). Dark themes carry the `$ThemeDark` tag (drives the highlight.js sheet swap — no name-sniffing). Legacy theme lists naming `$StyleSheetCore`/`$ThemeBase`/`$StyleSheetCoreDark`/`$StyleSheetUser` are filtered out for backward compatibility, and renamed themes (`AuroraThemeDark` → `AuroraTheme` etc.) resolve via a legacy-name map. See [docs/THEMES.md](docs/THEMES.md).
 
 ### Localhost rewriting
 

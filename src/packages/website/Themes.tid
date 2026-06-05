@@ -7,24 +7,22 @@ TWikki's look is driven entirely by stylesheets which you can change or replace.
 ```
 tags: $Theme
 
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[AuroraDark::StyleSheet]]
+* [[Aurora::StyleSheet]]
 ```
 
-In this case the theme loads the core styles (which every theme should do)
+The core styles (reset, layout structure, design tokens, component looks) are applied automatically as CSS cascade layers *underneath* every theme — a theme lists only its own stylesheets. Because the theme's rules live in a later cascade layer, they win over the core styles regardless of selector specificity.
 
-Switching or editing a theme re-paints instantly with no reload. Colours, radii and spacing are exposed as CSS custom properties (`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about plus any structural rules it wants.
+Switching or editing a theme re-paints instantly with no reload. Colours, radii and spacing are exposed as CSS custom properties (`--col*`, `--colbg*`, `--rad*`, see [[$Tokens]]), and a theme simply overrides the ones it cares about plus any structural rules it wants. Your own [[$StyleSheetUser]] tiddler is always applied on top of every theme.
 
 ## Example Themes
 
 Import Themes: <<themeImport.button>>
 
-### AuroraDark
+### Aurora
 Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
 accents. A modern dark-dashboard feel.
 
-![AuroraDark](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
+![Aurora](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
 
 ### Manuscript
 Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
@@ -73,17 +71,28 @@ icon boxes. Red `#e5322d` accent.
 > `tag:$Theme` / `$`-prefixed search.
 
 # Technical
-Themes are collections of stylesheets.
+Themes are collections of stylesheets, composed as CSS cascade layers:
 
-* A special [[$Theme]] stores name of the current [Theme](#msg:search:$tag:$Theme) e.g.:
-  * [[$CoreTheme]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet)
-* Stylesheets can be in one or more tiddlers
+```
+@layer reset, structure, tokens, components, theme, user;
+```
+
+* Layers 1–4 are collected from tiddlers tagged `$LayerReset`, `$LayerStructure`, [`$LayerTokens`]([[$Tokens]]) and `$LayerComponents` — every theme gets them automatically.
+* The `theme` layer is the active theme's own stylesheet list.
+* The `user` layer is [[$StyleSheetUser]] — always applied, always last.
+
+Other moving parts:
+
+* A special [[$Theme]] stores name of the current [Theme](#msg:search:$tag:$Theme)
+* Stylesheets can be in one or more tiddlers (or tiddler sections)
 * [[$DisplayTemplate]] tiddler determines display of tiddler
 * [[$TitleBar]] to customize the titlebar
 
-The shadow [[$Theme]] tiddler contains one word: the name of the tiddler with the current theme (e.g. {{$Theme}}). This theme tiddler should contain a [[DataList]] of stylesheets. To change the theme just edit the [[$Theme]] tiddler and enter the name of any tiddler containing a list of stylesheets.
+The shadow [[$Theme]] tiddler contains one word: the name of the tiddler with the current theme (e.g. {{$Theme}}). This theme tiddler should contain a [[DataList]] of its own stylesheets. To change the theme just edit the [[$Theme]] tiddler and enter the name of any tiddler containing a list of stylesheets.
 
-By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Themes should include `Light` or `Dark` in their name to assist in automatically using the right styles for code/syntax highlighting.
+By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Dark themes carry the additional `$ThemeDark` tag so the matching code/syntax-highlighting style is selected automatically.
 
 By convention we tag stylesheets with [$StyleSheet](#msg:search:$tag:$StyleSheet) to make them easier to find. This also enables fast edits to stylesheets without reloading to see the results.
+
+> **Note for power users:** within your own stylesheets you can declare sub-layers (`@layer` inside the `theme`/`user` layer) freely. One gotcha inherited from the CSS spec: `!important` *reverses* layer priority — an `!important` rule in a core layer beats one in your theme. You should rarely need `!important` at all now, since theme rules beat core rules by layer order alone.
 
