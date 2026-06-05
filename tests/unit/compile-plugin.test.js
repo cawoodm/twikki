@@ -32,6 +32,33 @@ test('getAutoTags: base + css combines both tags', () => {
   assert.deepEqual(getAutoTags('base', '.css'), ['$NoEdit', '$StyleSheet']);
 });
 
+test('getAutoTags: core layer files get their $Layer* tag by filename', () => {
+  assert.deepEqual(getAutoTags('core.defaults', '.css', '$Reset'), ['$Shadow', '$StyleSheet', '$LayerReset']);
+  assert.deepEqual(getAutoTags('core.defaults', '.css', '$Structure'), ['$Shadow', '$StyleSheet', '$LayerStructure']);
+  assert.deepEqual(getAutoTags('core.defaults', '.css', '$Tokens'), ['$Shadow', '$StyleSheet', '$LayerTokens']);
+  assert.deepEqual(getAutoTags('core.defaults', '.css', '$Components'), ['$Shadow', '$StyleSheet', '$LayerComponents']);
+});
+
+test('getAutoTags: layer names only apply to .css, other .css files stay plain $StyleSheet', () => {
+  assert.deepEqual(getAutoTags('core.defaults', '.js', '$Tokens'), ['$Shadow']);
+  assert.deepEqual(getAutoTags('core.defaults', '.css', '$DarkTokens'), ['$Shadow', '$StyleSheet']);
+  assert.deepEqual(getAutoTags('themes', '.css', 'MyStyleSheet'), ['$StyleSheet']);
+});
+
+test('parseFile: $Tokens.css gets the $LayerTokens tag from its filename', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    const filePath = join(dir, '$Tokens.css');
+    writeFileSync(filePath, ':root { --colfg: #000; }\n');
+    const t = parseFile(filePath, 'core.defaults');
+    assert.equal(t.type, 'css');
+    assert.deepEqual(t.tags, ['$Shadow', '$StyleSheet', '$LayerTokens']);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
 test('parseFile: no metadata header — full file is text', () => {
   const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
   mkdirSync(dir);

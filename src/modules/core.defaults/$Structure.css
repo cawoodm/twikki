@@ -1,0 +1,192 @@
+/* ============================================================
+   @layer structure — app-shell layout only (grid, flex
+   internals, responsive drawer). Colours/typography come from
+   $Tokens + $Components; a theme can override structure freely
+   from the theme layer.
+   ============================================================ */
+
+/* ---- App shell — 3-pane grid (sidebar | main) ---- */
+#app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w, 280px) 1fr;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Left sidebar ---- */
+#sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--colbg3);
+}
+
+#sidebar > #header {
+  flex: 0 0 auto;
+}
+
+#explorer-search {
+  flex: 0 0 auto;
+  position: relative;
+}
+
+#explorer-search #search {
+  width: 100%;
+}
+
+#search-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 5;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--colbg2);
+}
+
+#explorer {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#sidebar-footer {
+  flex: 0 0 auto;
+}
+
+/* ---- Main pane ---- */
+#main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#main-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+}
+
+#tab-strip {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+#visible-tiddlers {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#menu-toggle {
+  display: none;
+  flex: 0 0 auto;
+}
+
+/* Tabbed story: show only the active note. Gated behind `.tabbed`
+   (added by the tabs plugin) so this is a no-op when the plugin is
+   absent — notes then simply stack as before. */
+#visible-tiddlers.tabbed > .tiddler {
+  display: none;
+}
+
+#visible-tiddlers.tabbed > .tiddler.tab-active {
+  display: block;
+}
+
+/* River mode: no tabs — every open note stacks (the .tabbed rule above is off).
+   Hide the strip and collapse the now-empty top bar (the mobile menu-toggle
+   still keeps it visible on small screens). */
+.mode-river #tab-strip {
+  display: none;
+}
+
+.mode-river #main-topbar {
+  min-height: 0;
+  border-bottom: none;
+}
+
+/* ============================================================
+   Header-bar layout ($MainLayoutHeader) — structural only.
+   A top header bar over the main content (no left explorer pane;
+   navigation is via search + tabs). Scoped to #app.layout-header
+   so the default sidebar grid is untouched; visuals come from the theme.
+   ============================================================ */
+#app.layout-header {
+  display: flex;
+  flex-direction: column;
+}
+
+#app.layout-header > #header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#app.layout-header #header-col1 {
+  flex: 0 0 auto;
+}
+
+#app.layout-header #header-col2 {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+#app.layout-header #header-col3 {
+  flex: 1 1 auto;
+  position: relative;
+}
+
+#app.layout-header #header-col3 #search {
+  width: 100%;
+}
+
+#app.layout-header > #main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ============================================================
+   Responsive — sidebar collapses to a slide-in drawer
+   ============================================================ */
+@media (max-width: 600px) {
+  html {
+    font-size: 14px;
+  }
+
+  #app {
+    grid-template-columns: 1fr;
+  }
+
+  #sidebar {
+    position: fixed;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(85vw, var(--sidebar-w, 280px));
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 12px var(--col0);
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+  }
+
+  #menu-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+}
