@@ -1,0 +1,10 @@
+tags: Help
+
+Dump your **entire** current workspace (everything under `/ws/<workspace>/` in local storage) to a
+single file.
+* <<dump.dumpButton>>: Download `<workspace>.workspace.json`
+
+To restore, **drag a `*.workspace.json` file onto the window** (you'll see a drop overlay). This
+will *delete and completely overwrite* your current workspace — you'll be asked to confirm first.
+
+See also [[Backup]], [[Help]], [[Features]].
