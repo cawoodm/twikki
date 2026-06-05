@@ -1,0 +1,7 @@
+tags: Help
+
+## Installed Modules
+
+Modules are part of the platform but are loaded via URL and stored in local storage. They are like the "OS" and are common to all workspaces.
+
+<<modules>>
