@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.22.0';
+  const VERSION = '0.23.0';
 
   overrides();
 
