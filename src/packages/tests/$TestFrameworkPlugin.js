@@ -28,6 +28,7 @@
     if (options.expect) options.expect = options.expect.split(/,\s?/);
     if (options.expectSome) options.expectSome = options.expectSome.split(/,\s?/);
     if (options.click) queueTest(name, () => clickTest({id, ...options}));
+    else if (options.msg) queueTest(name, () => messageTest({id, ...options}));
     else if (options.type) queueTest(name, () => typingTest({id, ...options}));
     else if (options.comment) queueTest(name, () => '');
     else throw new Error('Unknown test type');
@@ -44,11 +45,21 @@
     checkExpectations({find, expect, expectNone, expectSome});
     return name;
   }
+  async function messageTest({name, msg, find, expect, expectNone, expectSome}) {
+    await sleep(WAIT);
+    doMessage({msg});
+    checkExpectations({find, expect, expectNone, expectSome});
+    return name;
+  }
   function doClick({click}) {
     if (!click) return;
     let src = document.querySelector(click);
     if (!src?.click) throw new Error(`Failed to find clickable element matching '${click}!`);
     src.click();
+  }
+  function doMessage({msg}) {
+    if (!msg) return;
+    let src = tw.run.sendCommand(msg);
   }
   async function typingTest({name, type, input, find, expect, expectNone, expectSome}) {
     await sleep(WAIT);

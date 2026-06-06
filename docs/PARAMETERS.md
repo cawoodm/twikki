@@ -1,0 +1,167 @@
+# Parameters
+
+TWikki is text-based, so every parameter starts life as a string inside tiddler content and must be deserialized before it reaches a JavaScript handler. Parameters appear in three places:
+
+| Where | Syntax | Parsed by |
+|---|---|---|
+| **Macros / widgets** | `<<foo.object name:"John Smith" age:22>>` | `tw.core.params.parseParams` ([core.params.js](../src/modules/core.params.js)) |
+| **Inclusions** | `{{$IconSettings\|size:32px}}` | same `parseParams` (named form) |
+| **Commands** | `#msg:event:params` links, `data-msg`/`data-params` attributes | `sendCommand` decode chain ([twikki.platform.js](../src/platform/twikki.platform.js)) |
+
+> In-app help: the `Parameters` tiddler (website package) covers the same ground from a user's perspective.
+
+## Quick reference — "I want to pass…"
+
+| Goal | Macro | Command |
+|---|---|---|
+| One string | `<<m hello>>` | `#msg:m:hello` |
+| String with spaces | `<<m "Car Wash">>` | `#msg:m:Car Wash` (bare strings stay raw) |
+| Multiple values | `<<m 1 true "Car Wash">>` | `#msg:m:[1, true, "Car Wash"]` |
+| An object | `<<m name:"John" age:22>>` or `<<m {"name":"John", "age":22}>>` | `#msg:m:name:John age:22` or `#msg:m:{"name":"John", "age":22}` |
+| An actual array (single argument) | `<<m [[1,2,3]]>>` | `#msg:m:[[1,2,3]]` |
+| A value containing `:` or `,` (URLs) | JSON only: `<<m {"url":"https://x"}>>` | JSON only |
+
+**Delivery rule (everywhere):** if parsing produces an **array**, it is spread as positional arguments — `fn(...params)`; anything else (object, string, number) is passed as a **single argument** — `fn(params)`.
+
+## Macro & widget parameters
+
+The examples below are live in [MyParamsTestPlugin.tid](../src/packages/marc/MyParamsTestPlugin.tid).
+
+### Positional parameters
+
+Space-separated tokens become arguments; double quotes protect spaces; bare tokens are type-coerced:
+
+```
+<<foo.hello John Smith>>           →  hello('John', 'Smith')        →  "Hello John Smith"
+<<foo.test 1 true "Car Wash">>     →  test(1, true, 'Car Wash')     →  "Age: 2 (number), Boolean: true (boolean), String: Car Wash (string)"
+```
+
+Type coercion of bare tokens:
+
+| Token | Becomes |
+|---|---|
+| `true` / `false` | boolean |
+| `1`, `3.14` | number |
+| `null` | `null` |
+| `"true"`, `"1"` | string (quotes force string… see Gotchas) |
+| `{expr}` | `eval`'d JS expression, e.g. `{1+2}` → `3` (single token only — no spaces) |
+| anything else | string |
+
+### Named parameters
+
+`key:value` pairs become **one object** (keys: `a-z`, `0-9`, `_`; no space around `:`; values follow the same coercion table):
+
+```
+<<foo.object name:"John Smith" age:22>>   →  object({name: 'John Smith', age: 22})
+                                          →  "Age: 23 (number), Name: John Smith (string)"
+```
+
+Limitation: values containing `:` (URLs!) are truncated at the first colon, quoted or not — use JSON instead.
+
+### JSON parameters
+
+A parameter string starting with `{` or `[` is parsed as **strict JSON** (double-quoted keys and strings):
+
+```
+<<foo.object {"name":"John Smith", "age":22}>>   →  object({name: 'John Smith', age: 22})
+<<m ["a b", 2, true]>>                           →  m('a b', 2, true)     (array → spread)
+<<add [[1,2,3]]>>                                →  add([1, 2, 3])        (wrap to pass one array)
+```
+
+**Invalid JSON falls through to the legacy tokenizer and arrives mangled.** The fourth example in MyParamsTestPlugin demonstrates this — `age:22` has an unquoted key, so it is *not* JSON:
+
+```
+<<foo.object {"name":"John Smith", age:22}>>     →  object('{name:John Smith,', 'age:22}')   ✗ two garbage strings
+```
+
+When in doubt, quote every key.
+
+### Registering a handler
+
+```javascript
+// Positional: one argument per token
+tw.extensions.registerMacro('foo', 'hello', (firstName, lastName) => {
+  return `Hello ${firstName + ' ' + lastName}`;
+}, {version: '1.0.0'});
+
+// Named or JSON object: a single destructurable object
+tw.extensions.registerMacro('foo', 'object', ({name, age}) => {
+  return `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`;
+}, {version: '1.0.0'});
+```
+
+## Inclusion parameters
+
+`{{Tiddler|params}}` parses the part after `|` with the same `parseParams` and substitutes placeholders of the form `##key#default#` in the included tiddler's text:
+
+```
+{{$IconSettings|size:32px}}     — the icon tiddler contains  width="##size#22px#"  → width="32px"
+```
+
+Missing parameters fall back to the placeholder's default.
+
+## Command parameters
+
+Commands fire events: from hash links (`#msg:event:params`), from any element with `data-msg`/`data-params` attributes, or programmatically via `tw.run.sendCommand('event:params')`. Since v0.23.0 there is a single payload attribute (`data-params` — `data-param` is no longer read) and a single decode chain, applied in this order:
+
+| Step | Trigger | Example |
+|---|---|---|
+| 1. Decode | `---enc:BASE64` prefix | payloads generated by `tw.ui.button(text, msg, payload)` |
+| 2. Substitute | literal `$currentTiddler` | `data-params="$currentTiddler"` → title of the surrounding tiddler |
+| 3. Eval | starts with `{{{` | `data-params="{{{1 + 2}}}"` → `handler(3)` |
+| 4. JSON | starts with `{`, `[` or `"` | `#msg:ui.open.all:{"tag":"Favorite"}` → `handler({tag:'Favorite'})` |
+| 5. Named params | matches `key:value` | `#msg:search.advanced:pck:icons title:add` → `handler({pck:'icons', title:'add'})` |
+| 6. Raw string | everything else | `#msg:tiddler.show:My Note` → `handler('My Note')` |
+
+Examples:
+
+```
+#msg:search:welcome                       →  searchQuery('welcome')            (raw string)
+#msg:search:$tag:$Theme                   →  searchQuery('$tag:$Theme')        (leading $ ⇒ not named params ⇒ raw)
+#msg:search:"tag:$Theme"                  →  searchQuery('tag:$Theme')         (JSON string literal)
+#msg:ui.open.all:title:^A                 →  openAll({title: '^A'})            (named)
+data-params='["a", "b"]'                  →  handler('a', 'b')                 (JSON array → spread)
+```
+
+Programmatic senders skip parsing entirely — `tw.events.send('event', {any: 'value'})` delivers the value untouched (arrays still spread).
+
+## Macros vs commands — differences & limitations
+
+Macros and commands share the JSON and named-parameter forms, but the paths differ everywhere else:
+
+| Aspect | Macro `<<name …>>` | Command `#msg:event:…` / `data-params` |
+|---|---|---|
+| Name charset | `a-z A-Z 0-9 _ .` (case-insensitive, e.g. `<<core.AllTagsLinked>>`) | **lowercase `a-z 0-9 .` only** — see warning below |
+| Parsed | at render time | at click / navigation time |
+| Bare string | tokenized: split on spaces, type-coerced | passed **raw** — one string, spaces intact, no coercion |
+| `<<m 1>>` vs `#msg:m:1` | `1` (number) | `'1'` (string) — use JSON for typed values |
+| Multiple positional args | spaces: `<<m a b>>` → `m('a','b')` | JSON array only: `#msg:m:["a","b"]` |
+| JSON detection | `{` or `[` | `{`, `[` **or `"`** (a JSON string literal forces "this is one raw string": `data-params='"tag:x"'`) |
+| JS eval | per-token `{expr}` (single token, no spaces) | whole payload `{{{expr}}}` |
+| `---enc:` base64 decode | — | yes (how `tw.ui.button` payloads travel) |
+| `$currentTiddler` substitution | — | yes |
+| Invalid JSON | **silently** falls through to the tokenizer → mangled strings | `console.warn` + payload delivered as the raw string |
+| Named-param parse error (e.g. a throwing `{expr}` value) | macro fails → inline error span | silently delivered as the raw string |
+| Delivery | the one macro function; its return value replaces the macro in the rendered text | **all** subscribers via `tw.events.send`; results come back as an array (`data-target` displays `result[0]`) |
+| Errors | caught per macro → inline `<span class="error">` | bubble to the console (modules are try/caught unless `?trace`) |
+
+**Event-name warning:** the command regex is lowercase-only and unanchored, so an uppercase or `_` character doesn't error — it **silently truncates the event name**. `#msg:t.Xy:1` fires the event `t.` with payload `Xy:1`. Keep event names strictly `lowercase.dotted`.
+
+### `#msg:` links have URL constraints that `data-params` doesn't
+
+A `#msg:` command inside a markdown link must survive markdown's URL parsing; the `data-params` attribute has no such constraints.
+
+* **Raw spaces kill the link** — `[x](#msg:search.advanced:pck:icons title:add)` doesn't render as a link at all (markdown URLs end at the first space; the text is left literal, and the typographer then smart-quotes any `"` in it, mangling JSON too). Encode spaces as `%20`: `[x](#msg:search.advanced:pck:icons%20title:add)` — `handleHashLink` runs `decodeURI` so the parameters arrive intact. Consequence: **multi-pair named params and JSON containing spaces always need `%20` in links**; single-pair named params (`#msg:ui.open.all:tag:Favorite`) and space-free JSON work as-is.
+* `"` and `{`/`[` are fine in link URLs — markdown percent-encodes them (`%22`, `%7B`) and `decodeURI` restores them.
+* No constraints apply to `data-params="…"` (it's an HTML attribute — just escape `"` as `&quot;` if the payload contains quotes) or to programmatic `tw.run.sendCommand(…)`.
+
+When a payload gets awkward to URL-encode, prefer a `tw.ui.button(text, msg, payload)` (payload travels `---enc:`-encoded in `data-params`) over a markdown link.
+
+## Gotchas
+
+* **Quoted booleans/numbers don't survive as strings in nested contexts** — `"true"` works at top level, but coercion happens per token; avoid relying on it. (See TODOs in [core.params.js](../src/modules/core.params.js).)
+* **`{expr}` eval tokens** allow no spaces and no quotes inside; errors surface as cryptic macro error spans (`John is not defined`).
+* **Unquoted JSON keys** (`{name:"x"}`) silently fall through to the tokenizer (macros) or are passed as a raw string with a console warning (commands).
+* **Named-parameter values are split at every `:`** — pass URLs via JSON.
+* **Arrays always spread** — a handler that wants a real array must receive `[[…]]`.
+* **Macros coerce types, commands don't** — `<<m 1>>` delivers `1` (number) but `#msg:m:1` delivers `'1'` (string).

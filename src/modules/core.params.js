@@ -7,6 +7,10 @@
   * Some Widgets expect named parameters (an object):
   *   <<WidgetO foo:"1 a" bar:2 baz:false>>
   *     => WidgetO({foo: "1 a", bar: 2, baz: false})
+  * JSON payloads (starting with { or [) are parsed as-is:
+  *   <<WidgetO {"foo": "1 a", "bar": 2}>>
+  *     => WidgetO({foo: "1 a", bar: 2})
+  *   <<WidgetP ["a b", 2]>> => WidgetP("a b", 2) (arrays spread as positional parameters)
   */
 (function() {
 
@@ -32,6 +36,7 @@
  *   - foo 'bar 2' false => ['foo', 'bar 2', false]
  */
   function parseParams(params) {
+    if (params?.match(/^[\[\{]/)) try {return JSON.parse(params);} catch {} // not valid JSON => fall through to legacy parsing
     if (params?.match(/^[a-z0-9_]+:/i)) return strToObject(params);
     return paramsToArray(params);
   }

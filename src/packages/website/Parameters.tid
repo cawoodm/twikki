@@ -2,9 +2,26 @@ tags: Help
 
 Parameters are used to pass messages to objects or widgets.
 
-For example `<<example.greet Mr. Smith>>` passes 2 string parameters to the `greet` [[Widget]] in [[ExamplePlugin]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
+For example `<<example.greet Mr. Smith>>` passes 2 string parameters (`"Mr."` and `"Smith"`) to the `greet` [[Widget]] in [[ExamplePlugin]].
 
 Since TWikki is text based the string `"red green blue"` must be parsed to produce parameters. We support 2 basic strategies for function parameters (named and unnamed).
+
+## Quick Reference
+
+| Description | Macro | Command | Invocation |
+|---|---|---|---|
+| Single string | `<<m hello>>` | `#msg:m:hello` | `m("hello")` |
+| String with spaces | `<<m "John Smith">>` | `#msg:m:John Smith` | `m("John Smith")` |
+| Multiple strings | `<<m foo bar>>` | `#msg:m:["foo", "bar"]` | `m("foo", "bar")` |
+| Typed (number, boolean) | `<<m 1 true>>` | `#msg:m:[1, true]` | `m(1, true)` |
+| Object (named parameters) | `<<m name:"Jo Do" age:22>>` | `#msg:m:name:"Jo Do" age:22` | `m({name: "Jo Do", age: 22})` |
+| Object (JSON) | `<<m {"name":"Jo", "age":22}>>` | `#msg:m:{"name":"Jo", "age":22}` | `m({name: "Jo", age: 22})` |
+| Array, spread (JSON) | `<<m ["a b", 2]>>` | `#msg:m:["a b", 2]` | `m("a b", 2)` |
+| Array as one argument | `<<m [[1,2,3]]>>` | `#msg:m:[[1,2,3]]` | `m([1, 2, 3])` |
+
+Notes:
+* Macros tokenize and type-coerce bare values (`<<m foo bar>>` → two args, `<<m 1 true>>` → number+boolean); commands pass bare values as **one raw string** (`#msg:m:1` → `m("1")`, `#msg:m:foo bar` → `m("foo bar")`) — use JSON for multiple or typed command arguments.
+* In markdown **links**, spaces in a `#msg:` URL must be `%20`-encoded or the link won't render (see [Macros vs Commands](#Parameters) below).
 
 ## Unnamed Parameters
 Tradional JavaScript functions accept the passing of multiple unnamed (or positional) parameters as in `function macro(p1, p2, p3)` which accepts 3 arguments. We can invoke it as such:
@@ -25,14 +42,46 @@ The same rules for booleans `true/false` or numbers and eval expressions apply a
 Notes:
 * There may be no space before or after the `:` and properties may contain only characters `a-z`, `A-Z`, `0-9` or the `_` .
 * Objects do not (yet) support dynamic/eval expressions like `foo:{fcn()}`
+* Values containing a `:` (e.g. URLs) cannot be passed as named parameters — use JSON (below).
+
+## JSON Parameters
+Parameters starting with `{` or `[` are parsed as JSON (the same rule as [[Commands]]). Keys and strings must be double-quoted — this is strict JSON, not JavaScript:
+* `<<greet {"name":"John Smith", "age":22}>>` becomes `greet({name: 'John Smith', age: 22})`
+* `<<macro ["a b", 2, true]>>` becomes `macro('a b', 2, true)` (arrays spread as positional parameters)
+* `<<fetch {"url":"https://example.com"}>>` — JSON is the way to pass values containing `:` or `,`
+
+Invalid JSON (e.g. unquoted keys like `{name:"John"}`) falls through to the legacy positional tokenizer and will arrive mangled — when in doubt, quote every key.
 
 ## Arrays
-It is not yet possible to pass an array to a function. We get around this by passing a csv string which the function can then manually `split(',')`.
-In future arrays will be possible via comma-separated tokens:
-* `<<add 1,2,3>>` yielding `add([1, 2, 3])`
+A JSON array spreads as positional parameters, so to pass an actual array as a single argument, wrap it: `<<add [[1,2,3]]>>` yielding `add([1, 2, 3])`.
+Legacy alternative: pass a csv string which the function then manually `split(',')`s — `<<selector red,green,blue>>` passes one parameter `"red,green,blue"` (because there are no spaces) to the [[SelectorWidget]].
 
-For example `<<selector red,green,blue>>` passes three colors to the [[SelectorWidget]].  Technically it's one parameter `"red,green,blue"` (because there are no spaces) and thus the widget must `split()` the string into an array.
+## Command Parameters
+TWikki supports [[Commands]] — events fired from links (`#msg:event:params`) or from elements with `data-msg`/`data-params` attributes. The parameter string is decoded (an optional `---enc:BASE64` prefix) and `$currentTiddler` is replaced by the title of the surrounding tiddler, then deserialized by its first characters:
 
-## Dynamic Parameters
-TWikki supports [[Commands]] which allow 3 types of serialized parameters:
-* 
+* **Raw string** (the default) — anything not matching the rules below is passed through as one string, so titles with spaces are safe:
+  * `#msg:tiddler.show:My Note` becomes `show('My Note')`
+  * `data-params="$currentTiddler"` becomes `close('My Note')` (on a button inside the tiddler 'My Note')
+* **Named parameters** — `key:value` pairs (as in macros, see above) become one object:
+  * `#msg:search.advanced:pck:icons title:add` becomes `searchAdvanced({pck: 'icons', title: 'add'})`
+* **JSON** — strings starting with `{`, `[` or `"` are parsed; arrays are spread as positional arguments:
+  * `#msg:ui.open.all:{"tag":"Favorite"}` becomes `openAll({tag: 'Favorite'})`
+  * `data-params='["a", "b"]'` becomes `handler('a', 'b')`
+  * `data-params='"tag:x"'` becomes `handler('tag:x')` (quote a literal string that would otherwise parse as named parameters)
+* **JavaScript** — strings starting with `{{{` are evaluated: `data-params="{{{1 + 2}}}"` becomes `handler(3)`
+
+Notes:
+* Since `:` is not a valid character in tiddler titles, a bare title can never be mistaken for named parameters.
+* Bare values are **not** type-coerced (`#msg:foo:1` passes the string `'1'`) — use JSON or named parameters for typed values.
+
+## Macros vs Commands
+The two paths differ — what works in `<<a.macro ...>>` may not work in `#msg:...` and vice versa:
+* **Bare strings**: macros tokenize and type-coerce them (`<<m 1>>` → number `1`, `<<m a b>>` → two args); commands pass them raw (`#msg:m:1` → string `'1'`, `#msg:m:My Note` → one string). For multiple or typed command arguments use JSON: `#msg:m:[1, "a b"]`.
+* **Eval**: macros eval single `{expr}` tokens; commands eval whole `{{{expr}}}` payloads.
+* **Only commands** support `---enc:` encoded payloads and `$currentTiddler`.
+* **Invalid JSON**: macros silently fall back to the tokenizer (mangled args); commands warn in the console and pass the raw string.
+* **Parse errors**: a named-parameter payload whose parsing throws (e.g. a failing `{expr}` value like `a:{boom}`) renders an inline error span in macros, but commands silently pass the raw string to the handler.
+* **Event names must be `lowercase.dotted`** — an uppercase letter silently truncates the event name (`#msg:t.Xy:1` fires `t.`!). Macro names may contain uppercase (`<<core.AllTagsLinked>>`).
+* **Spaces in `#msg:` links must be `%20`-encoded** — a raw space ends the markdown URL and the link won't render: `[OK](#msg:search.advanced:pck:icons%20title:add)`. The `data-params` attribute and `tw.run.sendCommand(...)` have no such limit; for awkward payloads prefer a `tw.ui.button` (its payload travels `---enc:`-encoded).
+
+See [Parameters Docs](https://github.com/cawoodm/twikki/blob/main/docs/PARAMETERS.md)

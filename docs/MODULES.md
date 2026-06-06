@@ -37,7 +37,9 @@ The platform lives in [src/platform/twikki.platform.js](../src/platform/twikki.p
 
 ### Updates
 Update logic is managed in `loadCoreModule(moduleName)`.
-For now modules are cached once and only updated if `?update` or `?reload` is called in the URL
+Modules are cached in localStorage and re-downloaded when:
+* the platform version changes (a `/modules.version` stamp is compared against `VERSION` on boot — platform and modules ship together, so a new platform never runs against stale incompatible modules), or
+* `?update` / `?reload` is passed in the URL (needed during development when module sources change without a version bump).
 
 > TODO: Make a sensible update policy and dialog
 

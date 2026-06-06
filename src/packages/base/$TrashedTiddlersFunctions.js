@@ -19,8 +19,8 @@
     tw.run.save();
   };
   tw.macros.core.TrashCanContents = () => {
-    const list = tw.tiddlers.trashed.map(t => (`<li><a data-msg="tiddlers.trashed.preview" data-param="${t.title}">${t.title}</a> 
-      <a title="Restore Tiddler" data-msg="tiddler.trashed.restore" data-param="${t.title}">🚮</a></li>`)).join('\n');
+    const list = tw.tiddlers.trashed.map(t => (`<li><a data-msg="tiddlers.trashed.preview" data-params="${t.title}">${t.title}</a>
+      <a title="Restore Tiddler" data-msg="tiddler.trashed.restore" data-params="${t.title}">🚮</a></li>`)).join('\n');
     return `<ul id="trashContents">${list}</ul>`;
   };
   tw.events.subscribe('tiddlers.trashed.preview', trashPreview);

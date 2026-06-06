@@ -186,7 +186,7 @@
     strip.innerHTML = shown.map(title => `
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
-        <button class="tab-close icon" data-msg="tiddler.close" data-param="${attr(title)}" title="Close">✕</button>
+        <button class="tab-close icon" data-msg="tiddler.close" data-params="${attr(title)}" title="Close">✕</button>
       </div>`).join('') +
       more +
       '<button class="tab-new icon" data-msg="tiddler.new" title="New note">+</button>';

@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.22.0';
+  const VERSION = '0.23.0';
 
   overrides();
 
@@ -119,7 +119,12 @@
         '/core.templater.js',
         '/core.search.js',
       ];
-      let modulesLoaded = await Promise.all(modulesToLoad.map(loadCoreModule));
+      // Platform and core modules ship together: when the platform version changes,
+      //   cached modules may be incompatible with the new platform, so re-download them all once.
+      const modulesStale = read('/modules.version') !== VERSION;
+      let modulesLoaded = await Promise.all(modulesToLoad.map(m => loadCoreModule(m, modulesStale)));
+      write('/modules.version', VERSION);
+      if (modulesStale) console.log(`Modules updated to ${VERSION}`);
       tw.modules = modulesToLoad.map((p, i) => ({name: p, res: modulesLoaded[i]}));
 
     },
@@ -1326,23 +1331,23 @@
     scrollToTiddler(link);
     location.hash = '';
   }
-  function sendCommand(cmd, param, params, currentTiddlerTitle) {
-  // "foo.bar:etc etc" => events.send('foo.bar', ['etc', 'etc'])
+  function sendCommand(cmd, params, currentTiddlerTitle) {
+  // "foo.bar:{json}"            => events.send('foo.bar', {…})
+  // "foo.bar:pck:icons title:x" => events.send('foo.bar', {pck: 'icons', title: 'x'})
+  // "foo.bar:My Note"           => events.send('foo.bar', 'My Note') (bare strings stay raw)
     let cmds = cmd.match(reCommand);
     if (!cmds) throw new Error(`Invalid command '${cmd}' does not match ${reCommand}/!`);
     let msg = cmds[1];
     if (!params) params = cmds.length > 2 ? cmds[2] : null;
     tw.logging.break('command');
-    if (typeof param === 'undefined' || param === null) {
+    if (typeof params === 'string') {
       params = tw.events.decode(params);
-      if (params) params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
-      if (params?.match(/^\{\{\{/)) try {params = eval(params);} catch {dp('events.send received invalid JS payload: ' + params);}
-      else if (params?.match(/^[\[\{]/)) try {params = JSON.parse(params);} catch {dp('events.send received invalid JSON payload: ' + params);}
-      else params = tw.core.params.parseParams(params);
-    } else if (typeof param === 'string')
-      params = tw.events.decode(param).replaceAll('$currentTiddler', currentTiddlerTitle);
-    else
-      params = param;
+      params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
+      if (params.match(/^\{\{\{/)) try {params = eval(params);} catch {console.warn('events.send received invalid JS payload: ' + params);}
+      else if (params.match(/^[\[\{"]/)) try {params = JSON.parse(params);} catch {console.warn('events.send received invalid JSON payload: ' + params);}
+      else if (params.match(/^[a-z0-9_]+:/i)) try {params = tw.core.params.parseParams(params)}catch{}; // named params => object
+      // else: bare string stays a raw string (':' is not a valid title char, so titles never hit the named branch)
+    }
     dp('sendCommand', msg, 'params=', params);
     let result = tw.events.send(msg, params); // scroll-on-show is handled by the tiddler.show subscriber
     location.hash = '';
@@ -1395,14 +1400,14 @@
       let src = tw.core.dom.nearestElementWithAttribute(el, 'data-msg');
       if (!src) return;
       let msg = src.getAttribute('data-msg');
-      let param = src.getAttribute('data-param');
+      if (src.hasAttribute('data-param')) console.warn('data-param is no longer supported, use data-params', src);
       let params = src.getAttribute('data-params');
       if (!msg && isCommand(link)) msg = isCommand(link);
       if (!msg) return;
       if (src.getAttribute('data-default') !== 'true') event.preventDefault();
       let currentTiddlerTitle = tw.core.dom.nearestAttribute(el, 'data-tiddler-title', '.tiddler');
       if (msg) {
-        let result = sendCommand(msg, param, params, currentTiddlerTitle);
+        let result = sendCommand(msg, params, currentTiddlerTitle);
         let targetId = src.getAttribute('data-target');
         if (!targetId) return result;
         // Display results
@@ -1496,9 +1501,9 @@
   }
 
   /* END TWikki */
-  async function loadCoreModule(moduleName) {
+  async function loadCoreModule(moduleName, force = false) {
     let res = readObject('/modules' + moduleName);
-    if (!res?.code || qs.reload || qs.update) res = await fetchModule(moduleName);
+    if (!res?.code || force || qs.reload || qs.update) res = await fetchModule(moduleName);
     writeObject('/modules' + moduleName, res);
     return res;
   }

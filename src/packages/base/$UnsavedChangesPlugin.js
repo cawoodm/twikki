@@ -138,7 +138,7 @@
     // No href on the link: `#...` hrefs are intercepted as local links before data-msg dispatch.
     let label = c.status === 'deleted'
       ? `<span>${title}</span>`
-      : `<a data-msg="tiddler.show" data-param="---enc:${tw.core.common.encoder(c.title)}">${title}</a>`;
+      : `<a data-msg="tiddler.show" data-params="---enc:${tw.core.common.encoder(c.title)}">${title}</a>`;
     return `<li title="${tip}"><span class="tw-change-status ${c.status}">${c.status}</span>${label}</li>`;
   }
 

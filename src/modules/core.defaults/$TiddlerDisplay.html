@@ -6,14 +6,14 @@ tags: $Template
 <div class="tiddler shadow{{=isRawShadow}}" data-tiddler-id="{{=id}}" data-tiddler-title="$currentTiddler" tabindex="0">
   <div class="title" title="{{=type}}">
     {{=title}}
-    <button class="icon" title="close" data-msg="tiddler.close" data-param="$currentTiddler">{{$IconCancel}}</button>
+    <button class="icon" title="close" data-msg="tiddler.close" data-params="$currentTiddler">{{$IconCancel}}</button>
     {{!editDisabled}}
     {{!isSection}}
-    <button class="icon" title="edit" {{=editDisabled}} data-msg="tiddler.edit" data-param="$currentTiddler">{{$IconEdit}}</button>
-    <button class="icon" title="delete"{{=editDisabled}} data-msg="tiddler.delete" data-param="$currentTiddler">{{$IconDelete}}</button>
+    <button class="icon" title="edit" {{=editDisabled}} data-msg="tiddler.edit" data-params="$currentTiddler">{{$IconEdit}}</button>
+    <button class="icon" title="delete"{{=editDisabled}} data-msg="tiddler.delete" data-params="$currentTiddler">{{$IconDelete}}</button>
     {{/!isSection}}
     {{!notSection}}
-    <button class="icon" title="Edit parent note" data-msg="section.edit" data-param="$currentTiddler">{{$IconEdit}}</button>
+    <button class="icon" title="Edit parent note" data-msg="section.edit" data-params="$currentTiddler">{{$IconEdit}}</button>
     {{/!notSection}}
     {{/!editDisabled}}
   </div>
