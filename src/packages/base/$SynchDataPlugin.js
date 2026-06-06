@@ -309,7 +309,7 @@ tw.macros.synch = (function(){
         console.warn(`SynchData: skipping malformed file '${name}':`, e.message);
       }
     });
-    if (!sawMeta) console.debug(`SynchData: no ${META_FILENAME} in gist — visible will be empty`);
+    if (!sawMeta) dp(`SynchData: no ${META_FILENAME} in gist — visible will be empty`);
     return {all, visible, trashed: []};
   }
 

@@ -2,6 +2,9 @@ tags: Help
 
 ## Installed Modules
 
-Modules are part of the platform but are loaded via URL and stored in local storage. They are like the "OS" and are common to all workspaces.
+Modules are part of the platform but are loaded via URL and stored in local storage. They are like the "OS" and are common to all workspaces. [Modules Docs](https://github.com/cawoodm/twikki/blob/main/docs/MODULES.md)
 
 <<modules>>
+
+### Updates
+Modules are loaded once and cached in localStorage. You can `?update` or `?reload` them via the URL.

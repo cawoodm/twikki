@@ -24,21 +24,17 @@ A plugin is usually an immediately-invoked function that hooks into the global `
 })();
 ```
 
-## The `tw` namespace
+See [[TW API]] for more details
 
-Everything hangs off the global `tw` object:
+## Macros
 
-* `tw.events` — pub/sub: `subscribe(event, handler, name)` and `send(event, payload)`
-* `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
-* `tw.run` — read and update tiddlers, e.g. `tw.run.getTiddler(title)`
-* `tw.ui` — UI helpers such as `tw.ui.notify(...)` and `tw.ui.button(...)`
-* `tw.macros` / `tw.extensions` — register macros and widgets (see below)
-* `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, ...)
-* `tw.storage` — the localStorage wrapper
+A macro is a speciall command inside `<<...>>` blocks in markdown which runs and produces dynamic content and/or UI elements (like buttons). A macro returns a string of markdown/HTML that is rendered in place.
 
-## Adding macros and widgets
+For example `<<include $TWikkiVersion>>` will include the `$TWikkiVersion` tiddler's content and produce:
+> <<include $TWikkiVersion>>
 
-Register a macro so it can be used as `<<namespace.name args>>` inside any markdown or `x-twikki` tiddler:
+## User Macros
+Core or base macros reside in the global namespace. When you install a plugin it should have a namespace so that macros don't collide.
 
 ```js
 tw.extensions.registerMacro('greet', 'hello', (name) => {
@@ -46,7 +42,7 @@ tw.extensions.registerMacro('greet', 'hello', (name) => {
 }, {version: '1.0.0'});
 ```
 
-You can then write `<<greet.hello "Marc">>` anywhere. A macro returns a string of markdown/HTML that is rendered in place. (You may also assign directly, e.g. `tw.macros.greet = { hello: ... }`.)
+This registers a macro so it can be used as `<<greet.hello "Marc">>` anywhere. 
 
 See [[ExamplePlugin]] for a fuller worked example, and [[$GeneralWidgets]] for the built-in widgets.
 
@@ -63,10 +59,24 @@ Subscribe to lifecycle events to extend behaviour. Some useful ones:
 ```js
 tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
   // decorate freshly-rendered tiddlers here
-}, 'MyPlugin');
+}, 'MyPlugin.HandleRenderedTiddler');
 ```
 
-Always pass a **name** as the third argument so your handler is identifiable and is not registered twice when the tiddler re-runs.
+Always pass a unique **name** of your handler as the third argument so your handler is identifiable and is not registered twice when the tiddler re-runs.
+
+## Replacing the markdown renderer
+
+Markdown rendering is itself a plugin. The platform renders tiddlers by sending the `markdown.render` event and using the first handler's result; [[$BaseMarkdownPlugin]] subscribes the bundled markdown-it implementation. To swap in your own implementation or flavor, override the handler from any code tiddler:
+
+```js
+tw.events.override('markdown.render', function myMarkdown(text) {
+  return MyRenderer.toHtml(text); // must return an HTML string
+});
+```
+
+Your package's code runs after the base package, so the override wins on every boot and reload. At runtime, follow it with `tw.events.send('ui.reload')` to re-render. If **no** handler is subscribed (e.g. in `?safemode`), TWikki falls back to rendering tiddlers as escaped plain text.
+
+The default markdown-it instance is exposed as `tw.core.markdown.md`, so you can also *extend* rather than replace it (e.g. `tw.core.markdown.md.use(...)` — see [[$OpenLinksInNewWindow]]).
 
 ## Loading external libraries
 

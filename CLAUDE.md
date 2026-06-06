@@ -27,6 +27,8 @@ todo...
 
 The runtime never imports anything via ESM — modules are strings of JS loaded over HTTP and `eval`'d (the `(1, eval)(...)` indirect-eval pattern is intentional, to evaluate at global scope). **Do not add `import`/`export` statements to files under `src/modules/` or `src/packages/<pkg>/`** — they must remain plain IIFEs/scripts.
 
+Markdown rendering is **not** a core module: the platform renders via the `markdown.render` event and falls back to escaped plain text when no handler is subscribed (e.g. under `?safemode`). `$BaseMarkdownPlugin` (base package) provides the default markdown-it implementation and exposes it as `tw.core.markdown = {md, render}`; replace it from any package with `tw.events.override('markdown.render', function myMarkdown(text) {...})`.
+
 ### Module contract
 
 A core module under [src/modules/](src/modules/) is an IIFE that takes `tw` and returns `{name, version, [exports], [run]}`:

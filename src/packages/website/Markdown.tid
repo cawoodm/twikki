@@ -1,0 +1,16 @@
+Tiddlers of type `x-twikki` are rendered as markdown by the [[$BaseMarkdownPlugin]].
+
+The flavor is CommonMark implemented by [markdown-it 14.2.0](https://github.com/markdown-it/markdown-it) but can be overriden by creating a plugin.
+
+## Custom Renderers
+A custom plugin can implement a `render()` function to override the `markdown.render` functionality:
+```javascript
+function myRenderer(markdown) {
+  // Implement your renderer here..
+  return MyRenderer.toHtml(text); // must return an HTML string
+}
+tw.core.markdown = {render: myRenderer};
+tw.events.override('markdown.render', myRenderer);
+```
+
+If no handler is subscribed (e.g. `?safemode`), the platform falls back to escaped plain text.

@@ -13,6 +13,9 @@ const compat = new FlatCompat({
 });
 
 export default [...compat.extends('strongloop'), {
+  // Bundled third-party libraries (minified) — not our code
+  ignores: ['src/packages/base/$BaseMarkdownPlugin.js'],
+}, {
   languageOptions: {
     globals: {
       dp: 'readonly',

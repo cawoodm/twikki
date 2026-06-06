@@ -41,14 +41,7 @@ Notes are written in standard [Markdown](https://commonmark.org/), so the format
 As in TiddlyWiki, everything lives in the store, including code. A tiddler of type `script/js` is executed (`eval`) in the global context when TWikki loads and again whenever you save it, so changes take effect immediately. **There is no separate plugin format: a plugin is just a tiddler.** Installing one means adding a tiddler; uninstalling means deleting it. Tag it `$CodeDisabled` to keep it dormant.
 
 ### A clean, framework-free runtime
-TWikki is vanilla JavaScript — no React, no build-time framework, no bundler magic in the runtime. Modules are plain IIFEs loaded over HTTP and evaluated at global scope, hanging their exports off a single global `tw` namespace:
-
-* `tw.events` — pub/sub lifecycle (`ui.loaded`, `tiddler.rendered`, `theme.switch`, …)
-* `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
-* `tw.run` — read/update actions on tiddlers
-* `tw.core.*` — subsystems (`dom`, `markdown`, `search`, `sections`, …)
-* `tw.macros` / `tw.extensions` — register macros and widgets
-* `tw.storage` — the localStorage wrapper
+TWikki is vanilla JavaScript — no React, no build-time framework, no bundler magic in the runtime. Modules are plain IIFEs loaded over HTTP and evaluated at global scope, hanging their exports off a single global `tw` namespace (see [[TW API]]).
 
 This makes the system easy to read, debug, and extend without learning a bespoke widget/filter language.
 

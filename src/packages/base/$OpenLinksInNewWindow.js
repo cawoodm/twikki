@@ -6,7 +6,7 @@ tw.extensions.registerPlugin('base', 'OpenLinksInNewWindow', () => {
     description: 'Open http(s):// links in markdown in new window',
     version: '0.0.1',
     init() {
-      if (!tw.core.markdown?.md) throw new Error('Markdown library missing!');
+      if (!tw.core.markdown?.md) throw new Error('markdown-it not active ($BaseMarkdownPlugin missing or replaced) — OpenLinksInNewWindow disabled!');
     },
     start() {
       // Source: https://www.jsdelivr.com/package/npm/markdown-it-for-inline

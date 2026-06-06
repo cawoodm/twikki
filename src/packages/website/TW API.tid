@@ -1,0 +1,11 @@
+## The `tw` namespace
+
+Everything hangs off the global `tw` object:
+
+* `tw.events` — pub/sub: `subscribe(event, handler, name)` and `send(event, payload)`
+* `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
+* `tw.run` — read and update tiddlers, e.g. `tw.run.getTiddler(title)`
+* `tw.ui` — UI helpers such as `tw.ui.notify(...)` and `tw.ui.button(...)`
+* `tw.macros` / `tw.extensions` — register macros and widgets (see below)
+* `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, ...)
+* `tw.storage` — the localStorage wrapper

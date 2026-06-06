@@ -33,7 +33,7 @@ The platform lives in [src/platform/twikki.platform.js](../src/platform/twikki.p
 * `core.notifications`: Functionality for showing alerts and messages
 * `core.templater`: Tiny mustache-style template engine
 * `core.search`: Search functions
-* `core.markdown`: Bundled markdown-it library plus helper functions
+
 
 ### Updates
 Update logic is managed in `loadCoreModule(moduleName)`.

@@ -19,7 +19,7 @@
   return {name, version, exports};
 
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
-    console.debug('Loading tiddler package', name, url);
+    dp('Loading tiddler package', name, url);
     try {
       let obj = await httpGetJSON(url, name, {});
       return loadList(obj.tiddlers, {name, overWrite, filter, doNotSave, noOverWrite}); // tw.events.send('package.loaded');
@@ -45,14 +45,14 @@
       t.created = new Date(t.created);
       let issues = tw.util.tiddlerValidation(t);
       if (issues.length) return tw.ui.notify(`Tiddler '${t.title}' is invalid: ` + issues.join('<br>'));
-      if (filter && !filter.test(t.title)) return console.debug('Skipping import of tiddler', t.title);
+      if (filter && !filter.test(t.title)) return dp('Skipping import of tiddler', t.title);
       const existingTiddler = tw.run.getTiddler(t.title, false);
       if (noOverWrite && existingTiddler) return; // Don't overwrite, skip silently
       if (overWrite !== true && existingTiddler) {
         if (!existingTiddler.isRawShadow && tiddlerDiff(existingTiddler, t)) {
           if (existingTiddler.tags.includes('$NoImport')) return;
           if (!confirm(`Package '${name}' will overwrite tiddler '${t.title}'! OK to proceed?`)) return;
-          // console.debug(`packages.loadList(${name}): Tiddler '${t.title}' exists and is being be overwritten...`);
+          // dp(`packages.loadList(${name}): Tiddler '${t.title}' exists and is being be overwritten...`);
         }
       }
       if (doNotSave) t.doNotSave = true;
