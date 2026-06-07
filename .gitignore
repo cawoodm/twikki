@@ -136,3 +136,6 @@ tmp*
 public/packages
 public/modules
 dist/
+
+# Don't leak claude stuff
+.claude
