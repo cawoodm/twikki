@@ -99,9 +99,12 @@
       dp(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      baseUrl = window.MODULE_URL || 'https://cawoodm.github.io/twikki';
+      let settings = localStorage.getItem('/settings.json');
+      try {settings = JSON.parse(settings);}catch{dp("Invalid /settings.json in localStorage!");settings=null}
+
+      baseUrl = settings?.urls?.moduleUrl || window.MODULE_URL || document.location.origin;
       // Local dev: serve modules/packages from the dev server, not the published copy
-      if (document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) baseUrl = document.location.origin;
+      // if (document.location.host.match(/^(localhost):\d+$/)) baseUrl = document.location.origin;
 
       dp('Looking for local TWikki.Core modules...');
 
@@ -669,7 +672,16 @@
         if (m[2]?.match(/;/)) console.warn('Deprecated ";" in macroParams', macroName, title);
         let macroParams = m[2] || '';
         // TODO: Inclusions (pass {{DataTiddler}} as string/array/object) would be cool
-        macroParams = tw.core.params.parseParams(macroParams);
+        try {
+          macroParams = tw.core.params.parseParams(macroParams);
+        } catch (e) {
+          // A parse error (e.g. a throwing {expr} eval token) must not kill the whole tiddler render
+          let errmsg = `Macro '${macroName}' has invalid parameters '${m[2]}' in tiddler '${title}': ${e.message}`;
+          console.warn(errmsg, e.stack);
+          result = replaceFrom(result, indexOfMacro, m[0], `<span class="error">${errmsg}</span>`);
+          if (validation) throw e;
+          return;
+        }
         if (dbg) {dp({macroName, macroParams}); }
         if (qs.trace) {
           let newText = Array.isArray(macroParams) ? macroFunction(...macroParams) : macroFunction(macroParams);
@@ -785,7 +797,11 @@
     tw.core.dom.$('new-dialog').showModal();
     // Land the cursor where the user will type: the title input for a brand-new
     // (untitled) tiddler, the body textarea when editing one that already has a title.
-    tw.core.dom.frm.elements[tiddler.title ? 'new-body' : 'new-title'].focus();
+    let focusElement = tw.core.dom.frm.elements[tiddler.title ? 'new-body' : 'new-title'];
+    focusElement.focus();
+    // The browser puts the cursor at the END of a prefilled textarea — start at the top instead
+    focusElement.setSelectionRange(0, 0);
+    focusElement.scrollTop = 0;
     setDirty(true);
     tw.core.dom.$('new-types').innerHTML = getKeyValuesArray('$TiddlerTypes').map(t => {
       return `<option value="${t.key}">${t.value}</option>`;

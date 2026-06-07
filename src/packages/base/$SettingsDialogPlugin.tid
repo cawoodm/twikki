@@ -219,6 +219,7 @@ function so re-evaluating this code tiddler does not register duplicates.
     t.text = JSON.stringify(parsed, null, 2);
     delete t.doNotSave;
     tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
+    localStorage.setItem('/settings.json', t.text);
     tw.events.send('save.silent');        // persist to localStorage
   }
 
