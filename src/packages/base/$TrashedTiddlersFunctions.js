@@ -9,7 +9,7 @@
     return tw.ui.button('Empty Trash', 'tiddlers.trashed.empty', null, 'trashButton');
   };
   tw.macros.core.TrashCanStatus = () => {
-    return `<span id="trashStatus">${tw.tiddlers.trashed.length} tiddlers in the [trash can](#$TrashedTiddlers)!`;
+    return `<span id="trashStatus">${tw.tiddlers.trashed.length} tiddlers in the [trash can](#$TrashedTiddlers)!</span>`;
   };
   tw.events.subscribe('tiddlers.trashed.empty', emptyTrash);
   function emptyTrash() {

@@ -36,7 +36,7 @@
  *   - foo 'bar 2' false => ['foo', 'bar 2', false]
  */
   function parseParams(params) {
-    if (params?.match(/^[\[\{]/)) try {return JSON.parse(params);} catch {} // not valid JSON => fall through to legacy parsing
+    if (params?.match(/^[\[\{]/)) return JSON.parse(params);
     if (params?.match(/^[a-z0-9_]+:/i)) return strToObject(params);
     return paramsToArray(params);
   }

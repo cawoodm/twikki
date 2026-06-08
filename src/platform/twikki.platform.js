@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.23.0';
+  const VERSION = '0.23.1';
 
   overrides();
 
@@ -190,6 +190,46 @@
 
       wireUpEvents();
 
+      // Basic API which modules may need or override
+      tw.run = {
+        save,
+        saveAll,
+        saveVisible,
+        updateTiddler,
+        updateTiddlerHard,
+        addTiddler,
+        addTiddlerHard,
+        deleteTiddler,
+        getTiddler,
+        getSection,
+        getTiddlerList,
+        getTiddlersByTag,
+        getTiddlersByPackage,
+        getTiddlerTextList,
+        getTiddlerTextRaw,
+        getJSONObject,
+        getKeyValuesArray,
+        getKeyValuesObject,
+        getTiddlerElement,
+        tiddlerToggleTag,
+        showTiddlerList,
+        showTiddler,
+        previewTiddler,
+        rerenderTiddler,
+        showAllTiddlers,
+        closeAllTiddlers,
+        closeTiddler,
+        hideTiddler,
+        renderAllTiddlers,
+        sendCommand,
+        reload,
+        registerDropHandler,
+        tiddler: {
+          getJSONObject,
+          updateText: updateTiddlerText,
+        },
+      };
+
       dp(`${tw.modules.length} modules loaded. Running modules...`);
       tw.modules
         .filter(pck => pck.meta?.run)
@@ -237,44 +277,6 @@
         },
       }};
 
-      tw.run = {
-        save,
-        saveAll,
-        saveVisible,
-        updateTiddler,
-        updateTiddlerHard,
-        addTiddler,
-        addTiddlerHard,
-        deleteTiddler,
-        getTiddler,
-        getSection,
-        getTiddlerList,
-        getTiddlersByTag,
-        getTiddlersByPackage,
-        getTiddlerTextList,
-        getTiddlerTextRaw,
-        getJSONObject,
-        getKeyValuesArray,
-        getKeyValuesObject,
-        getTiddlerElement,
-        tiddlerToggleTag,
-        showTiddlerList,
-        showTiddler,
-        previewTiddler,
-        rerenderTiddler,
-        showAllTiddlers,
-        closeAllTiddlers,
-        closeTiddler,
-        hideTiddler,
-        renderAllTiddlers,
-        sendCommand,
-        reload,
-        registerDropHandler,
-        tiddler: {
-          getJSONObject,
-          updateText: updateTiddlerText,
-        },
-      };
       // ----------
       // Legacy Aliases
       tw.util = {tagMatch, titleMatch, titleIs, tiddlerValidation, tiddlerExists};
@@ -282,6 +284,7 @@
       Object.assign(tw.ui, tw.core.ui);
       tw.ui.notify = tw.core.notifications.notify;
       tw.call = call;
+
       tw.extensions = {
         registerMacro(namespace, name, fcn, options) {
           if (!tw.macros[namespace]) tw.macros[namespace] = {};
@@ -706,18 +709,23 @@
       });
       // TODO: Support raw/wikified {{=}} inclusions
       getInclusions(result).forEach(m => {
-        let title = m[1];
-        const inclusionSearch = new RegExp(`(?<!\`)${escapeRegExp('{{' + title)}`);
-        const indexOfInclusion = result.search(inclusionSearch);
-        if (indexOfInclusion < 0) throw new Error(`Unable to locate inclusion of '${title}'!`);
-        // if (title === '$TWikkiVersion') {dp(inclusionSearch); debugger;}
-        let params = m[2];
-        params = tw.core.params.parseParams(params);
-        // dp('inclusion: title=', title, 'params=', params);
-        let text = getTiddlerTextReplaced(title, params);
-        if (!text) text = `No tiddler '${title}' found - let's [create it](#${title})!`;
-        // result = result.replace(m[0], text);
-        result = replaceFrom(result, indexOfInclusion, m[0], text);
+        let includedTitle = m[1];
+      try {
+          const inclusionSearch = new RegExp(`(?<!\`)${escapeRegExp('{{' + includedTitle)}`);
+          const indexOfInclusion = result.search(inclusionSearch);
+          if (indexOfInclusion < 0) throw new Error(`Unable to locate inclusion of '${includedTitle}'!`);
+          // if (title === '$TWikkiVersion') {dp(inclusionSearch); debugger;}
+          let params = m[2];
+          params = tw.core.params.parseParams(params);
+          // dp('inclusion: title=', title, 'params=', params);
+          let text = getTiddlerTextReplaced(includedTitle, params);
+          if (!text) text = `No tiddler '${includedTitle}' found - let's [create it](#${includedTitle})!`;
+          // result = result.replace(m[0], text);
+          result = replaceFrom(result, indexOfInclusion, m[0], text);
+        } catch (e) {
+          result = `<span class="error">ERROR: Inclusion of "${includedTitle}" Failed: ${e.message}</span>`;
+          console.error(`getInclusions "${includedTitle}" inside "${title}" Failed: ${e.message}`, e.stack);
+        }
       });
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -764,7 +772,8 @@
     return Array.from(text.matchAll(reLinks));
   }
   function getInclusions(text) {
-  // {{SomeTiddlerTitle}} or {{SomeTiddlerTitle:Params}}
+    // {{SomeTiddlerTitle}} or {{SomeTiddlerTitle:Params}}
+    // KNOWN ISSUE: We can't support JSON params here since the curly brackets interfere: {{FAQ|{"name":"John Smith", "age":22}}}
     return Array.from(text.matchAll(reInclusion)); // /\{\{([\-\$a-z_0-9\.]+)\:?([^\}]+)?}}/gi);
   }
   function previewTiddler(t, template) {

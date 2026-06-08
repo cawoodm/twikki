@@ -1,0 +1,89 @@
+tags: Help
+
+TWikki ships a set of standard macros (widgets) in the `base` package. Call them anywhere in tiddler content as `<<name params>>` — short names resolve to the `core.` namespace automatically (`<<list>>` ≡ `<<core.list>>`); `button` and `packages.*` live in their own namespaces. See [[Parameters]] for the parameter syntax.
+
+## Buttons
+
+| Widget | Description | Example | Live |
+|---|---|---|---|
+| `button` | Generic button: label, event to send, optional payload and id | `<<button "Open All Help" ui.open.all tag:Help>>` | <<button "Open All Help" ui.open.all tag:Help>> |
+| `command` | Debug button labelled with the `msg:payload` it sends | `<<command ui.reload>>` | <<command ui.reload>> |
+| `Reload` | Reload the UI | `<<Reload>>` | <<Reload>> |
+| `Save` | Save all tiddlers (icon button) | `<<Save>>` | <<Save>> |
+| `Settings` | Open the [[$GeneralSettings]] tiddler; optional icon size in px | `<<Settings 16>>` | <<Settings 16>> |
+| `New` | Create a new tiddler | `<<New>>` | <<New>> |
+| `ShowAllTiddlersButton` | Open all tiddlers matching `tag`/`title` (regex, `!` negates, `*` = all) | `<<ShowAllTiddlersButton tag:Help>>` | <<ShowAllTiddlersButton tag:Help>> |
+| `CloseAllTiddlersButton` | Close all open tiddlers matching `tag`/`title` | `<<CloseAllTiddlersButton>>` | <<CloseAllTiddlersButton>> |
+| `WorkspaceCreate` | Prompt for and create/clone a workspace | `<<WorkspaceCreate>>` | <<WorkspaceCreate>> |
+| `TrashCanIcon` | Trash-can button showing the trashed-tiddler count; opens [[$TrashManager]] | `<<TrashCanIcon>>` | <<TrashCanIcon>> |
+| `TrashEmptyButton` | Permanently delete all trashed tiddlers (asks first) | `<<TrashEmptyButton>>` | <<TrashEmptyButton>> |
+
+## Pickers & Inputs
+
+| Widget | Description | Example | Live |
+|---|---|---|---|
+| `ThemeSelector` | Dropdown to switch the active theme instantly | `<<ThemeSelector>>` | <<ThemeSelector>> |
+| `WorkspaceSelect` | Dropdown to switch or create workspaces | `<<WorkspaceSelect>>` | <<WorkspaceSelect>> |
+| `selector` | HTML `<select>` from csv values or `key:value` pairs | `<<selector red,green,blue>>` | <<selector red,green,blue>> |
+| `TagInput` | Text input with autocomplete over all existing tags | `<<TagInput id:my-tags>>` | <<TagInput id:my-tags>> |
+
+## Lists & Information
+
+| Widget | Description | Example | Live |
+|---|---|---|---|
+| `list` | Bulleted list of tiddler links filtered by `tag`, `title`, `pck`, `type` (system tiddlers hidden by default) | `<<list tag:Help>>` | *below ↓* |
+| `text` | Raw text of a tiddler | `<<text $Theme>>` | *below ↓* |
+| `Section` | Block expander (`<details>`); static `content` or the result of sending `message`/`payload` | `<<Section name:"More" content:"Details here">>` | <<Section name:"More" content:"Details here">> |
+| `Expand` | Inline expander — like `Section` but flows with text | `<<Expand name:"More" content:"Details here">>` | <<Expand name:"More" content:"Details here">> |
+| `Expose` | Expander that renders the result of `message` only when opened | `<<Expose name:"Theme" message:tiddler.text payload:$Theme>>` | <<Expose name:"Theme" message:tiddler.text payload:$Theme>> |
+| `AllTiddlersSimple` | All tiddler titles on one line, custom separator | `<<AllTiddlersSimple " - ">>` | *below ↓* |
+| `AllTagsSimple` | All tags on one line, custom separator | `<<AllTagsSimple>>` | <<AllTagsSimple>> |
+| `AllTagsLinked` | All tags as links which open the tagged tiddlers | `<<AllTagsLinked>>` | *below ↓* |
+| `AllTypesMacro` | All tiddler types in use, as links opening tiddlers of that type | `<<AllTypesMacro>>` | *below ↓* |
+| `TrashCanStatus` | One-line count of trashed tiddlers | `<<TrashCanStatus>>` | <<TrashCanStatus>> |
+| `TrashCanContents` | List of trashed tiddlers with preview/restore links | `<<TrashCanContents>>` | *below ↓* |
+| `modules` | Markdown table of installed core modules with versions | `<<modules>>` | *below ↓* |
+
+## Packages
+
+| Widget | Description | Example | Live |
+|---|---|---|---|
+| `packages.import` | Button importing a package from a URL (`name`, `url`, optional `filter`, `overWrite`, `doNotSave`) | `<<packages.import name:website url:./packages/website.json>>` | <<packages.import name:website url:./packages/website.json>> |
+| `packages.importBin` | As above for binary packages | `<<packages.importBin name:icons url:./packages/icons.json>>` | <<packages.importBin name:icons url:./packages/icons.json>> |
+
+## Helpers
+
+These return data (not HTML) and are mainly for use by other macros/plugins via `tw.macros.core.*`:
+
+| Helper | Returns | Example | Live |
+|---|---|---|---|
+| `allTags()` | Array of all unique tags | `<<allTags>>` | <<allTags>> |
+| `allProperty(property)` | Array of unique values of any tiddler property | `<<allProperty type>>` | <<allProperty type>> |
+
+## Live Examples (block widgets)
+
+These widgets produce multi-line output, so they render below rather than inside the table:
+
+`<<text $Theme>>` — the current theme: <<text $Theme>>
+
+<<Section {"name":"All Help tiddlers — list tag:Help", "message":"tiddlers.list", "payload":{"tag":"Help"}}>>
+
+All tags linked — `<<AllTagsLinked>>`:
+
+<<AllTagsLinked>>
+
+All types — `<<AllTypesMacro>>`:
+
+<<AllTypesMacro>>
+
+All titles — `<<AllTiddlersSimple " - ">>`:
+
+<<AllTiddlersSimple " - ">>
+
+Trash contents — `<<TrashCanContents>>`:
+
+<<TrashCanContents>>
+
+Installed modules — `<<modules>>`:
+
+<<modules>>

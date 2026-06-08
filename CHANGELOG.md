@@ -2,6 +2,10 @@
 
 ## 6 Jun 2026 (v0.23.0)
 * BaseMarkdownPlugin: Moved markdown rendering out of core to a plugin which can be overridden
+* **Editor cursor starts at the top** — editing a tiddler used to land the cursor at the end of the body; it now starts at the top with the textarea scrolled up.
+* **Macro parameter errors no longer kill the page** — a throwing parameter parse (e.g. a bad `{expr}` eval token) used to escape the per-macro guard and abort rendering of the entire tiddler; it now renders an inline error span for just that macro.
+* **Standard widgets emit single-line HTML** — `selector`, `ThemeSelector`, `WorkspaceSelect` and `TagInput` no longer contain newlines, so they can be used inside markdown table cells; fixed unclosed `<span>` in `TrashCanStatus`.
+* **New help tiddlers** — `StandardMacros` (all standard widgets with live examples) and `ParametersTests` (live demonstrations of parameter gotchas).
 * **JSON macro parameters** — `parseParams` now parses payloads starting with `{`/`[` as strict JSON, so macros accept objects/arrays like commands do: `<<greet {"name":"John Smith", "age":22}>>`. Invalid JSON falls through to the legacy tokenizer.
 * **Version-stamped module cache** — core modules cached in `localStorage` are re-downloaded once when the platform version changes (`/modules.version` stamp), so a new platform never runs against stale incompatible modules. Previously this required a manual `?update`/`?reload`.
 * **Unified command parameters** — `sendCommand(cmd, params, currentTiddlerTitle)` replaces the old `param`/`params` pair, and `data-params` is the only payload attribute (`data-param` is no longer read; a `console.warn` flags stale content). One decode chain for all payloads: `---enc:` decode → `$currentTiddler` substitution → `{{{js}}}` eval → JSON (`{`/`[`/`"`) → named `key:value` params → bare strings pass through raw (titles with spaces are safe; `:` is not a valid title character). Positional `cmd:a b` splitting and bare-scalar coercion are gone — use JSON arrays / typed JSON instead. `tw.ui.button()` now accepts any payload type (objects as JSON, others stringified). Documented in the `Parameters` help tiddler.

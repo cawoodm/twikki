@@ -5,7 +5,6 @@
  *     duplicate-handler guard and `---enc:` base64 param decoding.
  *   - a minimal `tw.run` (just getTiddler) so the first paint can resolve
  *     tiddlers before the platform installs the full action API later in boot.
- *   - `tw.macros`, `tw.extensions.registerMacro` and `tw.call` (eval-by-name).
  */
 (function(tw) {
 
@@ -77,32 +76,5 @@
     }
   })();
 
-  tw.run = {
-    getTiddler,
-  };
-  tw.macros = {};
-  tw.extensions = {
-    registerMacro,
-  };
-  tw.call = call;
-
   return {name, version};
-
-  function call(functionName, ...args) {
-    return eval(functionName)(...args);
-  }
-  function registerMacro(namespace, name, fcn, options) {
-    if (!tw.macros[namespace]) tw.macros[namespace] = {};
-    tw.macros[namespace][name] = fcn;
-    if (options) Object.assign(tw.macros[namespace][name], options);
-  }
-  function getTiddler(title, includeRawShadow = true) {
-    // TODO: This is case-senstive and allows duplicates like AAA + aaa
-    let result = tw.tiddlers.all.find(titleIs(title));
-    if (includeRawShadow === false && result?.isRawShadow === true) return undefined;
-    return result;
-  }
-  function titleIs(title) {
-    return t => t.title === title;
-  }
 });

@@ -17,7 +17,7 @@ tw.macros.core.New = () => {
 };
 tw.macros.core.TagInput = ({id}) => {
   const tags = tw.macros.core.allTags();
-  return `<input id="${id}" placeholder="Tags" list="${id}-tags"/><datalist id="${id}-tags">${tags.map(t => `<option value="${t}">${t}</option>`).join('\n')}</datalist>`;
+  return `<input id="${id}" placeholder="Tags" list="${id}-tags"/><datalist id="${id}-tags">${tags.map(t => `<option value="${t}">${t}</option>`).join('')}</datalist>`;
 };
 // Lists types used in all tiddlers
 tw.macros.core.AllTypesMacro = () => {

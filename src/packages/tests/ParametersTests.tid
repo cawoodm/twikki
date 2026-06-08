@@ -1,0 +1,67 @@
+tags: Help
+
+Live demonstrations of known bugs, issues and gotchas (traps) in [[Parameters]] handling. Each example runs the `foo.*` macros from [[TestParametersPlugin]] so you can see the failure modes with your own eyes. The macros:
+
+* `foo.hello(firstName, lastName)` → `Hello <first> <last>`
+* `foo.test(age, boolean, string)` → reports each value **and its type**
+* `foo.object({name, age})` → expects one object
+
+## Baseline (works as intended)
+
+* `<<foo.hello John Smith>>`: <<foo.hello John Smith>>
+* `<<foo.test 1 true "Car Wash">>`: <<foo.test 1 true "Car Wash">>
+* `<<foo.object name:"John Smith" age:22>>`: <<foo.object name:"John Smith" age:22>>
+* `<<foo.object {"name":"John Smith", "age":22}>>`: <<foo.object {"name":"John Smith", "age":22}>>
+
+## Trap: invalid JSON falls through to the tokenizer
+
+JSON keys must be double-quoted. One unquoted key (`age:`) and the whole payload is silently tokenized into garbage strings instead:
+
+* `<<foo.object {"name":"John Smith", age:22}>>`: <<foo.object {"name":"John Smith", age:22}>>
+
+The handler received `('{name:John Smith,', 'age:22}')` — note `name` and `age` are `undefined` above. In **commands** the same mistake at least logs a console warning and passes the raw string.
+
+## Trap: a colon inside a named-parameter value truncates it
+
+`getKeyVal` splits at **every** colon, quoted or not — URLs cannot be passed as named parameters:
+
+* `<<foo.object name:Mr:Smith age:1>>`: <<foo.object name:Mr:Smith age:1>>
+* `<<foo.object name:"Mr:Smith" age:1>>`: <<foo.object name:"Mr:Smith" age:1>>
+
+`name` arrives as `Mr` in both cases. **Workaround**: JSON — `<<foo.object {"name":"Mr:Smith", "age":1}>>`: <<foo.object {"name":"Mr:Smith", "age":1}>>
+
+## Trap: quoting does not prevent type coercion
+
+You cannot force `"1"` or `"true"` to stay strings — the tokenizer strips quotes *before* coercion:
+
+* `<<foo.test "1" "true" "x">>`: <<foo.test "1" "true" "x">>
+
+`age` is a number and `boolean` a boolean despite the quotes. **Workaround**: JSON — `<<foo.test ["1", "true", "x"]>>`: <<foo.test ["1", "true", "x"]>>
+
+## Trap: `{expr}` eval tokens
+
+A single `{...}` token is `eval`'d as JavaScript — useful (`{1+2}` → `3`) but two traps:
+
+1. **No spaces allowed** — a space splits the token before eval: `<<foo.test {1 + 2} true x>>`: <<foo.test {1 + 2} true x>>
+   (`age` arrived as the literal string `{1`.)
+2. **Cryptic errors** — an unquoted-key object like `{name:"Boom"}` is invalid JSON *and* an eval token, so it throws inside `eval` and renders an inline error: `<<foo.object {name:"Boom"}>>`: <<foo.object {name:"Boom"}>>
+   (Before v0.23.0 this throw escaped the per-macro guard and aborted rendering of the **entire tiddler**.)
+
+## Trap: arrays always spread
+
+A JSON array becomes positional arguments — a handler can never receive a bare array unless you wrap it:
+
+* `<<foo.hello ["John", "Smith"]>>`: <<foo.hello ["John", "Smith"]>> (spread → two parameters)
+* `<<foo.hello [["John", "Smith"]]>>`: <<foo.hello [["John", "Smith"]]>> (`firstName` is the whole array, `lastName` is `undefined`)
+
+## Trap: `>` cannot appear in macro parameters
+
+The macro regex stops at the first `>`, so `<<m {1>0}>>` or JSON containing `>` breaks the macro match entirely (it renders literally or mis-parses). There is no escape — keep `>` out of macro parameters.
+
+## Command-only traps (see [[Parameters]] → Macros vs Commands)
+
+* **No type coercion**: `#msg:m:1` delivers the string `'1'` — macros would deliver the number `1`. Use JSON.
+* **Uppercase silently truncates the event name**: `#msg:t.Xy:1` fires the event `t.` with payload `Xy:1` — no error. Keep event names `lowercase.dotted`.
+* **Spaces break `#msg:` links**: a raw space ends a markdown URL — this link is broken and renders literally: [broken](#msg:search.advanced:pck:icons title:add) — encode as `%20` and it works: [works](#msg:search.advanced:pck:icons%20title:add)
+* **Named-parameter parse errors degrade silently**: a payload like `a:{boom}` whose value eval throws is passed to the handler as the raw string, with no warning.
+* **`$currentTiddler` is textual**: substitution is a string `replaceAll` — a title containing `"` corrupts surrounding JSON payloads.

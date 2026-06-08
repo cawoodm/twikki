@@ -21,6 +21,7 @@ Fenced block, must stay literal:
 * [[$StyleSheetCore]]
 * <<somemacro>>
 * {{SomeTiddler}}
+* [Show 'Code Tiddler'](#msg:tiddler.show:Code%20Tiddler)
 ```
 
 And a real link outside code still works: [[$StyleSheetCore]]

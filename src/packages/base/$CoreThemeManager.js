@@ -111,10 +111,8 @@
     let items = getThemeNames().sort().map(n =>
       `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`,
     ).join('');
-    return `<span class="picker" data-event="theme.switch">
-    <button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button>
-    <span class="picker-menu" hidden>${items}</span>
-  </span>`;
+    // Single-line output so the widget can live inside markdown table cells
+    return `<span class="picker" data-event="theme.switch"><button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button><span class="picker-menu" hidden>${items}</span></span>`;
   };
 
   function wireUp(event, handler) {
