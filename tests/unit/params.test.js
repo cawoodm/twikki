@@ -1,8 +1,8 @@
-import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
+import {test} from 'node:test';
+import {fileURLToPath} from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..', '..');
@@ -25,8 +25,16 @@ test('positional: bare tokens are type-coerced, quotes protect spaces', () => {
   assert.deepEqual(parseParams('null 3.14'), [null, 3.14]);
 });
 
-test('positional: {expr} single tokens are eval\'d', () => {
-  assert.deepEqual(parseParams('{1+2}'), [3]);
+test('positional: ${expr} single expressions are eval\'d', () => {
+  assert.deepEqual(parseParams('${1+2}'), [3]);
+});
+
+test('positional: ${expr} complex expressions are eval\'d', () => {
+  assert.deepEqual(parseParams('${1 + 2}'), [3]);
+});
+
+test('positional: ${expr} complex quoted expressions are eval\'d', () => {
+  assert.deepEqual(parseParams('"${1 + 2}"'), [3]);
 });
 
 test('positional: empty/missing input yields an empty array', () => {
@@ -51,8 +59,14 @@ test('named: leading non-word char means NOT named params', () => {
   assert.deepEqual(parseParams('$pck:website'), ['$pck:website']); // stays one positional string
 });
 
-test('named: values are split at every colon (known limitation — use JSON for URLs)', () => {
-  assert.deepEqual(parseParams('url:https://example.com'), {url: 'https'});
+test('named: values may contain colons (split on first delimiter only)', () => {
+  assert.deepEqual(parseParams('url:https://example.com'), {url: 'https://example.com'});
+  assert.deepEqual(parseParams('name:"Mr:Smith" age:1'), {name: 'Mr:Smith', age: 1});
+  assert.deepEqual(parseParams('name:Mr:Smith age:1'), {name: 'Mr:Smith', age: 1});
+});
+
+test('named: a colon-less token gets an empty value instead of throwing', () => {
+  assert.deepEqual(parseParams('name:John foo'), {name: 'John', foo: ''});
 });
 
 /* JSON parameters */
@@ -77,21 +91,9 @@ test('json: nested structures survive', () => {
   assert.deepEqual(parseParams('{"url":"https://example.com"}'), {url: 'https://example.com'}); // colons are safe in JSON
 });
 
-/* Invalid JSON falls through to the legacy tokenizer */
-
-test('invalid json (unquoted key) falls through and arrives mangled', () => {
-  // <<foo.object {"name":"John Smith", age:22}>> — the cautionary example in MyParamsTestPlugin.tid
-  assert.deepEqual(
-    parseParams('{"name":"John Smith", age:22}'),
-    ['{name:John Smith,', 'age:22}'],
-  );
-});
+/* Invalid JSON throws exception */
 
 test('invalid json that matches the {expr} eval hatch throws a cryptic error', () => {
-  assert.throws(() => parseParams('{name:"John"}'), /John is not defined/);
+  assert.throws(() => parseParams('{name:"John"}'), /SyntaxError/);
 });
 
-test('json branch does not eat legacy {expr} eval tokens', () => {
-  // '{1+2}' is not valid JSON, so it falls through to the eval hatch unchanged.
-  assert.deepEqual(parseParams('{1+2}'), [3]);
-});

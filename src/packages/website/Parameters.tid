@@ -28,7 +28,7 @@ Tradional JavaScript functions accept the passing of multiple unnamed (or positi
 * `<<macro foo bar>>` becomes `macro("foo", "bar")` (unquoted space-separated strings)
 * `<<macro 1 true car>>` becomes `macro(1, true, "car")` (literal numbers and booleans)
 * `<<macro 1 "true car">>` becomes `macro(1, "true car")` (quoted strings with spaces)
-* `<<macro 1 true "{foo()}">>` becomes `macro(1, true, foo())` (eval expression)
+* `<<macro 1 true ${foo()}>>` becomes `macro(1, true, foo())` (eval expression)
 
 Note: Technically the parameters are parsed into an array which is then spread as it is passed to the function.
 
@@ -42,7 +42,6 @@ The same rules for booleans `true/false` or numbers and eval expressions apply a
 Notes:
 * There may be no space before or after the `:` and properties may contain only characters `a-z`, `A-Z`, `0-9` or the `_` .
 * Objects do not (yet) support dynamic/eval expressions like `foo:{fcn()}`
-* Values containing a `:` (e.g. URLs) cannot be passed as named parameters — use JSON (below).
 
 ## JSON Parameters
 Parameters starting with `{` or `[` are parsed as JSON (the same rule as [[Commands]]). Keys and strings must be double-quoted — this is strict JSON, not JavaScript:
@@ -68,7 +67,7 @@ TWikki supports [[Commands]] — events fired from links (`#msg:event:params`) o
   * `#msg:ui.open.all:{"tag":"Favorite"}` becomes `openAll({tag: 'Favorite'})`
   * `data-params='["a", "b"]'` becomes `handler('a', 'b')`
   * `data-params='"tag:x"'` becomes `handler('tag:x')` (quote a literal string that would otherwise parse as named parameters)
-* **JavaScript** — strings starting with `{{{` are evaluated: `data-params="{{{1 + 2}}}"` becomes `handler(3)`
+* **JavaScript** — strings starting with `${` are evaluated: `data-params="${1 + 2}"` becomes `handler(3)`
 
 Notes:
 * Since `:` is not a valid character in tiddler titles, a bare title can never be mistaken for named parameters.
@@ -77,7 +76,7 @@ Notes:
 ## Macros vs Commands
 The two paths differ — what works in `<<a.macro ...>>` may not work in `#msg:...` and vice versa:
 * **Bare strings**: macros tokenize and type-coerce them (`<<m 1>>` → number `1`, `<<m a b>>` → two args); commands pass them raw (`#msg:m:1` → string `'1'`, `#msg:m:My Note` → one string). For multiple or typed command arguments use JSON: `#msg:m:[1, "a b"]`.
-* **Eval**: macros eval single `{expr}` tokens; commands eval whole `{{{expr}}}` payloads.
+* **Eval**: macros eval single `{expr}` tokens; commands eval whole `${expr}` payloads.
 * **Only commands** support `---enc:` encoded payloads and `$currentTiddler`.
 * **Invalid JSON**: macros silently fall back to the tokenizer (mangled args); commands warn in the console and pass the raw string.
 * **Parse errors**: a named-parameter payload whose parsing throws (e.g. a failing `{expr}` value like `a:{boom}`) renders an inline error span in macros, but commands silently pass the raw string to the handler.

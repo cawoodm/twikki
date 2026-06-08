@@ -21,23 +21,31 @@
   // Constants
   const reDoubleQuoted = /^["](.+)["]$/g;
   const reSingleQuoted = /^['](.+)[']$/g;
-  const reCurlyBraces = /^\{(.+)\}$/g;
+  const reEvalExpression = /^\$\{([^}]+)\}$/g;
 
   // Exports
-  const exports = {parseParams};
+  const exports = {parseParams, evalParam};
 
   const run = () => {};
 
   return {name, version, exports, run};
 
   /**
- * Handle all examples:
+ * Always returns an object or an array of params to be spread:
  *   - foo:'1 a' bar:2 => {foo: '1 a', bar: 2}
  *   - foo 'bar 2' false => ['foo', 'bar 2', false]
  */
   function parseParams(params) {
+    // We do not try/catch here to be consistent and inform the macro: Anything that starts with { or [ must be JSON
     if (params?.match(/^[\[\{]/)) return JSON.parse(params);
     if (params?.match(/^[a-z0-9_]+:/i)) return strToObject(params);
+    if (reEvalExpression.test(params)) {
+      let res = evalParam(params);
+      if (typeof res === 'object')
+        return res; 
+      else
+        return [res]; // Primitives are wrapped as arrays to spread to function calls (...res)
+    }
     return paramsToArray(params);
   }
 
@@ -80,8 +88,10 @@
   /* Utilities */
 
   function getKeyVal(x, delim) {
-    const y = x.split(delim);
-    return {[y[0].trim()]: y[1].trim()};
+    // Split on the FIRST delimiter only, so values may contain it (e.g. URLs: url:https://x.com).
+    const i = x.indexOf(delim);
+    if (i < 0) return {[x.trim()]: ''}; // no delimiter => empty value (don't throw on a stray token)
+    return {[x.slice(0, i).trim()]: x.slice(i + 1).trim()};
   }
 
   function getTypedParams(arr) {
@@ -96,8 +106,12 @@
     if (strIsNumber(val)) return parseFloat(val); // Number
     if (reDoubleQuoted.test(val)) return val.replace(reDoubleQuoted, '$1');
     if (reSingleQuoted.test(val)) return val.replace(reSingleQuoted, '$1');
-    if (reCurlyBraces.test(val)) return eval(val.replace(reCurlyBraces, '$1'));
+    if (reEvalExpression.test(val)) return evalParam(val);
     return val;
+  }
+
+  function evalParam(param) {
+    return eval(param.replace(reEvalExpression, '$1'));
   }
 
   // 'false' => true

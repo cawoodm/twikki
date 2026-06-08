@@ -21,14 +21,16 @@ JSON keys must be double-quoted. One unquoted key (`age:`) and the whole payload
 
 The handler received `('{name:John Smith,', 'age:22}')` — note `name` and `age` are `undefined` above. In **commands** the same mistake at least logs a console warning and passes the raw string.
 
-## Trap: a colon inside a named-parameter value truncates it
+## ✅ Fixed: a colon inside a named-parameter value (v0.23.0)
 
-`getKeyVal` splits at **every** colon, quoted or not — URLs cannot be passed as named parameters:
+`getKeyVal` now splits on the **first** colon only, so values may contain colons (URLs work as named parameters):
 
 * `<<foo.object name:Mr:Smith age:1>>`: <<foo.object name:Mr:Smith age:1>>
 * `<<foo.object name:"Mr:Smith" age:1>>`: <<foo.object name:"Mr:Smith" age:1>>
 
-`name` arrives as `Mr` in both cases. **Workaround**: JSON — `<<foo.object {"name":"Mr:Smith", "age":1}>>`: <<foo.object {"name":"Mr:Smith", "age":1}>>
+`name` correctly arrives as `Mr:Smith` in both cases. JSON still works too — `<<foo.object {"name":"Mr:Smith", "age":1}>>`: <<foo.object {"name":"Mr:Smith", "age":1}>>
+
+Previously this split at *every* colon, so `name` truncated to `Mr` and URLs could not be passed as named parameters.
 
 ## Trap: quoting does not prevent type coercion
 
@@ -38,14 +40,13 @@ You cannot force `"1"` or `"true"` to stay strings — the tokenizer strips quot
 
 `age` is a number and `boolean` a boolean despite the quotes. **Workaround**: JSON — `<<foo.test ["1", "true", "x"]>>`: <<foo.test ["1", "true", "x"]>>
 
-## Trap: `{expr}` eval tokens
+## Trap: $`${expr}` eval tokens
 
-A single `{...}` token is `eval`'d as JavaScript — useful (`{1+2}` → `3`) but two traps:
+A single `${...}` token is `eval`'d as JavaScript — useful (`${1+2}` → `3`) but two traps:
 
-1. **No spaces allowed** — a space splits the token before eval: `<<foo.test {1 + 2} true x>>`: <<foo.test {1 + 2} true x>>
+1. **Basic case** - ``<<foo.test ${tw.tiddlers.all.length} true "Tiddlers Length">>` should `foo.test(tw.tiddlers.all.length, true, 1)` (eval expression): <<foo.test ${tw.tiddlers.all.length} true "Tiddlers Length">>
+2. **No spaces allowed** — a space splits the token before eval: `<<foo.test ${1 + 2} true x>>`: <<foo.test ${1 + 2} true x>>
    (`age` arrived as the literal string `{1`.)
-2. **Cryptic errors** — an unquoted-key object like `{name:"Boom"}` is invalid JSON *and* an eval token, so it throws inside `eval` and renders an inline error: `<<foo.object {name:"Boom"}>>`: <<foo.object {name:"Boom"}>>
-   (Before v0.23.0 this throw escaped the per-macro guard and aborted rendering of the **entire tiddler**.)
 
 ## Trap: arrays always spread
 

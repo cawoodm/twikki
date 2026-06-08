@@ -56,7 +56,7 @@ Type coercion of bare tokens:
                                           →  "Age: 23 (number), Name: John Smith (string)"
 ```
 
-Limitation: values containing `:` (URLs!) are truncated at the first colon, quoted or not — use JSON instead.
+Values may contain colons (e.g. URLs) — the key is split off at the first `:` only: `<<fetch url:https://example.com>>` → `fetch({url: 'https://example.com'})`.
 
 ### JSON parameters
 
@@ -162,6 +162,6 @@ When a payload gets awkward to URL-encode, prefer a `tw.ui.button(text, msg, pay
 * **Quoted booleans/numbers don't survive as strings in nested contexts** — `"true"` works at top level, but coercion happens per token; avoid relying on it. (See TODOs in [core.params.js](../src/modules/core.params.js).)
 * **`{expr}` eval tokens** allow no spaces and no quotes inside; errors surface as cryptic macro error spans (`John is not defined`).
 * **Unquoted JSON keys** (`{name:"x"}`) silently fall through to the tokenizer (macros) or are passed as a raw string with a console warning (commands).
-* **Named-parameter values are split at every `:`** — pass URLs via JSON.
+* **Named-parameter values keep their colons** — the key is split off at the first `:` only, so URLs work: `url:https://x.com`.
 * **Arrays always spread** — a handler that wants a real array must receive `[[…]]`.
 * **Macros coerce types, commands don't** — `<<m 1>>` delivers `1` (number) but `#msg:m:1` delivers `'1'` (string).

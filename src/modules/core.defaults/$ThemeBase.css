@@ -714,7 +714,11 @@ dialog#command-palette {
 .palette-row.selected,
 .palette-row:hover {
   background-color: var(--col3);
-  color: #fff;
+  color: var(--colfg); /* theme-aware: #fff fails on light --col3 (e.g. Kontrast) */
+  /* Border keeps the row distinguishable where --col3 matches the dialog
+     background (e.g. Kontrast: both #fff) — same trick the filled buttons use. */
+  outline: 1px solid var(--col4);
+  outline-offset: -1px;
 }
 
 .palette-label {
@@ -731,7 +735,8 @@ dialog#command-palette {
 
 .palette-row.selected .palette-hint,
 .palette-row:hover .palette-hint {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--colfg);
+  opacity: 0.75;
 }
 
 .palette-empty {

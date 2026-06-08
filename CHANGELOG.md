@@ -2,6 +2,7 @@
 
 ## 6 Jun 2026 (v0.23.0)
 * BaseMarkdownPlugin: Moved markdown rendering out of core to a plugin which can be overridden
+* **Named-parameter values may contain colons** — `getKeyVal` now splits on the first `:` only, so URLs and other colon-bearing values work as named parameters (`<<fetch url:https://example.com>>`); previously truncated at the first colon. A colon-less token no longer throws.
 * **Editor cursor starts at the top** — editing a tiddler used to land the cursor at the end of the body; it now starts at the top with the textarea scrolled up.
 * **Macro parameter errors no longer kill the page** — a throwing parameter parse (e.g. a bad `{expr}` eval token) used to escape the per-macro guard and abort rendering of the entire tiddler; it now renders an inline error span for just that macro.
 * **Standard widgets emit single-line HTML** — `selector`, `ThemeSelector`, `WorkspaceSelect` and `TagInput` no longer contain newlines, so they can be used inside markdown table cells; fixed unclosed `<span>` in `TrashCanStatus`.

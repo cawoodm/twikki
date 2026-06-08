@@ -27,7 +27,7 @@
 
   tw.extensions.registerCommand({
     label: 'Close all but active note',
-    run: closeAllButActive,
+    run: closeAllButActive, // TODO: This should be pub/sub: event: 'tiddlers.closeAllButActive'
   });
 
   function activeNote() {
