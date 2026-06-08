@@ -1,14 +1,14 @@
-tags: $Theme
+tags: $Theme, $ThemeDark
 
 A dark theme with a floating glass header and lime accents.
 
 # NocturneThemeDark
-tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[NocturneThemeDark::NocturneStyleSheetDark]]
+tags: $Theme, $ThemeDark
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[NocturneThemeDark::NocturnePalette]]
 
-# NocturneStyleSheetDark
+# NocturnePalette
 tags: $StyleSheet
 ```css
 /* ---- Web fonts ---- */
