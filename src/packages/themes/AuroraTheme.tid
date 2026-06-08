@@ -2,11 +2,11 @@ tags: $Theme, $ThemeDark
 
 A nice theme.
 
-# AuroraThemeDark
+# AuroraTheme
 tags: $Theme, $ThemeDark
 * [[$CoreThemeLayout]]
 * [[$CoreThemeAppearance]]
-* [[AuroraThemeDark::AuroraPalette]]
+* [[AuroraTheme::AuroraPalette]]
 
 # AuroraPalette
 tags: $StyleSheet

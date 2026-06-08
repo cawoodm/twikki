@@ -2,11 +2,11 @@ tags: $Theme, $ThemeDark
 
 A modern dark theme with a violet accent.
 
-# ObsidianThemeDark
+# ObsidianTheme
 tags: $Theme, $ThemeDark
 * [[$CoreThemeLayout]]
 * [[$CoreThemeAppearance]]
-* [[ObsidianThemeDark::ObsidianPalette]]
+* [[ObsidianTheme::ObsidianPalette]]
 
 # ObsidianPalette
 tags: $StyleSheet
