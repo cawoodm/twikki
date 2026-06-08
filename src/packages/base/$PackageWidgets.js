@@ -12,3 +12,14 @@ tw.macros.packages = {
     return tw.ui.button(`Import: ${name} ${filter ? ' (' + filter + ')' : ''}`, ' ', {url, name, overWrite, doNotSave});
   },
 };
+
+// Command palette: prompt for a package URL, then import it (reloads the UI on success).
+tw.extensions.registerCommand({
+  label: 'Import package from URL…',
+  run: () => {
+    const url = prompt('Package URL to import:');
+    if (!url) return;
+    const name = (url.split('/').pop() || '').replace(/\.json$/i, '');
+    tw.events.send('package.reload.url', {url, name});
+  },
+});

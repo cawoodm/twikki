@@ -27,3 +27,13 @@ if (!tw.tmp.workspaceEvents) {
     return workspace;
   }, 'WorkspaceWidgets');
 }
+
+// Command palette: "Create workspace" plus a dynamic "Switch workspace: X" per
+// stored workspace (a provider so the list stays current).
+tw.extensions.registerCommand({label: 'Create workspace', event: 'workspace.create.prompt'});
+tw.extensions.registerCommandProvider('workspaces', () =>
+  (tw.storage.get('workspaces') || []).map(name => ({
+    label: `Switch workspace: ${name}`,
+    event: 'workspace.load.prompt', payload: name,
+  })),
+);

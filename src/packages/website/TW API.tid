@@ -6,6 +6,7 @@ Everything hangs off the global `tw` object:
 * `tw.tiddlers` — the in-memory store (`.all`, `.visible`, `.trashed`)
 * `tw.run` — read and update tiddlers, e.g. `tw.run.getTiddler(title)`
 * `tw.ui` — UI helpers such as `tw.ui.notify(...)` and `tw.ui.button(...)`
-* `tw.macros` / `tw.extensions` — register macros and widgets (see below)
+* `tw.macros` / `tw.extensions` — register macros, widgets and command palette commands (see below)
+* `tw.commands` — the command palette registry (`registerCommand` / `registerCommandProvider` via `tw.extensions`)
 * `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, ...)
 * `tw.storage` — the localStorage wrapper

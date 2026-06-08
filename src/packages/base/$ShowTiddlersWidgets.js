@@ -17,3 +17,8 @@ tw.macros.core.ShowAllTiddlersButton = ({tag = '', title = ''} = {}) => {
 tw.macros.core.CloseAllTiddlersButton = ({tag = '*', title = '*'} = {}) => {
   return tw.ui.button('{{$IconCloseAll}}', 'ui.close.all', {tag, title}, 'close-all', 'title="Close All Tiddlers"');
 };
+
+tw.extensions.registerCommand([
+  {label: 'Open all notes', event: 'ui.open.all', payload: {tag: '', title: ''}},
+  {label: 'Close all notes', event: 'ui.close.all', payload: {tag: '*', title: '*'}},
+]);

@@ -284,7 +284,19 @@
       Object.assign(tw.ui, tw.core.ui);
       tw.ui.notify = tw.core.notifications.notify;
       tw.call = call;
-
+      // Command registry for the command palette. Created once and preserved
+      // across soft reloads (which re-eval extension tiddlers), so re-registration
+      // replaces rather than accumulates.
+      tw.commands = tw.commands || {
+        byLabel: {}, // static commands, keyed by label (last-wins)
+        providers: [], // {key, fn} — fn() returns commands, evaluated at palette render
+        all() {
+          const dynamic = this.providers.flatMap(p => {
+            try {return p.fn() || [];} catch (e) {console.warn('Command provider failed:', p.key, e); return [];}
+          });
+          return [...Object.values(this.byLabel), ...dynamic];
+        },
+      };
       tw.extensions = {
         registerMacro(namespace, name, fcn, options) {
           if (!tw.macros[namespace]) tw.macros[namespace] = {};
@@ -295,6 +307,22 @@
           if (!tw.plugins[namespace]) tw.plugins[namespace] = {};
           tw.plugins[namespace][name] = fcn();
           if (options) Object.assign(tw.plugins[namespace][name], options);
+        },
+        // Register a command (or array of commands) for the command palette.
+        // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
+        // soft reloads don't duplicate and plugins can override a built-in.
+        registerCommand(command) {
+          if (Array.isArray(command)) return command.forEach(c => this.registerCommand(c));
+          if (!command?.label) return console.warn('registerCommand: command needs a label', command);
+          tw.commands.byLabel[command.label] = command;
+        },
+        // Register a keyed function producing commands, evaluated each time the
+        // palette renders — for runtime-varying lists (themes, workspaces).
+        // Re-registration replaces by key.
+        registerCommandProvider(key, fn) {
+          const i = tw.commands.providers.findIndex(p => p.key === key);
+          const entry = {key, fn};
+          if (i >= 0) tw.commands.providers[i] = entry; else tw.commands.providers.push(entry);
         },
       };
       window.markdown = tw.lib.markdown;

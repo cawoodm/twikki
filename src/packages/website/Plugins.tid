@@ -42,9 +42,27 @@ tw.extensions.registerMacro('greet', 'hello', (name) => {
 }, {version: '1.0.0'});
 ```
 
-This registers a macro so it can be used as `<<greet.hello "Marc">>` anywhere. 
+This registers a macro so it can be used as `<<greet.hello "Marc">>` anywhere.
 
 See [[ExamplePlugin]] for a fuller worked example, and [[$GeneralWidgets]] for the built-in widgets.
+
+## Command palette commands
+
+Any plugin or macro can add commands to the command palette (Ctrl/Cmd+K). A command is `{label, event?, payload?, run?}` — either send an event or run a function:
+
+```js
+tw.extensions.registerCommand({label: 'Save all', event: 'save.all'});
+tw.extensions.registerCommand({label: 'Say hi', run: () => tw.ui.notify('Hi!', 'D')});
+```
+
+For lists that change at runtime (themes, workspaces, …), register a **provider** — a keyed function that is re-evaluated each time the palette opens:
+
+```js
+tw.extensions.registerCommandProvider('myThings', () =>
+  myThings().map(t => ({label: `Open: ${t}`, event: 'thing.open', payload: t})));
+```
+
+Commands are deduped by `label` (last registration wins, so you can override a built-in), and registration is reload-safe. Register your command in the same tiddler that defines the widget or macro it drives — that keeps the command available exactly when its feature is installed (e.g. `<<synch.full>>` and "Synch: full" live together in [[$SynchDataPlugin]]).
 
 ## Reacting to events
 

@@ -56,6 +56,15 @@ tw.macros.synch = (function(){
   tw.events.override('synch.push', doPush);
   tw.events.override('synch.pull', doPull);
   tw.events.override('synch.upload', doUpload);
+
+  // Command palette entries (synch.upload is intentionally omitted — it overwrites
+  // the remote and is too destructive for a one-keystroke command).
+  tw.extensions.registerCommand([
+    {label: 'Synch: full (pull + push)', event: 'synch.full'},
+    {label: 'Synch: push', event: 'synch.push'},
+    {label: 'Synch: pull', event: 'synch.pull'},
+  ]);
+
   return {
     // <<synch.full>>: Push/pull to/from remote
     full() {

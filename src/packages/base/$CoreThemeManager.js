@@ -115,6 +115,15 @@
     return `<span class="picker" data-event="theme.switch"><button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button><span class="picker-menu" hidden>${items}</span></span>`;
   };
 
+  // Dynamic command palette entries — one "Switch theme: X" per installed theme.
+  // A provider (re-evaluated at palette render) so newly added themes appear live.
+  tw.extensions.registerCommandProvider('themes', () =>
+    getThemeNames().sort().map(name => ({
+      label: `Switch theme: ${name.replace(/(^\$)|(Theme)/g, '')}`,
+      event: 'theme.switch', payload: name,
+    })),
+  );
+
   function wireUp(event, handler) {
     tw.events.subscribe(event, handler, 'CoreThemeManager');
   }

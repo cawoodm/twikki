@@ -19,6 +19,7 @@ The platform lives in [src/platform/twikki.platform.js](../src/platform/twikki.p
     * `getTiddler` helper function for accessing tiddlers.
   * `extensions`: Interface for extensions/plugins
     * `registerMacro`: Register a new macro/widget
+    * `registerCommand` / `registerCommandProvider`: Register command palette command(s); a provider is a function re-evaluated at palette render for runtime-varying lists
 * `core.common`: Common functionality shared in the codebase (hashing, sorting, html escaping)
 * `core.sections`: Functionality for ContentSections
 * `core.workspaces`: Functionality for Workspaces

@@ -26,6 +26,12 @@
   let notesEl;
   let tagsEl;
 
+  // The explorer owns the sidebar, so the toggle command lives here.
+  tw.extensions.registerCommand({
+    label: 'Toggle sidebar',
+    run: () => document.getElementById('sidebar')?.classList.toggle('open'),
+  });
+
   wireUp('ui.loaded', init);
   wireUp('ui.reloaded', init);
 

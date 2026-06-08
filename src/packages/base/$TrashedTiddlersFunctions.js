@@ -1,5 +1,10 @@
 (function(){
 
+  tw.extensions.registerCommand([
+    {label: 'Open trash', event: 'tiddler.show', payload: '$TrashManager'},
+    {label: 'Empty trash', event: 'tiddlers.trashed.empty'},
+  ]);
+
   tw.macros.core.TrashCanIcon = () => {
     let count = tw.tiddlers.trashed.length;
     return tw.ui.button('{{$IconDelete}}', 'tiddler.show', '$TrashManager', 'trashCanIcon', `title="${count} trashed tiddlers"`);

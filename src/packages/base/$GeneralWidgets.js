@@ -23,3 +23,11 @@ tw.macros.core.TagInput = ({id}) => {
 tw.macros.core.AllTypesMacro = () => {
   return tw.lib.markdown([...new Set(tw.tiddlers.all.map(t => `* [${t.type}](#msg:tiddlers.show:type:${t.type})\n`))].join(''));
 };
+
+// Command palette commands for the general widgets defined above.
+tw.extensions.registerCommand([
+  {label: 'New note', event: 'tiddler.new'},
+  {label: 'Save all', event: 'save.all'},
+  {label: 'Reload UI', event: 'ui.reload'},
+  {label: 'Open Settings', event: 'tiddler.show', payload: '$GeneralSettings'},
+]);

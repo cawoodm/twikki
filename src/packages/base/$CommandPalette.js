@@ -1,10 +1,15 @@
 /**
  * ## Description
- * Obsidian-style command palette. Ctrl/Cmd+K opens an overlay to run actions
+ * Obsidian-style command palette. Ctrl/Cmd+K opens an overlay to run commands
  * and quick-open notes by name:
- *   - empty input or a `>`-prefixed query → the action list (filtered);
+ *   - empty input or a `>`-prefixed query → the command list (filtered);
  *   - any other text → ranked note search (reusing `tw.core.search.search`).
  * Arrow keys move, Enter runs, Escape closes.
+ *
+ * Commands are not defined here — any plugin or macro registers its own via
+ * `tw.extensions.registerCommand({label, event?, payload?, run?})` (or
+ * `registerCommandProvider(key, fn)` for runtime-varying lists). The palette
+ * just reads `tw.commands.all()` on every render.
  *
  * The `<dialog>` is built in JS (so it can't collide with layout ids). The
  * document-level keydown is bound once (guarded via `tw.tmp`) and is ignored
@@ -21,17 +26,6 @@
 // ## Code
 // ```javascript
 (function() {
-
-  const ACTIONS = [
-    {label: 'New note', event: 'tiddler.new'},
-    {label: 'Save all', event: 'save.all'},
-    {label: 'Open all notes', event: 'ui.open.all', payload: {tag: '', title: ''}},
-    {label: 'Close all notes', event: 'ui.close.all', payload: {tag: '*', title: '*'}},
-    {label: 'Show favorites', event: 'ui.open.all', payload: {tag: 'Favorite', title: '*'}},
-    {label: 'Reload UI', event: 'ui.reload'},
-    {label: 'Open Settings', event: 'tiddler.show', payload: '$GeneralSettings'},
-    {label: 'Toggle sidebar', run: () => document.getElementById('sidebar')?.classList.toggle('open')},
-  ];
 
   let dialog;
   let input;
@@ -89,17 +83,17 @@
   function buildItems() {
     let q = input.value;
     // `>` forces commands-only (Obsidian convention).
-    if (q[0] === '>') return actionItems(q.slice(1).trim().toLowerCase());
+    if (q[0] === '>') return commandItems(q.slice(1).trim().toLowerCase());
     // Empty input → the full command list.
-    if (!q.trim()) return actionItems('');
+    if (!q.trim()) return commandItems('');
     // Plain text → matching commands first, then matching notes.
-    return [...actionItems(q.trim().toLowerCase()), ...noteItems(q)];
+    return [...commandItems(q.trim().toLowerCase()), ...noteItems(q)];
   }
 
-  function actionItems(needle) {
-    return ACTIONS
-      .filter(a => !needle || a.label.toLowerCase().includes(needle))
-      .map(a => ({label: a.label, hint: 'command', run: () => runAction(a)}));
+  function commandItems(needle) {
+    return tw.commands.all()
+      .filter(c => !needle || c.label.toLowerCase().includes(needle))
+      .map(c => ({label: c.label, hint: 'command', run: () => runCommand(c)}));
   }
 
   function noteItems(q) {
@@ -121,6 +115,9 @@
       `<span class="palette-label">${esc(it.label)}</span>` +
       `<span class="palette-hint">${esc(it.hint || '')}</span></div>`,
     ).join('');
+    // Keep the keyboard-selected row visible as the selection moves past the
+    // edge of the scroll viewport. `nearest` only scrolls when needed (no jump).
+    results.querySelector('.palette-row.selected')?.scrollIntoView({block: 'nearest'});
   }
 
   function onInputKeydown(e) {
@@ -153,9 +150,9 @@
     it.run();
   }
 
-  function runAction(a) {
-    if (a.run) return a.run();
-    tw.events.send(a.event, a.payload);
+  function runCommand(c) {
+    if (c.run) return c.run();
+    tw.events.send(c.event, c.payload);
   }
 
   function openNote(title) {

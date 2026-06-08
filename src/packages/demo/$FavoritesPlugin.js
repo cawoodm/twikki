@@ -42,5 +42,15 @@
   tw.extend.tiddlerDetails.favoriteClass = function(t) {
     return t.tags.includes('Favorite') ? 'favorite' : '';
   };
+
+  // Command palette commands (only available when the demo package is installed).
+  tw.extensions.registerCommand([
+    {label: 'Show favorites', event: 'ui.open.all', payload: {tag: 'Favorite', title: '*'}},
+    {label: 'Toggle favorite (active note)', run: () => {
+      const title = tw.tabs?.active;
+      if (!title) return tw.ui.notify('No active note to favorite.', 'W');
+      tw.events.send('favorites.toggle', title);
+    }},
+  ]);
 })();
 // TODO: How to add button:yellow svg {fill: yellow;} to theme?
