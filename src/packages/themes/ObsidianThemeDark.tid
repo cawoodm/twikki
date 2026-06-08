@@ -1,0 +1,36 @@
+tags: $Theme, $ThemeDark
+
+A modern dark theme with a violet accent.
+
+# ObsidianThemeDark
+tags: $Theme, $ThemeDark
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[ObsidianThemeDark::ObsidianPalette]]
+
+# ObsidianPalette
+tags: $StyleSheet
+```css
+:root {
+  --colbg1: #1e1e1f;
+  --colbg2: #262629;
+  --colbg3: #181819;
+  --colbgi: #1a1a1c;
+  --colfg:  #dcddde;
+  --colfgi: #e9eaec;
+  --col0: #000000;
+  --col1: #9a9ba0;
+  --col3: #7c6fd6;
+  --col4: #34343a;
+  --col6: #a78bfa;
+  --notify-rgba: 124, 111, 214;
+  --rad1: 6px;
+  --rad2: 6px;
+  --rad3: 6px;
+  --rad4: 6px;
+  --accent: #a78bfa;
+  --accent-2: #7c6fd6;
+  --tab-bg: #181819;
+  --tab-active-bg: #1e1e1f;
+}
+```
