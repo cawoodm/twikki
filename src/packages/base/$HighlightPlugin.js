@@ -48,12 +48,12 @@
 
   // Enable exactly one hljs sheet for the active theme, disabling the other. Doing
   // both (not just enabling one) guarantees a single active sheet regardless of DOM
-  // order or load timing. Themes carrying 'Dark' in their name use the dark sheet.
+  // order or load timing. Themes carrying the $ThemeDark tag use the dark sheet.
   function applyHighlightTheme() {
     // The sheets are added on ui.loaded; on a soft ui.reloaded before that they may
     // be absent — skip rather than let enableStyleSheet throw (would fault the plugin).
     if (!document.querySelector('link[data-stylesheet="highlight-light"]')) return;
-    let dark = /Dark/.test(currentTheme());
+    let dark = tw.run.getTiddler(currentTheme())?.tags?.includes('$ThemeDark') ?? false;
     tw.core.dom.enableStyleSheet(dark ? 'highlight-dark' : 'highlight-light');
     tw.core.dom.disableStyleSheet(dark ? 'highlight-light' : 'highlight-dark');
   }

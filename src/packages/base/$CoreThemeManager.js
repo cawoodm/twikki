@@ -57,7 +57,7 @@
         tw.run.updateTiddlerHard('$Layout', lt);
       }
     }
-    if (theme.match(/Dark/)) {
+    if (tw.run.getTiddler(theme)?.tags?.includes('$ThemeDark')) {
       tw.core.dom.enableStyleSheet('highlight-dark');
       tw.core.dom.disableStyleSheet('highlight-light');
     } else {
