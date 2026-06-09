@@ -93,6 +93,7 @@
   function buildCss() {
     const layers = {
       base: BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
+      plugin: pluginStyles(),
       theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
       user: [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
     };
@@ -101,6 +102,16 @@
       .map(([name, bodies]) => `@layer ${name} {\n${bodies.filter(Boolean).join('\n')}\n}`)
       .join('\n\n');
     return header + '\n\n' + body;
+  }
+
+  // Auto-collected from every $Plugin-tagged tiddler that ships a `# StyleSheet`
+  // section. Plugin CSS lives next to plugin JS — the manager doesn't maintain a
+  // list, it just walks the existing $Plugin tag.
+  function pluginStyles() {
+    return tw.run.getTiddlersByTag('$Plugin')
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(t => tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`))
+      .filter(Boolean);
   }
 
   function tiddlerIsATheme(title) {
@@ -113,7 +124,11 @@
 
   function tiddlerIsThemeRelevant(title) {
     let themeName = getCurrentThemeName();
-    return title === '$Theme' || title === themeName || getThemeStyleSheets().includes(title);
+    if (title === '$Theme' || title === themeName) return true;
+    if (getThemeStyleSheets().includes(title)) return true;
+    // Edits to any $Plugin tiddler may have touched its `# StyleSheet` section
+    // (the plugin layer); rebuild rather than try to parse out which section changed.
+    return tw.run.getTiddler(title)?.tags?.includes('$Plugin') === true;
   }
   function getCurrentThemeName() {
     return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]
