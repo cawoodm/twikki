@@ -71,6 +71,16 @@
     if (layoutChanges) return tw.events.send('reboot.hard');
     tw.events.send('tiddler.refresh', '$Theme');
     themeUpdate(theme);
+    syncThemeSelector(theme);
+  }
+
+  // The <<ThemeSelector>> macro bakes the `active` class at render time, and a
+  // colour-only switch never re-renders it (only a layout change reboots). Move the
+  // highlight directly so every theme picker reflects the new theme — covers picker
+  // clicks and command-palette switches alike.
+  function syncThemeSelector(theme) {
+    document.querySelectorAll('.picker[data-event="theme.switch"] .picker-item')
+      .forEach(b => b.classList.toggle('active', b.dataset.value === theme));
   }
 
   const BASE_SHEETS = ['$BaseReset', '$BaseVariables'];
@@ -82,9 +92,9 @@
 
   function buildCss() {
     const layers = {
-      base:  BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
+      base: BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
       theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
-      user:  [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
+      user: [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
     };
     const header = `@layer ${Object.keys(layers).join(', ')};`;
     const body = Object.entries(layers)
@@ -126,7 +136,10 @@
       `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`,
     ).join('');
     // Single-line output so the widget can live inside markdown table cells
-    return `<span class="picker" data-event="theme.switch"><button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button><span class="picker-menu" hidden>${items}</span></span>`;
+    return `<span class="picker" data-event="theme.switch">
+      <button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button>
+      <span class="picker-menu" hidden>${items}</span>
+      </span>`.replace(/\n/g, '');
   };
 
   // Dynamic command palette entries — one "Switch theme: X" per installed theme.
