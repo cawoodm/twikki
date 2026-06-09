@@ -4,11 +4,11 @@ A light editorial theme with serif headlines and a centered reading column.
 
 # BroadsheetTheme
 tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[BroadsheetTheme::BroadsheetStyleSheet]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[BroadsheetTheme::BroadsheetPalette]]
 
-# BroadsheetStyleSheet
+# BroadsheetPalette
 tags: $StyleSheet
 ```css
 /* ---- Web fonts (loaded via @font-face — survives constructable stylesheets) ---- */

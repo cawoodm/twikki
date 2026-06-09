@@ -107,12 +107,12 @@ test('duplicate section names: last wins, order keeps one entry', () => {
 });
 
 test('integration: real Aurora theme tiddler compiles + parses into a usable theme', () => {
-  const tid = parseFile(join(root, 'src/packages/themes/AuroraThemeDark.tid'), 'themes');
+  const tid = parseFile(join(root, 'src/packages/themes/AuroraTheme.tid'), 'themes');
   assert.equal(tid.type, 'x-twikki');
   assert.ok(tid.tags.includes('$Theme'), 'parent carries a real $Theme tag (so it lists in the selector)');
 
-  const css = getSection(tid.text, 'AuroraStyleSheet');
-  assert.ok(css, 'AuroraStyleSheet section exists');
+  const css = getSection(tid.text, 'AuroraPalette');
+  assert.ok(css, 'AuroraPalette section exists');
   assert.equal(css.type, 'css');
   assert.ok(css.text.startsWith(':root'), 'CSS extracted without fence/meta');
   assert.ok(!css.text.includes('```'), 'no fence markers leak into the CSS');

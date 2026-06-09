@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `npm run compile` | Runs `node vite-plugin-tiddler-compile.js` standalone — regenerates `public/packages/*.json` and `public/modules/*.json` from sources in `src/packages/<pkg>/` and `src/modules/<pkg>/`. Cross-platform (pure Node). Only needed outside the dev server, e.g. to seed `public/` before a `vite build` in a one-shot environment. |
 | `npm run build` / `npm run build-test` | Vite production build into `dist/`, then runs `vite` from inside `dist/` (the trailing `vite` previews the built output). `build-test` adds `--open --host`. |
 | `npm run publish` | Declared as `pwsh ci/publish.ps1`: assemble `dist/`, then commit & push to a sibling checkout at `../cawoodm.github.io/twikki/` (the GitHub Pages target). |
-| `npm test` | `node --test --watch ./tests/unit/*.test.js`. Coverage is currently limited to the compile plugin ([tests/unit/compile-plugin.test.js](tests/unit/compile-plugin.test.js)); the runtime platform itself has no unit tests. |
+| `npm test` | `node --test --watch ./tests/unit/*.test.js`. Coverage is currently limited to the compile plugin ([tests/unit/compile-plugin.test.js](tests/unit/compile-plugin.test.js)), the section parser ([tests/unit/sections.test.js](tests/unit/sections.test.js)), parameter parsing ([tests/unit/params.test.js](tests/unit/params.test.js)) and the design-token contract ([tests/unit/tokens.test.js](tests/unit/tokens.test.js)); the runtime platform itself has no unit tests. |
 
 Lint is configured ([eslint.config.mjs](eslint.config.mjs)) but is not wired into an `npm` script. Notable rule overrides: `no-eval` off (the runtime evaluates module strings), single quotes, `object-curly-spacing: never`, `complexity` warns at 40, `require-await` error. Globals `tw` and `dp` are declared.
 
@@ -57,6 +57,12 @@ Tiddler file format (parsed by [vite-plugin-tiddler-compile.js](vite-plugin-tidd
 - Auto-tags are keyed on the **package directory name**: files in `src/packages/base/` get `$NoEdit`; files in `src/modules/core.defaults/` get `$Shadow`; any `.css` file gets `$StyleSheet` (and tags stack — a `.css` file in `base/` gets both).
 
 A leading `$` in a tiddler title is a convention for shadow/system tiddlers (e.g. `$MainLayout`, `$CorePackages`, `$Theme`).
+
+### Theming: CSS cascade layers
+
+`$CoreThemeManager` ([src/packages/base/$CoreThemeManager.js](src/packages/base/$CoreThemeManager.js)) composes one constructable stylesheet as `@layer base, theme, user`. The `base` layer is hardcoded — always `$BaseReset` + `$BaseVariables` — and a theme cannot opt out. The `theme` layer is the active `$Theme` tiddler's bullet list, in concatenation order. The `user` layer is `$StyleSheetUser`, applied last; cross-layer, later layers win regardless of selector specificity, so the user always wins.
+
+Core stylesheets in [src/modules/core.defaults/](src/modules/core.defaults/): `$BaseReset` and `$BaseVariables` (base layer) plus `$CoreThemeLayout`, `$CoreThemeAppearance`, `$CoreThemePalette`, `$CoreThemeDarkPalette` (theme layer). The default `$Theme` shadow tiddler points to `$CoreThemeLight`; `$CoreThemeDark` swaps the palette tiddler. Every CSS variable must have a default in `$BaseVariables` — [tests/unit/tokens.test.js](tests/unit/tokens.test.js) enforces this. Dark themes carry the `$ThemeDark` tag (drives the highlight.js sheet swap — no name-sniffing). See [docs/THEMES.md](docs/THEMES.md).
 
 ### Localhost rewriting
 

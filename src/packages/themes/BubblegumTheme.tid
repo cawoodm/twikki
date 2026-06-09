@@ -4,11 +4,11 @@ A playful pink theme with rounded cards.
 
 # BubblegumTheme
 tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[BubblegumTheme::BubblegumStyleSheet]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[BubblegumTheme::BubblegumPalette]]
 
-# BubblegumStyleSheet
+# BubblegumPalette
 tags: $StyleSheet
 ```css
 :root {

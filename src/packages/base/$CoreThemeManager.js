@@ -57,7 +57,7 @@
         tw.run.updateTiddlerHard('$Layout', lt);
       }
     }
-    if (theme.match(/Dark/)) {
+    if (tw.run.getTiddler(theme)?.tags?.includes('$ThemeDark')) {
       tw.core.dom.enableStyleSheet('highlight-dark');
       tw.core.dom.disableStyleSheet('highlight-light');
     } else {
@@ -73,14 +73,28 @@
     themeUpdate(theme);
   }
 
+  const BASE_SHEETS = ['$BaseReset', '$BaseVariables'];
+
   wireUp('ui.reloaded', themeUpdate);
   function themeUpdate() {
-    let css = getThemeStyleSheets().map(tw.run.getTiddlerTextRaw).join('\n');
-    tw.theme.stylesheets.custom.replaceSync(css);
+    tw.theme.stylesheets.custom.replaceSync(buildCss());
+  }
+
+  function buildCss() {
+    const layers = {
+      base:  BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
+      theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
+      user:  [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
+    };
+    const header = `@layer ${Object.keys(layers).join(', ')};`;
+    const body = Object.entries(layers)
+      .map(([name, bodies]) => `@layer ${name} {\n${bodies.filter(Boolean).join('\n')}\n}`)
+      .join('\n\n');
+    return header + '\n\n' + body;
   }
 
   function tiddlerIsATheme(title) {
-    return tw.run.getTiddler(title)?.tags.includes('$Theme');
+    return tw.run.getTiddler(title)?.tags?.includes('$Theme');
   }
 
   function themesUpdate() {
@@ -100,8 +114,8 @@
   function getThemeStyleSheets() {
     let theme = getCurrentThemeName();
     if (!tw.call('tiddlerExists', theme)) {
-      tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreTheme', 'W');
-      theme = '$CoreTheme';
+      tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreThemeLight', 'W');
+      theme = '$CoreThemeLight';
     }
     return tw.run.getTiddlerList(theme);
   }

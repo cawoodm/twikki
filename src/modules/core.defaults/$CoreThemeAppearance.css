@@ -1,8 +1,9 @@
 /* ============================================================
-   $ThemeBase — universal component styling for the 3-pane UI.
+   Universal component appearance for the 3-pane UI.
    Token-driven: themes recolour everything by overriding the
-   CSS variables (see $StyleSheetCore for the fallback set).
-   Structure/layout lives in $StyleSheetCore; this file is looks.
+   CSS variables (defaults live in $BaseVariables).
+   Structure/layout lives in $CoreThemeLayout; this file is looks.
+   Part of the active theme's bullet list (loaded into `theme` layer).
    ============================================================ */
 
 * {
@@ -207,7 +208,7 @@ a.explorer-tag:hover {
 
 .picker-item:hover {
   background-color: var(--col3);
-  color: #fff;
+  color: var(--col-on-accent);
 }
 
 .picker-item.active {
@@ -714,7 +715,7 @@ dialog#command-palette {
 .palette-row.selected,
 .palette-row:hover {
   background-color: var(--col3);
-  color: var(--colfg); /* theme-aware: #fff fails on light --col3 (e.g. Kontrast) */
+  color: var(--colfg); /* theme-aware: var(--col-on-accent) fails on light --col3 (e.g. Kontrast) */
   /* Border keeps the row distinguishable where --col3 matches the dialog
      background (e.g. Kontrast: both #fff) — same trick the filled buttons use. */
   outline: 1px solid var(--col4);
@@ -757,7 +758,7 @@ dialog#command-palette {
   min-width: 250px;
   max-width: 80vw;
   background-color: rgba(var(--notify-rgba), 0.96);
-  color: #fff;
+  color: var(--col-on-accent);
   text-align: left;
   border-radius: var(--rad1);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
@@ -841,12 +842,108 @@ td {
 th {
   font-weight: 700;
   background-color: var(--col3);
-  color: #fff;
+  color: var(--col-on-accent);
 }
 
 span.error {
-  color: #fff;
-  background-color: #c0392b;
+  color: var(--col-on-accent);
+  background-color: var(--col-error);
   padding: 0 4px;
   border-radius: 3px;
+}
+
+/* ============================================================
+   Settings form ($SettingsDialogPlugin) — in-place editable form
+   rendered over the $GeneralSettings JSON. Namespaced so it does
+   not collide with the global tab strip (.tab / .tab-active).
+   ============================================================ */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--col4);
+}
+.settings-tab {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.settings-tab:hover {
+  background: var(--tab-bg);
+}
+.settings-tab-active {
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.settings-tab-panel.is-hidden {
+  display: none;
+}
+.settings-section {
+  margin: 0.5rem 0 1rem;
+}
+.settings-section-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--colbg3);
+}
+.settings-field {
+  display: grid;
+  grid-template-columns: minmax(8rem, 30%) 1fr;
+  gap: 0.5rem 1rem;
+  align-items: start;
+  margin: 0.4rem 0;
+}
+.settings-field-label {
+  font-weight: 500;
+  padding-top: 0.3rem;
+}
+.settings-field-help {
+  font-weight: 400;
+  font-size: 0.85em;
+  color: var(--col1);
+  margin-top: 0.15rem;
+}
+.settings-field-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+input.settings-field-input[type="checkbox"] {
+  width: auto;
+}
+.settings-text {
+  min-height: 3rem;
+}
+.settings-json {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: monospace;
+  min-height: 5rem;
+}
+.settings-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding-top: 0.3rem;
+}
+.settings-option {
+  font-weight: 400;
+}
+.settings-error {
+  color: var(--col-error);
+  background: var(--colbg1);
+  border: 1px solid var(--col-error);
+  border-radius: var(--rad1);
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
 }

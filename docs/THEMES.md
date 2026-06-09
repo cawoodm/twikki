@@ -1,25 +1,20 @@
 # TWikki Themes
 
 TWikki's look is driven entirely by **data, not a build step**. A theme is just a
-tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply:
+tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply.
 
 ```
 tags: $Theme
 
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[AuroraStyleSheet]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[MyPalette]]
 ```
 
-`$CoreThemeManager` concatenates those stylesheets into a single
-[constructable stylesheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet)
-and adopts it at runtime, so switching or editing a theme re-paints instantly with no
-reload. Colours, radii and spacing are exposed as CSS custom properties
-(`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about
-plus any structural rules it wants.
-
-The themes below live in the `themes` package (`src/packages/themes/`). Switch between
-them with the theme selector in the sidebar, or from the console:
+`$CoreThemeManager` composes those into one constructable stylesheet wrapped in three
+[CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer) and
+adopts it at runtime, so switching or editing a theme re-paints instantly with no
+reload.
 
 ```js
 tw.events.send('theme.switch', 'AuroraTheme');
@@ -27,9 +22,77 @@ tw.events.send('theme.switch', 'AuroraTheme');
 
 ---
 
-## Token themes
+## The three layers
 
-These use system font stacks, so they work offline with zero network dependency.
+```css
+@layer base, theme, user;
+```
+
+| Layer | Contents | Core default tiddlers |
+|---|---|---|
+| **base** | Reset rules + `:root` token declarations | `$BaseReset`, `$BaseVariables` |
+| **theme** | Whatever the active `$Theme` tiddler's bullet list points to | `$CoreThemeLayout`, `$CoreThemeAppearance`, `$CoreThemePalette` |
+| **user** | `$StyleSheetUser` (delivered empty) | — |
+
+Two guarantees from `@layer`:
+
+- **Theme rules beat base rules** regardless of selector specificity.
+- **User rules beat both** regardless of selector specificity.
+
+The base layer is hard-coded into `$CoreThemeManager` — a theme cannot opt out. The
+user layer is wrapped automatically; a theme cannot lock it out. The theme layer is
+yours.
+
+### What lives where
+
+- `$BaseReset` — browser normalization (box-sizing, list/image resets).
+- `$BaseVariables` — every CSS variable used anywhere, with light defaults
+  (`--col*`, `--colbg*`, `--col-on-accent`, `--col-error`, `--rad*`, `--sidebar-w`,
+  `--accent`, `--tab-bg`, …). The contract every component depends on; new tokens go
+  here. Enforced by [`tests/unit/tokens.test.js`](../tests/unit/tokens.test.js), which
+  fails if any `var(--x)` reference in `src/` has no matching declaration.
+- `$CoreThemeLayout` — app-shell grid, sidebar/main flex internals, responsive drawer,
+  header-bar variant. Structural rules only.
+- `$CoreThemeAppearance` — token-driven component appearance: sidebar, picker, tabs,
+  cards, dialogs, buttons, forms, typography, code blocks, notifications, settings form.
+  Reads tokens from the base layer.
+- `$CoreThemePalette` — placeholder for the **light** palette; intentionally empty
+  because the light defaults already live in `$BaseVariables`. Custom light themes can
+  supply their own `*Palette` in its place.
+- `$CoreThemeDarkPalette` — `:root` overrides that turn the UI dark.
+
+### Light vs dark
+
+The default `$Theme` is `$CoreThemeLight`. Dark mode is just a different bullet list:
+
+```
+title: $CoreThemeLight
+tags: $Theme
+
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[$CoreThemePalette]]
+```
+
+```
+title: $CoreThemeDark
+tags: $Theme, $ThemeDark
+
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[$CoreThemeDarkPalette]]
+```
+
+The `$ThemeDark` tag is **not** part of the cascade. Its only job is to flip the
+syntax highlighter between `highlight-light` and `highlight-dark`. Any dark theme
+should carry it; light themes should not.
+
+---
+
+## Built-in themes
+
+These live in `src/packages/themes/`. Switch between them with the theme selector
+in the sidebar, or via `tw.events.send('theme.switch', 'AuroraTheme')`.
 
 ### Aurora — dark, cool, glassy
 ![Aurora](./screenshots/01-aurora.png)
@@ -55,14 +118,6 @@ uppercase titles and a subtle scanline texture.
 Pastel pink wash, candy accents, chunky 24px rounded cards and soft glow shadows.
 Toy-like and friendly.
 
----
-
-## Web-font themes
-
-These pull a display + body font over `@font-face` from the
-[Fontsource](https://fontsource.org) CDN, and also rework the layout — reordering the
-header, trimming the toolbar and centring the reading column.
-
 ### Broadsheet — editorial, light
 ![Broadsheet](./screenshots/06-broadsheet.png)
 
@@ -84,24 +139,64 @@ gradient cards. Lime `#c6f24e` accent.
 borders, hard 6px offset shadows, a square search box and a segmented row of bordered
 icon boxes. Red `#e5322d` accent.
 
+### Obsidian — modern dark with violet accent
+A dense dark theme used as TWikki's previous default. Now ships as a regular theme
+in the same package.
+
 ---
 
 ## Creating your own
 
-1. Add a stylesheet tiddler to `src/packages/themes/`, e.g. `MyStyleSheet.css`
-   (`.css` files are auto-tagged `$StyleSheet`). Override the tokens you want and add
-   any structural rules.
-2. Add a theme tiddler `MyTheme.tid` tagged `$Theme` that lists
-   `$StyleSheetCore`, `$ThemeBase` and your stylesheet (in that order, so your rules
-   win).
-3. Run `npm run dev` (the compile plugin regenerates `public/packages/themes.json`
-   automatically) and pick your theme from the selector.
+A theme is a `$Theme`-tagged tiddler whose bullet list names everything that should
+end up in the `theme` cascade layer.
 
-> **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
-> the `$Theme` and `$StyleSheet` tags are in the `excludeTags` list on the **Search**
-> tab of `$GeneralSettings`. They still appear in the theme selector and in an explicit
-> `tag:$Theme` / `$`-prefixed search. Edit `includeTags`/`excludeTags` to change which
-> tags are hidden — no renaming required.
+**Tokens-only theme** — change colours and radii without touching layout or component
+CSS:
+
+```
+title: MyTheme
+tags: $Theme
+
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[MyTheme::MyPalette]]
+```
+
+```
+# MyPalette
+tags: $StyleSheet
+```css
+:root {
+  --colbg1: #1a1a2e;
+  --colbg2: #16213e;
+  --col6:   #e94560;
+}
+```
+```
+
+You don't have to copy every variable from `$BaseVariables` — only the ones you want
+to change. The rest inherit from the base layer.
+
+**Theme with custom layout** — Broadsheet, Nocturne and Kontrast restructure the
+header. They ship their own structural CSS in the same palette section (which is fine
+since the theme layer can win over the base layer), or in a separate `*Layout`
+section. Either way, list it in the bullet list before the palette so the palette can
+re-tweak it.
+
+### Dark themes
+
+Tag your dark theme `$Theme, $ThemeDark`. The runtime uses the tag (not the theme
+name) to switch the syntax highlighter between light and dark sheets. No naming
+convention required — you can call your dark theme `Midnight` or `Cthulhu` and it'll
+work.
+
+### Where things live
+
+- A `.css` file in `src/packages/themes/` becomes a standalone `$StyleSheet`-tagged
+  tiddler whose title is the filename.
+- A `.tid` file with `# Section` markers inside it becomes one parent tiddler plus
+  named sub-sections, addressable as `[[ParentName::SectionName]]`. Use this to ship
+  a theme as a single file (theme tiddler + palette section), as the built-ins do.
 
 ### Web fonts
 
@@ -120,3 +215,24 @@ snippet won't work. Use `@font-face` directly instead — it loads fine:
 
 For a fully offline theme, embed the font as a base64 `data:` URI in the `src` instead
 of a CDN URL — the font then travels with the wiki and syncs like any other tiddler.
+
+> **Search visibility:** theme and stylesheet tiddlers are hidden from normal search
+> by default — the `$Theme` and `$StyleSheet` tags are in the `excludeTags` list on
+> the **Search** tab of `$GeneralSettings`. They still appear in the theme selector
+> and in an explicit `tag:$Theme` / `$`-prefixed search. Edit
+> `includeTags`/`excludeTags` to change which tags are hidden — no renaming required.
+
+---
+
+## User overrides
+
+Anything you put in `$StyleSheetUser` lands in the `user` layer and wins over the
+active theme regardless of selector specificity. Use it for personal tweaks without
+forking a theme:
+
+```css
+:root {
+  --col6: hotpink;          /* recolour every link */
+}
+div.tiddler { max-width: 1100px; }
+```

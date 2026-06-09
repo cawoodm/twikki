@@ -1,0 +1,7 @@
+/* ============================================================
+   Light palette — token overrides for the default $CoreThemeLight.
+   The base light defaults already live in $BaseVariables, so this
+   file is intentionally empty. Themes that want a custom light
+   look can ship their own *Palette in place of this one.
+   Part of the active theme's bullet list (loaded into `theme` layer).
+   ============================================================ */

@@ -2,17 +2,17 @@ tags: Help
 
 # TWikki Themes
 
-TWikki's look is driven entirely by stylesheets which you can change or replace. A theme consists of one or more stylesheets and a tiddler tagged <<Tag $Theme>> whose body lists the stylesheet tiddlers to apply:
+TWikki's look is driven entirely by stylesheets which you can change or replace. A theme is a tiddler tagged <<Tag $Theme>> whose body lists the stylesheet tiddlers to apply:
 
 ```
 tags: $Theme
 
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[AuroraDark::StyleSheet]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[AuroraTheme::AuroraPalette]]
 ```
 
-In this case the theme loads the core styles (which every theme should do)
+`$CoreThemeManager` composes those into one constructable stylesheet wrapped in three [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer): `@layer base, theme, user`. The `base` layer (always `$BaseReset` + `$BaseVariables`) is hard-coded by the runtime — a theme cannot opt out. The `theme` layer is the bullet list above. The `user` layer is `$StyleSheetUser`, applied last and always wins.
 
 Switching or editing a theme re-paints instantly with no reload. Colours, radii and spacing are exposed as CSS custom properties (`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about plus any structural rules it wants.
 
@@ -20,11 +20,11 @@ Switching or editing a theme re-paints instantly with no reload. Colours, radii 
 
 Import Themes: <<themeImport.button>>
 
-### AuroraDark
+### Aurora
 Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
 accents. A modern dark-dashboard feel.
 
-![AuroraDark](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
+![Aurora](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
 
 ### Manuscript
 Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
@@ -65,6 +65,10 @@ icon boxes. Red `#e5322d` accent.
 
 ![Kontrast](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/09-kontrast-fixed.png)
 
+### Obsidian
+Dense dark theme with a violet/purple accent. TWikki's previous built-in default; now
+ships as a selectable theme alongside the others.
+
 ---
 
 > **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
@@ -73,17 +77,18 @@ icon boxes. Red `#e5322d` accent.
 > `tag:$Theme` / `$`-prefixed search.
 
 # Technical
-Themes are collections of stylesheets.
+Themes are collections of stylesheets composed into three cascade layers.
 
-* A special [[$Theme]] stores name of the current [Theme](#msg:search:$tag:$Theme) e.g.:
-  * [[$CoreTheme]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet)
-* Stylesheets can be in one or more tiddlers
-* [[$DisplayTemplate]] tiddler determines display of tiddler
-* [[$TitleBar]] to customize the titlebar
+* A special [[$Theme]] stores the name of the current theme, e.g. [[$CoreThemeLight]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet).
+* The runtime always prepends `$BaseReset` + `$BaseVariables` as the `base` layer — every theme inherits a reset and the design-token contract.
+* The user's own `$StyleSheetUser` is appended as the `user` layer and wins over anything a theme defines.
+* Stylesheets can be in one or more tiddlers, including section sub-tiddlers (`[[ParentName::SectionName]]`).
+* [[$DisplayTemplate]] tiddler determines display of tiddler.
+* [[$TitleBar]] to customize the titlebar.
 
 The shadow [[$Theme]] tiddler contains one word: the name of the tiddler with the current theme (e.g. {{$Theme}}). This theme tiddler should contain a [[DataList]] of stylesheets. To change the theme just edit the [[$Theme]] tiddler and enter the name of any tiddler containing a list of stylesheets.
 
-By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Themes should include `Light` or `Dark` in their name to assist in automatically using the right styles for code/syntax highlighting.
+By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Dark themes additionally carry the [$ThemeDark](#msg:search:$tag:$ThemeDark) tag — the runtime uses that tag (not a `Dark` suffix in the name) to switch the syntax highlighter between light and dark sheets.
 
 By convention we tag stylesheets with [$StyleSheet](#msg:search:$tag:$StyleSheet) to make them easier to find. This also enables fast edits to stylesheets without reloading to see the results.
 

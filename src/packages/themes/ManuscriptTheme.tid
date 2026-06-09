@@ -4,11 +4,11 @@ A warm parchment theme with serif type.
 
 # ManuscriptTheme
 tags: $Theme
-* [[$StyleSheetCore]]
-* [[$ThemeBase]]
-* [[ManuscriptTheme::ManuscriptStyleSheet]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
+* [[ManuscriptTheme::ManuscriptPalette]]
 
-# ManuscriptStyleSheet
+# ManuscriptPalette
 tags: $StyleSheet
 ```css
 :root {

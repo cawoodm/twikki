@@ -48,10 +48,9 @@ div.example {
 }
 ```
 # Theme
-* [[$StyleSheetCore]]
-* [[$StyleSheetCoreDark]]
+* [[$CoreThemeLayout]]
+* [[$CoreThemeAppearance]]
 * [[$ExampleTheme]]
-* [[$StyleSheetUser]]
 
 # Tests
 This should print out: "Hello John Smith"

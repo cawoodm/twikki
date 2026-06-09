@@ -1,0 +1,15 @@
+/* ============================================================
+   $StyleSheetUser — your custom CSS goes here.
+
+   The active theme's stylesheet is composed as three cascade
+   layers: base → theme → user. Anything you put in this file
+   lives in the `user` layer and overrides any theme rule,
+   regardless of selector specificity. Use it for personal tweaks
+   without forking a theme.
+
+   Example:
+     :root {
+       --col6: hotpink;   // recolour every link
+     }
+     div.tiddler { max-width: 1100px; }
+   ============================================================ */
