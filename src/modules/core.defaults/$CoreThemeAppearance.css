@@ -336,52 +336,6 @@ dialog.tw-dialog .tw-dialog-toolbar button {
   margin-left: 0.4rem;
 }
 
-/* Unsaved-changes list (UnsavedChangesPlugin) */
-.tw-changes-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.tw-changes-list li {
-  padding: 0.25rem 0;
-  cursor: help;
-}
-
-.tw-changes-list a {
-  color: var(--colfg);
-  cursor: pointer;
-}
-
-.tw-change-status {
-  display: inline-block;
-  min-width: 5em;
-  margin-right: 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.tw-change-status.new {
-  color: var(--col6);
-}
-
-.tw-change-status.modified {
-  color: #e0a000;
-}
-
-.tw-change-status.deleted {
-  color: #d05050;
-}
-
-/* Dirty indicator (header) — hidden via [hidden] until there are unsaved changes */
-#dirty-indicator {
-  color: #e0a000;
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
 dialog#new-dialog {
   width: 70%;
   height: 75%;

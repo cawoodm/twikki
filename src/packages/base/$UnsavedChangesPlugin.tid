@@ -1,32 +1,31 @@
-// tags: $Plugin
+tags: $Plugin
 
-/**
- * ## Description
- * Tracks unsaved changes and shows them in a dialog (built with the core
- * `tw.ui.dialog` API). The changed set is computed live by diffing the
- * in-memory tiddlers (`tw.tiddlers.all`, minus `doNotSave`) against the
- * last-saved set in storage (`tw.store.get('tiddlers')`), so it is accurate
- * even if the dirty flag under-reports. Each changed tiddler is listed as
- * new/modified/deleted with a short summary (≤100 words) as a native tooltip.
- *
- * Surfaced three ways:
- *   - a `●` dirty indicator in the header (toggled by the `dirty.changed`
- *     event from the platform) which opens the dialog on click,
- *   - the `unsaved.show` event (what the indicator's `data-msg` sends),
- *   - automatically ~1s after the user cancels leaving the page: browsers
- *     forbid custom UI inside `beforeunload`, so we schedule a timeout there;
- *     if the page is still alive and visible afterwards, the user stayed.
- */
-/**
- * ## Data
- * ```json
- * {
- *   "version": 1.0.0
- * }
- * ```
- */
-// ## Code
-// ```javascript
+# Description
+
+Tracks unsaved changes and shows them in a dialog (built with the core
+`tw.ui.dialog` API). The changed set is computed live by diffing the
+in-memory tiddlers (`tw.tiddlers.all`, minus `doNotSave`) against the
+last-saved set in storage (`tw.store.get('tiddlers')`), so it is accurate
+even if the dirty flag under-reports. Each changed tiddler is listed as
+new/modified/deleted with a short summary (≤100 words) as a native tooltip.
+
+Surfaced three ways:
+  - a `●` dirty indicator in the header (toggled by the `dirty.changed`
+    event from the platform) which opens the dialog on click,
+  - the `unsaved.show` event (what the indicator's `data-msg` sends),
+  - automatically ~1s after the user cancels leaving the page: browsers
+    forbid custom UI inside `beforeunload`, so we schedule a timeout there;
+    if the page is still alive and visible afterwards, the user stayed.
+
+# Data
+```json
+{
+  "version": 1.0.0
+}
+```
+
+# Code
+```javascript
 (function() {
 
   const DIALOG_ID = 'unsaved-changes-dialog';
@@ -184,4 +183,54 @@
   }
 
 })();
-// ```
+```
+
+# StyleSheet
+```css
+/* Unsaved-changes list inside the unsaved-changes dialog, plus the header's
+   dirty indicator (a `●` button toggled by the dirty.changed event). */
+.tw-changes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tw-changes-list li {
+  padding: 0.25rem 0;
+  cursor: help;
+}
+
+.tw-changes-list a {
+  color: var(--colfg);
+  cursor: pointer;
+}
+
+.tw-change-status {
+  display: inline-block;
+  min-width: 5em;
+  margin-right: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tw-change-status.new {
+  color: var(--col6);
+}
+
+.tw-change-status.modified {
+  color: #e0a000;
+}
+
+.tw-change-status.deleted {
+  color: #d05050;
+}
+
+/* Dirty indicator (header) — hidden via [hidden] until there are unsaved changes */
+#dirty-indicator {
+  color: #e0a000;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+```
