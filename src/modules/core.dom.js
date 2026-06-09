@@ -9,7 +9,8 @@
 (function(tw) {
 
   const name = 'core.dom';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
   const exports = {};
 
   // Exports
@@ -24,7 +25,7 @@
   exports.nearestElementWithAttribute = nearestElementWithAttribute;
   exports.nearestElement = nearestElement;
 
-  return {name, version, exports};
+  return {name, version, platform, exports};
 
   function addStyleSheet(title, url) {
     var link = document.createElement('link');

@@ -10,7 +10,8 @@
 (function(tw) {
 
   const name = 'core.search';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Exports
   const exports = {
@@ -32,7 +33,7 @@
     tw.events.subscribe('search.advanced', searchQueryAdvanced); // From #msg:search.advanced:pck:icons title:add
   };
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   function searchQueryAdvanced({all = false, title, tag, pck, type, id}) {
     let q = '';
