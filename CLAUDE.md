@@ -22,23 +22,29 @@ todo...
 
 [src/index.html](src/index.html) loads [src/platform/twikki.platform.js](src/platform/twikki.platform.js) via a plain `<script>` tag and then calls `window.twikki.init()` followed by `window.twikki.start()` on `load`. There is no external bootloader or OS layer anymore.
 
-- **`init()`** — resolves `baseUrl` from the `MODULE_URL` constant (can be overriden in index.html, default `https://cawoodm.github.io/twikki`); on a `localhost`/`IP:port` host it instead uses `location.origin` so the dev server serves local sources (around line 72 of `twikki.platform.js`). There is no `?pUrl`/`?url` query override and no `/base.url` localStorage key. It then fetches the hard-coded core modules listed in the `modulesToLoad` array (around line 86), each from `<baseUrl>/modules/<name>` (or returns cached copies from `localStorage`).
-- **`start()`** — `eval`s each `script/js` module, merges JSON modules into the in-memory tiddler store, then loads extension packages from the URL lists in the `$CorePackages` and `$ExtensionPackages` shadow tiddlers.
+- **`init()`** — resolves `baseUrl` by priority: an explicit `/base.url` localStorage key (set by the compatibility dialog) wins, else a `localhost`/`IP:port` host uses `location.origin` (so the dev server serves local sources), else the `MODULE_URL` constant (overridable in index.html, default `https://cawoodm.github.io/twikki`). There is no `?pUrl`/`?url` query override. It then `fetchCoreModule`s the hard-coded core modules in `modulesToLoad`, each from `<baseUrl>/modules/<name>` or the `localStorage` cache, runs the **compatibility gate**, and only on success `storeCoreModule`s the freshly-fetched ones (nothing is written before the gate). On a halt it sets `tw.tmp.bootAborted` and shows the dialog.
+- **`start()`** — bails immediately if `init()` aborted the boot (`tw.tmp.bootAborted`), otherwise `eval`s each `script/js` module, merges JSON modules into the in-memory tiddler store, then loads extension packages from the URL lists in the `$CorePackages` and `$ExtensionPackages` shadow tiddlers.
+
+**Module versioning & the compatibility gate.** Each core module declares a `version` (its own API, semver) **and** a `platform` (the release it was built for) — both as `const` literals read statically (the parsed source already lives in the cached `/modules<name>` entry, so there is **no** separate version stamp and **no** auto-refetch on platform change). In `init()`, before any module is `eval`'d, `checkModuleCompat` parses each module's `const platform = '...'` and classifies it vs the running `VERSION` (caret: same major, `running >= built-for`) as **ok**, **warn** (same major but newer, or no `platform` field — overridable), or **block** (different major, or failed download — hard). Boot halts on any **block** or any *freshly-fetched* **warn** (a cached warn already booted before, so it boots again silently) and opens `showCompatDialog` — a self-contained native `<dialog>` (no `tw.ui`/theme CSS yet). It writes nothing until the user picks **Update & reload** (store the shown modules; disabled if any block) or **Keep current versions** (reload using the cached set, no write); the source URL is editable and saved to `/base.url`. `fetchCoreModule` only hits the network on an empty cache or `?reload`/`?update`. See [docs/MODULES.md](docs/MODULES.md).
 
 The runtime never imports anything via ESM — modules are strings of JS loaded over HTTP and `eval`'d (the `(1, eval)(...)` indirect-eval pattern is intentional, to evaluate at global scope). **Do not add `import`/`export` statements to files under `src/modules/` or `src/packages/<pkg>/`** — they must remain plain IIFEs/scripts.
 
 ### Module contract
 
-A core module under [src/modules/](src/modules/) is an IIFE that takes `tw` and returns `{name, version, [exports], [run]}`:
+A core module under [src/modules/](src/modules/) is an IIFE that takes `tw` and returns `{name, version, platform, [exports], [run]}`:
 
 ```js
 (function(tw) {
   const name = 'core.foo';
+  const version = '0.0.1';            // this module's own version (semver)
+  const platform = '0.24.0';          // platform release this module was built for
   const exports = { ... };           // merged into tw[name] by the platform
   const run = () => { ... };          // optional, invoked after all modules load
-  return {name, version: '0.0.1', exports, run};
+  return {name, version, platform, exports, run};
 })(tw);
 ```
+
+`version` and `platform` **must** be plain `const '...'` literals: the platform reads them by static regex (before `eval`) to gate compatibility, so they can't be computed. See the versioning notes in the Boot chain section above and [docs/MODULES.md](docs/MODULES.md).
 
 `tw` is the global namespace. Subsystems hang off it: `tw.events` (pub/sub), `tw.tiddlers` (`.all`/`.visible`/`.trashed`), `tw.storage` (localStorage wrapper), `tw.run` (action API), `tw.ui`, `tw.core.*` (subsystem exports), `tw.macros`, `tw.plugins`.
 

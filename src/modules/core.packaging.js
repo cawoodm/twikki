@@ -9,14 +9,15 @@
 (function(tw) {
 
   const name = 'core.packaging';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   const exports = {
     loadPackageFromURL,
     reloadPackageFromUrl,
   };
 
-  return {name, version, exports};
+  return {name, version, platform, exports};
 
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
     console.debug('Loading tiddler package', name, url);

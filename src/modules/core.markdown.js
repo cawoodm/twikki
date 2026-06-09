@@ -11,6 +11,7 @@
 
     const name = 'core.markdown';
     const version = '0.0.2';
+    const platform = '0.24.0'; // built for platform ^0.24.0
 
     // Init
     const md = markdownit({
@@ -29,6 +30,7 @@
     return {
         name,
         version,
+        platform,
         exports
     };
 

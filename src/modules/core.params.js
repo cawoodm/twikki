@@ -12,7 +12,8 @@
 
   // Meta
   const name = 'core.params';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Constants
   const reDoubleQuoted = /^["](.+)["]$/g;
@@ -24,7 +25,7 @@
 
   const run = () => {};
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   /**
  * Handle all examples:

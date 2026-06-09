@@ -1,7 +1,7 @@
 (function() {
 
   const NAME = 'twikki';
-  const VERSION = '0.23.0';
+  const VERSION = '0.24.0';
 
   overrides();
 
@@ -89,9 +89,16 @@
       console.debug(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      baseUrl = window.MODULE_URL || 'https://cawoodm.github.io/twikki';
-      // Local dev: serve modules/packages from the dev server, not the published copy
-      if (document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) baseUrl = document.location.origin;
+      // baseUrl priority: an explicit /base.url (chosen by the user via the compatibility
+      // dialog) wins over everything, then the localhost/IP dev rewrite, then
+      // window.MODULE_URL, then the published default.
+      const explicitBase = read('/base.url');
+      if (explicitBase) baseUrl = explicitBase;
+      else {
+        baseUrl = window.MODULE_URL || 'https://cawoodm.github.io/twikki';
+        // Local dev: serve modules/packages from the dev server, not the published copy
+        if (document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)) baseUrl = document.location.origin;
+      }
 
       tw.logging = {
         logFilter: new RegExp(qs.logfilter || '.', 'i'),
@@ -120,12 +127,47 @@
         '/core.search.js',
         '/core.markdown.js',
       ];
-      let modulesLoaded = await Promise.all(modulesToLoad.map(loadCoreModule));
-      tw.modules = modulesToLoad.map((p, i) => ({name: p, res: modulesLoaded[i]}));
+      let compatReports;
+      try {
+        // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
+        // to storeCoreModule below, so an incompatible fetch never clobbers the installed
+        // (cached) copies the user may want to keep.
+        let fetchResults = await Promise.all(modulesToLoad.map(fetchCoreModule));
+        tw.modules = modulesToLoad.map((p, i) => ({name: p, res: fetchResults[i].res, fetched: fetchResults[i].fetched}));
+        compatReports = tw.modules.map(checkModuleCompat);
+        // Stash each report on its module so runtime UI (e.g. the <<modules>> widget) can
+        // show built-for platform + compatibility status without re-deriving it.
+        tw.modules.forEach((m, i) => {m.compat = compatReports[i];});
+      } catch (e) {
+        // A download failed outright — a hard stop (block), surfaced in the same dialog.
+        // Give each module an `error` res so the dialog (which re-derives reports from the
+        // loaded set) classifies them as block too, and the user can re-check a new URL.
+        console.error('Core module download failed', e);
+        tw.modules = modulesToLoad.map(n => ({name: n, res: {type: 'error', error: e.message}, fetched: true}));
+        compatReports = tw.modules.map(checkModuleCompat);
+        tw.modules.forEach((m, i) => {m.compat = compatReports[i];});
+      }
+
+      // A 'block' (major-version gap or failed download) always halts the boot. A 'warn'
+      // (newer minor/patch of the same major, or no platform field) halts only for a
+      // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
+      // in the cache booted before (the user installed it), so it boots again silently.
+      const blocking = compatReports.filter(r => r.severity === 'block');
+      const freshWarn = tw.modules.filter((m, i) => m.fetched && compatReports[i].severity === 'warn');
+      if (blocking.length || freshWarn.length) {
+        console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
+        tw.tmp.bootAborted = true;
+        showCompatDialog();
+        return;
+      }
+      // Compatible (or only previously-installed warnings) — NOW persist anything freshly
+      // fetched, so the validated set becomes the installed set.
+      tw.modules.forEach(m => {if (m.fetched) storeCoreModule(m.name, m.res);});
 
     },
     // eslint-disable-next-line require-await
     async start() {
+      if (tw.tmp?.bootAborted) return; // init() found incompatible modules and showed the dialog
       const errMsgs = [];
 
       tw.modules
@@ -321,6 +363,157 @@
     document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
     document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
     document.write('</ul>');
+  }
+
+  // Reload the page with ?reload/?update stripped, so the next boot reads the (just-stored
+  // or already-cached) modules instead of force-fetching again and re-opening this dialog.
+  function reloadWithoutForce() {
+    const url = new URL(location.href);
+    url.searchParams.delete('reload');
+    url.searchParams.delete('update');
+    location.href = url.toString();
+  }
+
+  // Boot-time core-module compatibility dialog. Shown by init() when a freshly-fetched
+  // module is incompatible (or a download failed). It runs before any module is eval'd, so
+  // it cannot rely on tw.ui/tw.core or theme stylesheets — everything is plain DOM + inline
+  // styles on a native <dialog>. Crucially it persists NOTHING until the user chooses:
+  //   • Update — store the shown modules and reload (allowed unless a ✗ major-version block).
+  //   • Keep current versions — discard the update and reload using the installed (cached)
+  //     modules (offered only when a usable, non-blocking cached set exists).
+  // The user can also repoint the source URL and re-check before deciding.
+  function showCompatDialog() {
+    const escAttr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const dlg = document.createElement('dialog');
+    dlg.id = 'tw-compat-dialog';
+    dlg.style.cssText = 'max-width:700px;width:90%;font:14px/1.45 system-ui,sans-serif;color:#1a1a1a;'
+      + 'border:1px solid #999;border-radius:10px;padding:1.5rem;box-shadow:0 8px 32px rgba(0,0,0,.25)';
+
+    // The set of modules under consideration: starts as what init() loaded, and is replaced
+    // wholesale when the user re-checks a different source URL. Each entry is {name, res}.
+    let candidates = tw.modules.map(m => ({name: m.name, res: m.res}));
+
+    const reportsFor = set => set.map(c => checkModuleCompat({name: c.name, res: c.res}));
+    const hasBlock = reps => reps.some(r => r.severity === 'block');
+
+    // The currently-installed (cached) set — used to decide whether "Keep current versions"
+    // can boot. Available only if every module has a usable cache and none of them block.
+    function cachedSet() {
+      return tw.modules.map(m => ({name: m.name, res: readObject('/modules' + m.name)}));
+    }
+    function canKeepCurrent() {
+      const cs = cachedSet();
+      if (!cs.every(c => isCachedModuleUsable(c.res))) return false;
+      return !hasBlock(reportsFor(cs));
+    }
+
+    function statusText(r) {
+      if (r.exempt) return 'list (exempt)';
+      if (r.severity === 'ok') return '✓ OK';
+      if (r.severity === 'warn') return '⚠ ' + (r.reason || 'minor mismatch');
+      return '✗ ' + (r.reason || 'incompatible');
+    }
+    function rowBg(r) {
+      if (r.severity === 'block') return 'background:#fde8e8'; // red — hard block
+      if (r.severity === 'warn') return 'background:#fff4d6'; // amber — overridable
+      return '';
+    }
+
+    // Which rows the user has ticked to install. The checkbox is pre-ticked for compatible
+    // (✓) modules, un-ticked but tickable for ⚠ minor mismatches, and disabled for ✗ major
+    // mismatches (which can never be installed).
+    function selectedIndexes() {
+      return [...dlg.querySelectorAll('.tw-compat-pick:checked')].map(cb => +cb.dataset.idx);
+    }
+    function refreshInstallBtn() {
+      const btn = dlg.querySelector('#tw-compat-install');
+      if (btn) btn.disabled = selectedIndexes().length === 0;
+    }
+
+    function render() {
+      const reps = reportsFor(candidates);
+      const keepable = canKeepCurrent();
+      const rows = reps.map((r, i) => {
+        const cell = 'padding:4px 8px;border:1px solid #ddd';
+        const selectable = r.severity !== 'block';
+        const checkbox = `<input type="checkbox" class="tw-compat-pick" data-idx="${i}"`
+          + `${r.severity === 'ok' ? ' checked' : ''}${selectable ? '' : ' disabled'}>`;
+        return `<tr style="${rowBg(r)}">`
+          + `<td style="${cell};text-align:center">${checkbox}</td>`
+          + `<td style="${cell}">${esc(r.name)}</td>`
+          + `<td style="${cell}">${esc(r.version ?? '—')}</td>`
+          + `<td style="${cell}">${esc(r.required ?? '—')}</td>`
+          + `<td style="${cell}">${esc(statusText(r))}</td></tr>`;
+      }).join('');
+      dlg.innerHTML = `
+        <h2 style="margin:0 0 .5rem">Module compatibility</h2>
+        <p style="margin:.25rem 0">Running platform <b>v${esc(VERSION)}</b>. Tick the modules to install
+        then <b>Update selected</b>, or <b>Keep current versions</b> to change nothing. Compatible (✓)
+        modules are pre-selected; an <b>⚠</b> minor mismatch can be ticked to install it anyway; a
+        <b>✗</b> major mismatch can't be installed.</p>
+        <label style="display:block;margin:.75rem 0 .25rem">Source base URL:</label>
+        <div style="display:flex;gap:.5rem">
+          <input id="tw-compat-url" style="flex:1;padding:.4rem;border:1px solid #aaa;border-radius:6px"
+            value="${escAttr(read('/base.url') || baseUrl)}">
+          <button id="tw-compat-load" style="padding:.4rem .8rem">Re-check</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin:1rem 0;font-size:13px">
+          <thead><tr>
+            <th style="padding:4px 8px;border:1px solid #ddd;text-align:center">Install</th>
+            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Module</th>
+            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Version</th>
+            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Built for</th>
+            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Status</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+          <button id="tw-compat-keep" style="padding:.5rem 1rem"${keepable ? '' : ' disabled'}>Keep current versions</button>
+          <button id="tw-compat-install" style="padding:.5rem 1rem;font-weight:600">Update selected &amp; reload</button>
+        </div>`;
+      dlg.querySelector('#tw-compat-load').onclick = onRecheck;
+      dlg.querySelector('#tw-compat-keep').onclick = onKeepCurrent;
+      dlg.querySelector('#tw-compat-install').onclick = onUpdate;
+      dlg.querySelectorAll('.tw-compat-pick').forEach(cb => (cb.onchange = refreshInstallBtn));
+      refreshInstallBtn();
+    }
+
+    async function onRecheck() {
+      const url = dlg.querySelector('#tw-compat-url').value.trim();
+      if (!url) return;
+      write('/base.url', url);
+      const btn = dlg.querySelector('#tw-compat-load');
+      btn.disabled = true;
+      candidates = await Promise.all(tw.modules.map(async m => {
+        const r = await tryFetchModule(m.name, url);
+        // A failed fetch becomes an un-storable placeholder so its row shows the error and
+        // is non-selectable (block) without throwing.
+        return {name: m.name, res: r.ok ? r.res : {type: 'error', error: r.error}};
+      }));
+      render();
+    }
+
+    function onUpdate() {
+      // Persist only the ticked modules; the rest keep their installed (cached) copies.
+      // Then reload (without ?reload) so the next boot reads the cache.
+      const idxs = selectedIndexes();
+      if (!idxs.length) return;
+      idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
+      write('/base.url', dlg.querySelector('#tw-compat-url').value.trim());
+      reloadWithoutForce();
+    }
+
+    function onKeepCurrent() {
+      // Discard the update entirely. Nothing was written, so a plain reload boots the
+      // installed (cached) modules.
+      reloadWithoutForce();
+    }
+
+    document.body.appendChild(dlg);
+    render();
+    dlg.showModal();
   }
 
   async function onPageLoad() {
@@ -1304,23 +1497,24 @@
     scrollToTiddler(link);
     location.hash = '';
   }
-  function sendCommand(cmd, param, params, currentTiddlerTitle) {
-  // "foo.bar:etc etc" => events.send('foo.bar', ['etc', 'etc'])
+  function sendCommand(cmd, params, currentTiddlerTitle) {
+  // "foo.bar:${expression()}"          => events.send('foo.bar', expression())
+  // "foo.bar:{json}"            => events.send('foo.bar', {…})
+  // "foo.bar:pck:icons title:x" => events.send('foo.bar', {pck: 'icons', title: 'x'})
+  // "foo.bar:My Note"           => events.send('foo.bar', 'My Note') (bare strings stay raw)
     let cmds = cmd.match(reCommand);
     if (!cmds) throw new Error(`Invalid command '${cmd}' does not match ${reCommand}/!`);
     let msg = cmds[1];
     if (!params) params = cmds.length > 2 ? cmds[2] : null;
     tw.logging.break('command');
-    if (typeof param === 'undefined' || param === null) {
+    if (typeof params === 'string') {
       params = tw.events.decode(params);
-      if (params) params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
-      if (params?.match(/^\{\{\{/)) try {params = eval(params);} catch {dp('events.send received invalid JS payload: ' + params);}
-      else if (params?.match(/^[\[\{]/)) try {params = JSON.parse(params);} catch {dp('events.send received invalid JSON payload: ' + params);}
-      else params = tw.core.params.parseParams(params);
-    } else if (typeof param === 'string')
-      params = tw.events.decode(param).replaceAll('$currentTiddler', currentTiddlerTitle);
-    else
-      params = param;
+      if (params === '$currentTiddler') params = currentTiddlerTitle;
+      if (params.match(/^\$\{/)) try {params = tw.core.params.evalParam(params);} catch {console.warn('events.send received invalid JS payload: ' + params);}
+      else if (params.match(/^[\[\{"]/)) try {params = JSON.parse(params);} catch {console.warn('events.send received invalid JSON payload: ' + params);}
+      else if (params.match(/^[a-z0-9_]+:/i)) try {params = tw.core.params.parseParams(params);} catch {} // named params => object
+      // else: bare string stays a raw string (':' is not a valid title char, so titles never hit the named branch)
+    }
     dp('sendCommand', msg, 'params=', params);
     let result = tw.events.send(msg, params); // scroll-on-show is handled by the tiddler.show subscriber
     location.hash = '';
@@ -1474,11 +1668,108 @@
   }
 
   /* END TWikki */
-  async function loadCoreModule(moduleName) {
-    let res = readObject('/modules' + moduleName);
-    if (!res?.code || qs.reload || qs.update) res = await fetchModule(moduleName);
+
+  /* BEGIN semver helper (extracted verbatim by tests/unit/semver.test.js — keep pure, no closure refs) */
+  function semver(v) {
+    const m = String(v).trim().match(/^(\d+)\.(\d+)\.(\d+)$/);
+    return m ? {major: +m[1], minor: +m[2], patch: +m[3]} : null;
+  }
+  function semverCompare(a, b) {
+    const x = semver(a);
+    const y = semver(b);
+    if (!x || !y) return NaN;
+    if (x.major !== y.major) return x.major - y.major;
+    if (x.minor !== y.minor) return x.minor - y.minor;
+    return x.patch - y.patch;
+  }
+  // Does platform `running` satisfy a module built for `required`? Caret semantics:
+  // same major AND running >= required (e.g. built for 0.24.0 runs on 0.24.x/0.99.x
+  // but not 0.23.x or 1.0.0).
+  function caretSatisfies(required, running) {
+    const r = semver(required);
+    const p = semver(running);
+    if (!r || !p) return false;
+    if (r.major !== p.major) return false;
+    return semverCompare(running, required) >= 0;
+  }
+  /* END semver helper */
+
+  // Statically read a code module's `const name/version/platform = '...'` declarations
+  // WITHOUT eval'ing it — eval runs the module's IIFE side effects, so compatibility
+  // must be decided from the source text before any module code runs.
+  function parseModuleMeta(code) {
+    const grab = re => (code.match(re)?.[1] ?? null);
+    return {
+      name: grab(/const\s+name\s*=\s*'([^']+)'/),
+      version: grab(/const\s+version\s*=\s*'([^']+)'/),
+      platform: grab(/const\s+platform\s*=\s*'([^']+)'/),
+    };
+  }
+  // {name, version, required, compatible, severity, reason?, exempt?} for one loaded
+  // module. severity is one of:
+  //   'ok'    — compatible with the running platform.
+  //   'warn'  — incompatible but SAME major (built for a newer minor/patch) or no
+  //             platform field: the user may override and install anyway.
+  //   'block' — different major: a breaking platform gap that cannot be overridden.
+  // List modules (e.g. core.defaults.json) carry no code/version and are exempt ('ok').
+  function checkModuleCompat(pck) {
+    // A failed re-check fetch (see showCompatDialog) — a hard block, can't be installed.
+    if (pck.res?.type === 'error') return {name: pck.name, compatible: false, severity: 'block', reason: 'fetch failed: ' + (pck.res.error || 'error')};
+    if (pck.res?.type !== 'code') return {name: pck.name, compatible: true, exempt: true, severity: 'ok'};
+    const meta = parseModuleMeta(pck.res.code);
+    const required = meta.platform;
+    const compatible = !!required && caretSatisfies(required, VERSION);
+    let severity = 'ok';
+    let reason;
+    if (compatible) {
+      severity = 'ok';
+    } else if (!required) {
+      severity = 'warn';
+      reason = 'no platform field declared';
+    } else {
+      const r = semver(required);
+      const p = semver(VERSION);
+      if (r && p && r.major !== p.major) {
+        severity = 'block';
+        reason = `needs platform ${r.major}.x, running ${VERSION}`;
+      } else {
+        severity = 'warn';
+        reason = `built for ${required}, running ${VERSION}`;
+      }
+    }
+    return {name: pck.name, version: meta.version, required, compatible, severity, reason};
+  }
+
+  // A cached module is usable if it carries a payload: code modules have `.code`,
+  // list modules have `.tiddlers`. (The old `!res?.code` test wrongly re-fetched list
+  // modules every boot because they never have `.code`.)
+  function isCachedModuleUsable(res) {return !!(res && (res.code || res.tiddlers));}
+  // Obtain a core module's payload, WITHOUT persisting it. Returns {res, fetched}: a usable
+  // cached copy is used as-is (fetched:false) unless ?reload/?update forces the network;
+  // otherwise it is downloaded (fetched:true). Persisting is a separate, deferred step
+  // (storeCoreModule) so an incompatible download never overwrites the installed copy.
+  async function fetchCoreModule(moduleName) {
+    const cached = readObject('/modules' + moduleName);
+    if (isCachedModuleUsable(cached) && !qs.reload && !qs.update) return {res: cached, fetched: false};
+    return {res: await fetchModule(moduleName), fetched: true};
+  }
+  // Persist a fetched module into the localStorage cache. Called only after the compat
+  // gate passes, or when the user explicitly installs ("forces") from the compat dialog.
+  function storeCoreModule(moduleName, res) {
     writeObject('/modules' + moduleName, res);
-    return res;
+  }
+  // Non-throwing fetch from an arbitrary base URL, used by the compat dialog's re-check
+  // so one bad URL/module renders an error row instead of aborting the whole re-check.
+  async function tryFetchModule(moduleName, fromBaseUrl) {
+    const saved = baseUrl;
+    if (fromBaseUrl) baseUrl = fromBaseUrl;
+    try {
+      return {ok: true, res: await fetchModule(moduleName)};
+    } catch (e) {
+      return {ok: false, error: e.message};
+    } finally {
+      baseUrl = saved;
+    }
   }
   async function fetchModule(moduleName) {
     if (!baseUrl) throw new Error('NO_MODULE_URL: Unable to determine URL to load module from!');
