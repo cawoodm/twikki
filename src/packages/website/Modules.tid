@@ -2,9 +2,36 @@ tags: Help
 
 ## Installed Modules
 
+<<modules>>
+
 Modules are part of the platform but are loaded via URL and stored in local storage. They are like the "OS" and are common to all workspaces. [Modules Docs](https://github.com/cawoodm/twikki/blob/main/docs/MODULES.md)
 
-<<modules>>
+Each module is versioned independently and declares the platform release it was built for; the **Built for** and **Status** columns below show whether each one is compatible with the platform you are running.
+
 
 ### Updates
 Modules are loaded once and cached in localStorage. You can `?update` or `?reload` them via the URL.
+
+## Versioning & compatibility
+
+Every core module carries two **independent** version numbers:
+
+* **Version** — the module's own version, following [semver](https://semver.org): the **major** changes on a breaking API change (a method renamed or removed), the **minor** on a new feature, and the **patch** on a bugfix.
+* **Built for** — the platform release the module was written against.
+
+A module is compatible when the running platform shares its **major** version **and** is at least as new as the "built for" release — the same rule as npm's `^` (caret). So a module built for `0.23.0` runs happily on `0.23.x`, `0.24.0`, `0.99.0`, … but **not** on an older `0.22.x` (the platform is missing features the module expects) nor on a breaking `1.0.0` (a new major may have removed APIs the module relies on). In short: newer platforms stay backwards-compatible with older modules until the major version is bumped.
+
+The **Status** column reflects this check, and there are two degrees of incompatibility:
+
+* **✓ OK** — compatible with the running platform.
+* **⚠ …** — a *minor* mismatch: the **same major** version but built for a newer release (or no platform field declared). This is only a warning — you can choose to install and run it anyway.
+* **✗ …** — a *major* mismatch: a different major version, where a breaking change may have removed APIs the module relies on. This **cannot** be overridden.
+* **n/a** — not a code module (the `core.defaults` shadow-tiddler list), so it carries no version and is exempt.
+
+Compatibility is checked at startup, *before* any module runs and *before* anything is written to local storage. If a freshly-downloaded module is incompatible the platform halts the boot and opens a dialog, where you can:
+
+* **Update** the modules (install the downloaded versions) — allowed for ⚠ minor mismatches, blocked for ✗ major ones;
+* **Keep current versions** — discard the download and carry on with the modules you already have installed; or
+* point at a different module source and re-check before deciding.
+
+Because nothing is written until you choose **Update**, declining always leaves your installed modules intact. If you can see this page, every module listed above either is compatible or was a warning you chose to accept.

@@ -17,6 +17,7 @@
   // Meta
   const name = 'core.params';
   const version = '0.0.1';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Constants
   const reDoubleQuoted = /^["](.+)["]$/g;
@@ -28,7 +29,7 @@
 
   const run = () => {};
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   /**
  * Always returns an object or an array of params to be spread:
@@ -42,7 +43,7 @@
     if (reEvalExpression.test(params)) {
       let res = evalParam(params);
       if (typeof res === 'object')
-        return res; 
+        return res;
       else
         return [res]; // Primitives are wrapped as arrays to spread to function calls (...res)
     }
