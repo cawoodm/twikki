@@ -482,7 +482,7 @@
         <label style="display:block;margin:.75rem 0 .25rem">Source base URL:</label>
         <div style="display:flex;gap:.5rem">
           <input id="tw-compat-url" style="flex:1;padding:.4rem;border:1px solid #aaa;border-radius:6px"
-            value="${escAttr(read('/base.url') || baseUrl)}">
+            value="${escAttr(baseUrl)}">
           <button id="tw-compat-load" style="padding:.4rem .8rem">Re-check</button>
         </div>
         <table style="width:100%;border-collapse:collapse;margin:1rem 0;font-size:13px">
@@ -509,7 +509,7 @@
     async function onRecheck() {
       const url = dlg.querySelector('#tw-compat-url').value.trim();
       if (!url) return;
-      write('/base.url', url);
+      // TODO: Write url back to /settings.json (moduleUrl)
       const btn = dlg.querySelector('#tw-compat-load');
       btn.disabled = true;
       candidates = await Promise.all(tw.modules.map(async m => {
@@ -527,7 +527,8 @@
       const idxs = selectedIndexes();
       if (!idxs.length) return;
       idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
-      write('/base.url', dlg.querySelector('#tw-compat-url').value.trim());
+      // let url = dlg.querySelector('#tw-compat-url').value.trim();
+      // TODO: Write url back to /settings.json (moduleUrl)
       reloadWithoutForce();
     }
 
@@ -1816,7 +1817,7 @@
   async function fetchCoreModule(moduleName) {
     const cached = readObject('/modules' + moduleName);
     if (isCachedModuleUsable(cached) && !qs.reload && !qs.update) return {res: cached, fetched: false};
-    return {res: await fetchModule(moduleName), fetched: true};
+    return {res: await fetchModule(baseUrl, moduleName), fetched: true};
   }
   // Persist a fetched module into the localStorage cache. Called only after the compat
   // gate passes, or when the user explicitly installs ("forces") from the compat dialog.
@@ -1826,23 +1827,19 @@
   // Non-throwing fetch from an arbitrary base URL, used by the compat dialog's re-check
   // so one bad URL/module renders an error row instead of aborting the whole re-check.
   async function tryFetchModule(moduleName, fromBaseUrl) {
-    const saved = baseUrl;
-    if (fromBaseUrl) baseUrl = fromBaseUrl;
     try {
-      return {ok: true, res: await fetchModule(moduleName)};
+      return {ok: true, res: await fetchModule(fromBaseUrl, moduleName)};
     } catch (e) {
       return {ok: false, error: e.message};
-    } finally {
-      baseUrl = saved;
     }
   }
-  async function fetchModule(moduleName) {
+  async function fetchModule(baseUrl, moduleName) {
     if (!baseUrl) throw new Error('NO_MODULE_URL: Unable to determine URL to load module from!');
     let moduleUrl = baseUrl + '/modules' + moduleName;
     let res = {};
     dp(`Downloading module from '${moduleUrl}'...`);
     let result = {name: moduleName}; try {result = await fetch(moduleUrl);} catch {}
-    if (!result.ok) throw new Error(`Unable to download module from '${moduleUrl}' HTTP status: ${result.statusCode}`);
+    if (!result.ok) throw new Error(`Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`);
     if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
       res.code = await result.text();
       res.type = 'code';
