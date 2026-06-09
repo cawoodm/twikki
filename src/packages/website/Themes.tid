@@ -9,7 +9,7 @@ tags: $Theme
 
 * [[$CoreThemeLayout]]
 * [[$CoreThemeAppearance]]
-* [[Aurora::AuroraPalette]]
+* [[AuroraTheme::AuroraPalette]]
 ```
 
 `$CoreThemeManager` composes those into one constructable stylesheet wrapped in three [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer): `@layer base, theme, user`. The `base` layer (always `$BaseReset` + `$BaseVariables`) is hard-coded by the runtime — a theme cannot opt out. The `theme` layer is the bullet list above. The `user` layer is `$StyleSheetUser`, applied last and always wins.
@@ -20,11 +20,11 @@ Switching or editing a theme re-paints instantly with no reload. Colours, radii 
 
 Import Themes: <<themeImport.button>>
 
-### AuroraDark
+### Aurora
 Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
 accents. A modern dark-dashboard feel.
 
-![AuroraDark](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
+![Aurora](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
 
 ### Manuscript
 Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
@@ -64,6 +64,10 @@ borders, hard 6px offset shadows, a square search box and a segmented row of bor
 icon boxes. Red `#e5322d` accent.
 
 ![Kontrast](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/09-kontrast-fixed.png)
+
+### Obsidian
+Dense dark theme with a violet/purple accent. TWikki's previous built-in default; now
+ships as a selectable theme alongside the others.
 
 ---
 

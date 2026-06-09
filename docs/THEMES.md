@@ -54,10 +54,11 @@ yours.
 - `$CoreThemeLayout` — app-shell grid, sidebar/main flex internals, responsive drawer,
   header-bar variant. Structural rules only.
 - `$CoreThemeAppearance` — token-driven component appearance: sidebar, picker, tabs,
-  cards, dialogs, buttons, forms, typography, code blocks, notifications. Reads tokens
-  from the base layer.
-- `$CoreThemePalette` — the **light** palette extras (the actual light token defaults
-  already live in `$BaseVariables`). Settings-form rules live here.
+  cards, dialogs, buttons, forms, typography, code blocks, notifications, settings form.
+  Reads tokens from the base layer.
+- `$CoreThemePalette` — placeholder for the **light** palette; intentionally empty
+  because the light defaults already live in `$BaseVariables`. Custom light themes can
+  supply their own `*Palette` in its place.
 - `$CoreThemeDarkPalette` — `:root` overrides that turn the UI dark.
 
 ### Light vs dark
