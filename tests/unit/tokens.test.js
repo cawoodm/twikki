@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync, readdirSync, statSync} from 'node:fs';
+import {readFileSync, readdirSync} from 'node:fs';
 import {join, extname} from 'node:path';
 
 const SRC = join(import.meta.dirname, '..', '..', 'src');

@@ -94,7 +94,7 @@
   }
 
   function tiddlerIsATheme(title) {
-    return tw.run.getTiddler(title)?.tags.includes('$Theme');
+    return tw.run.getTiddler(title)?.tags?.includes('$Theme');
   }
 
   function themesUpdate() {
