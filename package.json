@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "test": "node --test --watch ./tests/unit/*.test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "compile": "node vite-plugin-tiddler-compile.js",
     "watch": "npm-watch",
     "build": "vite build --emptyOutDir && cd dist && vite",
@@ -15,6 +17,7 @@
   "dependencies": {},
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
+    "@playwright/test": "^1.48.0",
     "@eslint/js": "^9.9.1",
     "eslint-config-strongloop": "^2.1.0",
     "globals": "^15.9.0",
