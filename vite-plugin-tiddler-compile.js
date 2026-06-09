@@ -121,7 +121,7 @@ export function compilePackage(packageName, sourceDir, outputDir) {
 
 function compileAll(sourceSets) {
   for (const {sourceRoot, outputDir} of sourceSets) {
-    if (!existsSync(sourceRoot)) continue;
+    if (!existsSync(sourceRoot)) throw new Error(`sourceRoot "${sourceRoot}" does not exist!`);
     const entries = readdirSync(sourceRoot, {withFileTypes: true}).filter(e => e.isDirectory());
     for (const entry of entries) {
       compilePackage(entry.name, join(sourceRoot, entry.name), outputDir);
@@ -133,7 +133,9 @@ function findPackageForFile(filePath, sourceSets) {
   for (const {sourceRoot, outputDir} of sourceSets) {
     const rel = relative(sourceRoot, filePath);
     if (!rel.startsWith('..') && !isAbsolute(rel)) {
-      const packageName = rel.split(/[\\/]/)[0];
+      const parts = rel.split(/[\\/]/);
+      if (parts.length < 2) continue; // top-level file (e.g. core.search.js) — served as-is, no compile step
+      const packageName = parts[0];
       return {packageName, sourceDir: join(sourceRoot, packageName), outputDir};
     }
   }
