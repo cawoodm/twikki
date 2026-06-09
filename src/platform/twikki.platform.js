@@ -1397,12 +1397,9 @@
     if (typeof params === 'string') {
       params = tw.events.decode(params);
       params = params.replaceAll('$currentTiddler', currentTiddlerTitle);
-      params = tw.core.params.parseParams(params);
-      /*
-      if (params.match(/^\$\{\{/)) try {params = tw.core.params.evalParam(params);} catch {console.warn('events.send received invalid JS payload: ' + params);}
+      if (params.match(/^\$\{/)) try {params = tw.core.params.evalParam(params);} catch {console.warn('events.send received invalid JS payload: ' + params);}
       else if (params.match(/^[\[\{"]/)) try {params = JSON.parse(params);} catch {console.warn('events.send received invalid JSON payload: ' + params);}
-      else if (params.match(/^[a-z0-9_]+:/i)) try {params = tw.core.params.parseParams(params)}catch{}; // named params => object
-      */
+      else if (params.match(/^[a-z0-9_]+:/i)) try {params = tw.core.params.parseParams(params);} catch {} // named params => object
       // else: bare string stays a raw string (':' is not a valid title char, so titles never hit the named branch)
     }
     dp('sendCommand', msg, 'params=', params);
