@@ -3,10 +3,15 @@
 // regressions like the close-button $currentTiddler bug), and via tw.events.send /
 // tw.run for internal or programmatic-only events.
 
-import {test, expect} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import {
-  bootApp, acceptDialogs, createTiddler, send,
-  card, persistedStore, persistedTrash, visibleTitles,
+    acceptDialogs,
+    bootApp,
+    card,
+    createTiddler,
+    persistedStore, persistedTrash,
+    send,
+    visibleTitles,
 } from './helpers.js';
 
 test.beforeEach(async ({page}) => {
@@ -22,11 +27,11 @@ test.describe('show / close / open-all / close-all', () => {
   });
 
   test('tiddler.close (✕ button) closes the card — the regression', async ({page}) => {
-    await createTiddler(page, {title: 'CloseMe', text: 'bye', show: true});
-    await expect(card(page, 'CloseMe')).toBeVisible();
-    await card(page, 'CloseMe').locator('[data-msg="tiddler.close"]').click();
-    await expect(card(page, 'CloseMe')).toHaveCount(0);
-    expect(await visibleTitles(page)).not.toContain('CloseMe');
+    await createTiddler(page, {title: 'Close Me', text: 'bye', show: true});
+    await expect(card(page, 'Close Me')).toBeVisible();
+    await card(page, 'Close Me').locator('[data-msg="tiddler.close"]').click();
+    await expect(card(page, 'Close Me')).toHaveCount(0);
+    expect(await visibleTitles(page)).not.toContain('Close Me');
   });
 
   test('tiddler.close works for a title containing spaces (guards bare-string array split)', async ({page}) => {
