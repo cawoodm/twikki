@@ -22,26 +22,26 @@ tw.events.send('theme.switch', 'AuroraTheme');
 
 ---
 
-## The three layers
+## The four layers
 
 ```css
-@layer base, theme, user;
+@layer base, plugin, theme, user;
 ```
 
 | Layer | Contents | Core default tiddlers |
 |---|---|---|
 | **base** | Reset rules + `:root` token declarations | `$BaseReset`, `$BaseVariables` |
+| **plugin** | `# StyleSheet` section of every `$Plugin`-tagged tiddler (auto-collected, alphabetical) | `$SettingsDialogPlugin`, `$PickerPlugin`, `$TabsPlugin`, `$ExplorerPlugin`, `$CommandPalette`, `$UnsavedChangesPlugin` |
 | **theme** | Whatever the active `$Theme` tiddler's bullet list points to | `$CoreThemeLayout`, `$CoreThemeAppearance`, `$CoreThemePalette` |
 | **user** | `$StyleSheetUser` (delivered empty) | — |
 
-Two guarantees from `@layer`:
+Three guarantees from `@layer`:
 
-- **Theme rules beat base rules** regardless of selector specificity.
-- **User rules beat both** regardless of selector specificity.
+- **Plugin rules beat base rules** regardless of selector specificity (so a plugin's component CSS sits on top of the reset).
+- **Theme rules beat plugin rules** regardless of selector specificity (so a theme can re-skin any plugin).
+- **User rules beat everything** regardless of selector specificity.
 
-The base layer is hard-coded into `$CoreThemeManager` — a theme cannot opt out. The
-user layer is wrapped automatically; a theme cannot lock it out. The theme layer is
-yours.
+The base and plugin layers are assembled by `$CoreThemeManager` — a theme cannot opt out. The user layer is wrapped automatically; a theme cannot lock it out. The theme layer is yours.
 
 ### What lives where
 
@@ -51,10 +51,15 @@ yours.
   `--accent`, `--tab-bg`, …). The contract every component depends on; new tokens go
   here. Enforced by [`tests/unit/tokens.test.js`](../tests/unit/tokens.test.js), which
   fails if any `var(--x)` reference in `src/` has no matching declaration.
+- **Plugin `# StyleSheet` sections** — every built-in interaction plugin (settings
+  dialog, picker, tabs, explorer, command palette, unsaved-changes dialog) ships its
+  own CSS in a `# StyleSheet` section inside its `.tid` file. The manager auto-collects
+  them; plugins don't have to register anywhere. See "Shipping a stylesheet with a
+  plugin" below.
 - `$CoreThemeLayout` — app-shell grid, sidebar/main flex internals, responsive drawer,
   header-bar variant. Structural rules only.
-- `$CoreThemeAppearance` — token-driven component appearance: sidebar, picker, tabs,
-  cards, dialogs, buttons, forms, typography, code blocks, notifications, settings form.
+- `$CoreThemeAppearance` — token-driven component appearance: body chrome, sidebar
+  container, cards, dialog frame, buttons, forms, typography, code blocks, notifications.
   Reads tokens from the base layer.
 - `$CoreThemePalette` — placeholder for the **light** palette; intentionally empty
   because the light defaults already live in `$BaseVariables`. Custom light themes can
@@ -197,6 +202,55 @@ work.
 - A `.tid` file with `# Section` markers inside it becomes one parent tiddler plus
   named sub-sections, addressable as `[[ParentName::SectionName]]`. Use this to ship
   a theme as a single file (theme tiddler + palette section), as the built-ins do.
+
+---
+
+## Shipping a stylesheet with a plugin
+
+A plugin ships its CSS inside its own `.tid` file, in a `# StyleSheet` section. The
+manager auto-collects every `# StyleSheet` section from `$Plugin`-tagged tiddlers and
+wraps the result in `@layer plugin`, between the base and theme layers.
+
+```
+tags: $Plugin
+
+# Description
+A picker for foos.
+
+# Code
+```javascript
+(function() {
+  // … your plugin code …
+})();
+```
+
+# StyleSheet
+```css
+/* Use the design tokens — your CSS will follow whatever theme is active. */
+.my-plugin-thing {
+  background: var(--colbg2);
+  color: var(--colfg);
+  border: 1px solid var(--col4);
+  border-radius: var(--rad1);
+}
+```
+```
+
+What this gets you:
+
+- **Inherits the design tokens** (`--col*`, `--colbg*`, `--rad*`, …) so your component
+  recolours under every theme without you authoring per-theme overrides.
+- **Themes can override your component** — a theme that wants `.my-plugin-thing` to be
+  red simply ships that selector in its own palette; the theme layer beats the plugin
+  layer cross-layer regardless of specificity.
+- **Users can always win** — `$StyleSheetUser` overrides the plugin layer too.
+- **Zero registration**: the manager walks `$Plugin`-tagged tiddlers and pulls each
+  one's `::StyleSheet` section. Plugins without a section are skipped. Edits to the
+  section repaint without a reload.
+
+Namespace your selectors with a unique prefix (`.my-plugin-*`) so cross-plugin
+collisions stay rare. The built-in plugins follow this convention (`.settings-*`,
+`.picker-*`, `.tab*`, `.explorer-*`, `.palette-*`, `.tw-changes-*`).
 
 ### Web fonts
 

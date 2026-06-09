@@ -26,6 +26,43 @@ A plugin is usually an immediately-invoked function that hooks into the global `
 
 See [[TW API]] for more details
 
+## Plugin stylesheet
+
+A plugin can ship its own CSS alongside its code. Convert the plugin from a plain `.js` file to a multi-section `.tid` file tagged `$Plugin`, with the JS body inside a `# Code` section and the CSS inside a `# StyleSheet` section:
+
+```
+tags: $Plugin
+
+# Description
+What this plugin does.
+
+# Code
+```javascript
+(function() {
+  // … your plugin code …
+})();
+```
+
+# StyleSheet
+```css
+.my-plugin-thing { color: var(--col6); }
+```
+```
+
+`$CoreThemeManager` auto-discovers every `$Plugin`-tagged tiddler with a `# StyleSheet` section and wraps the collected CSS in `@layer plugin`, which sits between the `base` layer (reset + tokens) and the `theme` layer:
+
+```css
+@layer base, plugin, theme, user;
+```
+
+So a plugin's CSS:
+
+* **inherits** the design tokens from `$BaseVariables` (`--col*`, `--colbg*`, `--rad*`, …), so it follows whatever theme the user has on;
+* is **overridable by themes** — a theme can target `.my-plugin-thing` from its own palette and win cross-layer;
+* is **overridable by the user** — `$StyleSheetUser` always wins.
+
+Namespace your selectors (a unique class prefix) so cross-plugin collisions stay rare. Editing a `$Plugin` tiddler's `# StyleSheet` section repaints without a reload — the manager listens for `tiddler.updated` on any `$Plugin`. See [[ExamplePlugin]] for the canonical shape, and [[Themes]] for the full cascade picture.
+
 ## Macros
 
 A macro is a speciall command inside `<<...>>` blocks in markdown which runs and produces dynamic content and/or UI elements (like buttons). A macro returns a string of markdown/HTML that is rendered in place.
