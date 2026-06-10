@@ -148,9 +148,11 @@
   }
 
   // Concatenate CSS from every plugin in the relevance registry that exposes a
-  // # StyleSheet section. Sorted alphabetically for stable cascade order.
+  // # StyleSheet section. Disabled plugins ($CodeDisabled) are skipped — their JS
+  // doesn't run, so their CSS doesn't apply either. Sorted for stable cascade order.
   function pluginStyles() {
     return [...(tw.tmp.themeRelevantTiddlers || [])]
+      .filter(title => !tw.run.getTiddler(title)?.tags?.includes('$CodeDisabled'))
       .sort((a, b) => a.localeCompare(b))
       .map(title => tw.run.getTiddlerTextRaw(`${title}::StyleSheet`))
       .filter(Boolean);
