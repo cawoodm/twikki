@@ -1,6 +1,3 @@
-## Plugins
-* Create a registerPlugin API so we can list plugins with versions
-
 ## Links
 * Plugin to auto link CamelCase tiddlers if they exist
 * Browser history (back)
