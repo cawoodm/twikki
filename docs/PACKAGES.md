@@ -137,9 +137,10 @@ version: 1.0.0
 platform: 0.24.0
 ```
 
-Boot-time `prescanPluginRegistry()` walks `$Plugin` tiddlers, parses `# Meta` via `core.sections`, and populates `tw.pluginRegistry[]`. Unlike modules, the plugin compat gate is **soft** — an incompatible plugin still runs, the widget just surfaces a `⚠`/`✗` for the user. Full field reference and `.js`/`.tid` placement rules are in [`Plugins.tid`](../src/packages/website/Plugins.tid).
+Boot-time `prescanPluginRegistry()` walks `$Plugin` tiddlers, parses `# Meta` via `core.sections`, and populates `tw.pluginRegistry[]`. Unlike modules, the plugin compat gate is **soft** — an incompatible plugin still runs, the widget just surfaces a `⚠`/`✗` for the user. Full field reference and `.js`/`.tid` placement rules are in [PLUGINS.md](./PLUGINS.md).
 
 ## See also
 
 - [COMPILER.md](./COMPILER.md) — source-file → package-JSON build step.
 - [MODULES.md](./MODULES.md) — boot order, core-modules-vs-packages, caching, and the `?reload`/`?update`/`?safemode` refresh model.
+- [PLUGINS.md](./PLUGINS.md) — plugin authoring, the `# Meta` section, the registry, and the `<<plugins>>` widget.
