@@ -82,7 +82,7 @@
       // click handler resolves data-msg from the nearest ancestor, so the data
       // attributes live on the row itself. The inner link is kept for styling.
       newElement.setAttribute('data-msg', 'tiddler.show');
-      newElement.setAttribute('data-params', title);
+      newElement.setAttribute('data-params', JSON.stringify(title));
       newElement.appendChild(newTiddlerLink({title, type}));
     } else {
       newElement.innerHTML = title; // placeholder (e.g. "No results!") — not clickable
@@ -93,7 +93,7 @@
   function newTiddlerLink({title}) {
     let newElement = document.createElement('a');
     newElement.setAttribute('data-msg', 'tiddler.show');
-    newElement.setAttribute('data-params', title);
+    newElement.setAttribute('data-params', JSON.stringify(title));
     newElement.setAttribute('data-tiddler-backref', tw.core.common.hash(title));
     newElement.setAttribute('href', 'javascript:false;');
     newElement.innerText = title;

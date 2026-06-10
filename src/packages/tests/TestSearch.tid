@@ -1,8 +1,13 @@
+tags: Test
+
 * <<tests.clear>>
-* <<tests.queue name:"Close All Tiddlers" click:#close-all find:[data-tiddler-title] expectNone:1>>
-* <<tests.queue name:"Search Welcome" type:#search input:welcome find:"#search-results [data-params=Welcome]">>
+* <<tests.queue name:"Close All Tiddlers" msg:"ui.close-all" find:[data-tiddler-title] expectNone:1>>
+* <<tests.queue name:"Search Welcome" type:#search input:welcome find:"#search-results [data-params*=Welcome]">>
 * <<tests.queue name:"Search Advanced 1" type:#search input:"$close pck:icons" find:"#search-results div" expect:"$IconClose">>
 * <<tests.queue name:"Search Advanced 2" type:#search input:"$all pck:icons" find:"#search-results div" expect:"$IconOpenAll,$IconCloseAll">>
+* <<tests.queue comment:"Search result click — multi-word title">>
+* <<tests.queue name:"Search: multi-word result appears" type:#search input:"Test Search" find:"#search-results [data-params*='Test Search Result']">>
+* <<tests.queue name:"Click: multi-word result opens correct tiddler" click:"#search-results [data-params*='Test Search Result']" find:"#visible-tiddlers [data-tiddler-title='Test Search Result']">>
 * <<tests.queue comment:"Done">>
 
 <<tests.run suite:"Search">>

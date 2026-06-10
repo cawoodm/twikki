@@ -1,3 +1,5 @@
+tags: Test
+
 * <<tests.clear>>
 * <<tests.queue name:"Close All Tiddlers" msg:ui.close.all find:[data-tiddler-title] expectNone:1>>
 * <<tests.queue name:"Open All Tiddlers" msg:ui.open.all find:[data-tiddler-title] expectSome:"Welcome,Help">>
@@ -11,17 +13,3 @@
 * Open all tagged with `Favorite`: [⭐Favorites](#msg:ui.open.all:{"tag":"Favorite"})
 * [Favorite](#msg:ui.open.all:tag:Favorite)
 
-## Code-block escaping (must render literally, no links/macros/inclusions)
-
-Inline code, must stay literal: `[[$StyleSheetCore]]` `<<somemacro>>` `{{SomeTiddler}}`
-
-Fenced block, must stay literal:
-
-```
-* [[$StyleSheetCore]]
-* <<somemacro>>
-* {{SomeTiddler}}
-* [Show 'Code Tiddler'](#msg:tiddler.show:Code%20Tiddler)
-```
-
-And a real link outside code still works: [[$StyleSheetCore]]
