@@ -31,9 +31,6 @@
       "args": [
         "${workspaceFolder}/vite-plugin-tiddler-compile.js"
       ],
-      "runOptions": {
-        "runOn": "folderOpen"
-      },
       "problemMatcher": [],
       "presentation": {
         "reveal": "silent"

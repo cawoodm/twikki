@@ -1,8 +1,5 @@
-## Search
-* Highlight search term
-
-## Code Blocks
-* Probably shouldn't be running them automatically
+## Plugins
+* Create a registerPlugin API so we can list plugins with versions
 
 ## Links
 * Plugin to auto link CamelCase tiddlers if they exist
@@ -14,5 +11,4 @@
 * Recent view of recently edited tiddlers
 
 # Toolbars
-* Close other tiddlers (fullscreen icon)
 * favorites.toggle macro should Add to Favorites and toggle visibility of icon ⭐
