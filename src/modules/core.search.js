@@ -205,6 +205,17 @@
     tw.core.dom.$('search')?.addEventListener('focus', searchFocus);
     tw.core.dom.$('search')?.addEventListener('blur', searchLoseFocus);
     tw.core.dom.$('search-results').style.display = 'none';
+    tw.core.dom.$('search-results').addEventListener('click', publishSearchClick);
+  }
+
+  function publishSearchClick(e) {
+    const row = e.target.closest('[data-msg="tiddler.show"][data-params]');
+    if (!row) return;
+    let title;
+    try {title = JSON.parse(row.getAttribute('data-params'));}
+    catch {return;}
+    const term = tw.core.dom.$('search').value || '';
+    tw.events.send('search.result.clicked', {title, term});
   }
 
 });

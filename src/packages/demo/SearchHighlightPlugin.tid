@@ -1,0 +1,100 @@
+// tags: $Plugin
+
+# Description
+
+When a search result is clicked, every case-insensitive substring match for
+the search term inside the opened note is painted yellow for 10 seconds and
+then quietly cleared. Uses the CSS Custom Highlight API
+(`::highlight(search-hit)`), so it overlays text without touching the DOM and
+cannot disturb `$HighlightPlugin`'s syntax-highlighting spans.
+
+The term arrives via the `search.result.clicked` event published by
+`core.search`. Only terms whose trimmed length is at least 3 characters are
+highlighted, mirroring typical incremental-search ergonomics.
+
+# Data
+
+```json
+{
+  "version": "0.1.0"
+}
+```
+
+# Code
+
+```javascript
+(function() {
+
+  const NAME = 'search-hit';
+  const MIN = 3;
+  const TTL = 10_000;
+
+  if (typeof Highlight === 'undefined' || !CSS?.highlights) return; // older browser → no-op
+  installSheet();
+
+  let pending = null;     // {title, term} captured by search.result.clicked
+  let clearTimer = null;  // setTimeout id for the active highlight
+
+  tw.events.subscribe('search.result.clicked', onSearchResultClicked);
+  tw.events.subscribe('tiddler.rendered', onTiddlerRenderedForHighlight);
+
+  function onSearchResultClicked({title, term}) {
+    if (!title || typeof term !== 'string') return;
+    const t = term.trim();
+    pending = (t.length >= MIN) ? {title, term: t} : null;
+  }
+
+  function onTiddlerRenderedForHighlight({tiddler, newElement}) {
+    if (!pending || !tiddler || tiddler.title !== pending.title) return;
+    const term = pending.term;
+    pending = null;
+    const root = newElement.querySelector('.text');
+    if (!root) return;
+
+    const ranges = findRanges(root, term);
+    if (!ranges.length) return;
+
+    if (clearTimer) {window.clearTimeout(clearTimer); clearTimer = null;}
+    CSS.highlights.set(NAME, new Highlight(...ranges));
+    clearTimer = window.setTimeout(() => {
+      CSS.highlights.delete(NAME);
+      clearTimer = null;
+    }, TTL);
+  }
+
+  function findRanges(root, term) {
+    const needle = term.toLowerCase();
+    const ranges = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node; (node = walker.nextNode());) {
+      const hay = node.nodeValue.toLowerCase();
+      let i = 0;
+      while ((i = hay.indexOf(needle, i)) !== -1) {
+        const r = document.createRange();
+        r.setStart(node, i);
+        r.setEnd(node, i + needle.length);
+        ranges.push(r);
+        i += needle.length;
+      }
+    }
+    return ranges;
+  }
+
+  function installSheet() {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      ::highlight(search-hit) {
+        background-color: var(--search-hit-bg, #fff59d);
+        color: inherit;
+        animation: search-hit-fade 10s linear forwards;
+      }
+      @keyframes search-hit-fade {
+        0%, 90% { background-color: var(--search-hit-bg, #fff59d); }
+        100%    { background-color: transparent; }
+      }
+    `);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  }
+
+})();
+```
