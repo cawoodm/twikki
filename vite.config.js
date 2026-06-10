@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 3002,
-    open: true,
+    open: !process.env.VITE_TEST, // e2e harness sets VITE_TEST to avoid popping a browser
     host: true,
   },
   plugins: [

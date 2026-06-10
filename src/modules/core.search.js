@@ -10,7 +10,8 @@
 (function(tw) {
 
   const name = 'core.search';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Exports
   const exports = {
@@ -32,7 +33,7 @@
     tw.events.subscribe('search.advanced', searchQueryAdvanced); // From #msg:search.advanced:pck:icons title:add
   };
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   function searchQueryAdvanced({all = false, title, tag, pck, type, id}) {
     let q = '';
@@ -81,7 +82,7 @@
       // click handler resolves data-msg from the nearest ancestor, so the data
       // attributes live on the row itself. The inner link is kept for styling.
       newElement.setAttribute('data-msg', 'tiddler.show');
-      newElement.setAttribute('data-params', title);
+      newElement.setAttribute('data-params', JSON.stringify(title));
       newElement.appendChild(newTiddlerLink({title, type}));
     } else {
       newElement.innerHTML = title; // placeholder (e.g. "No results!") — not clickable
@@ -92,7 +93,7 @@
   function newTiddlerLink({title}) {
     let newElement = document.createElement('a');
     newElement.setAttribute('data-msg', 'tiddler.show');
-    newElement.setAttribute('data-params', title);
+    newElement.setAttribute('data-params', JSON.stringify(title));
     newElement.setAttribute('data-tiddler-backref', tw.core.common.hash(title));
     newElement.setAttribute('href', 'javascript:false;');
     newElement.innerText = title;
@@ -204,6 +205,29 @@
     tw.core.dom.$('search')?.addEventListener('focus', searchFocus);
     tw.core.dom.$('search')?.addEventListener('blur', searchLoseFocus);
     tw.core.dom.$('search-results').style.display = 'none';
+    tw.core.dom.$('search-results').addEventListener('click', publishSearchClick);
+    document.addEventListener('click', onDocumentClick);
+  }
+
+  // Event-triggered search (e.g. #msg:search:$tag:$Shadow) renders results without
+  // focusing the input, so the blur handler never fires. This catches outside
+  // clicks regardless of focus state.
+  function onDocumentClick(event) {
+    let results = tw.core.dom.$('search-results');
+    if (!results || results.style.display === 'none') return;
+    if (event.target.closest('#search-results')) return;
+    if (event.target.closest('#search')) return;
+    results.style.display = 'none';
+  }
+
+  function publishSearchClick(e) {
+    const row = e.target.closest('[data-msg="tiddler.show"][data-params]');
+    if (!row) return;
+    let title;
+    try {title = JSON.parse(row.getAttribute('data-params'));}
+    catch {return;}
+    const term = tw.core.dom.$('search').value || '';
+    tw.events.send('search.result.clicked', {title, term});
   }
 
 });

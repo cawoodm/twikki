@@ -8,7 +8,8 @@
 (function(tw) {
 
   const name = 'core.templater';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   let blockregex = /\{\{(([@!]?)(.+?))\}\}(([\s\S]+?)(\{\{:\1\}\}([\s\S]+?))?)\{\{\/\1\}\}/g;
   let valregex = /\{\{([=%])(.+?)\}\}/g;
@@ -24,7 +25,7 @@
 
   const run = () => {};
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   // Based on https://github.com/jasonmoo/t.js
   function Templater(template) {

@@ -104,7 +104,7 @@
 
       baseUrl = settings?.urls?.moduleUrl || window.MODULE_URL || document.location.origin;
       // Local dev: serve modules/packages from the dev server, not the published copy
-      // if (document.location.host.match(/^(localhost):\d+$/)) baseUrl = document.location.origin;
+      if (document.location.host.match(/^(localhost):\d+$/)) baseUrl = document.location.origin;
 
       dp('Looking for local TWikki.Core modules...');
 

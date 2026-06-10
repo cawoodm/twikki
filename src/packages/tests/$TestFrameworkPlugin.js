@@ -59,7 +59,7 @@
   }
   function doMessage({msg}) {
     if (!msg) return;
-    let src = tw.run.sendCommand(msg);
+    tw.run.sendCommand(msg);
   }
   async function typingTest({name, type, input, find, expect, expectNone, expectSome}) {
     await sleep(WAIT);

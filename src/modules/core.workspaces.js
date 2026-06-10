@@ -10,7 +10,8 @@
 (function(tw) {
 
   const name = 'core.workspaces';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Init
   if (!tw.storage.get('workspaces')) tw.storage.set('workspaces', ['default']);
@@ -43,7 +44,7 @@
     workspaceLoad,
   };
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   function workspaceDeleteUI(workspace) {
     if (!confirm(`Sure you want to delete the workspace '${workspace}'? This is irrevocable unless you have backups!`)) return;

@@ -27,7 +27,8 @@
 
   // Meta
   const name = 'core.sections';
-  const version = '0.0.1';
+  const version = '0.24.0';
+  const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Fence info-string → tiddler type. Unknown info-strings are used verbatim.
   const FENCE_TYPES = {
@@ -49,7 +50,7 @@
 
   const run = () => {};
 
-  return {name, version, exports, run};
+  return {name, version, platform, exports, run};
 
   function fenceToType(info) {
     let key = String(info || '').trim().toLowerCase();
