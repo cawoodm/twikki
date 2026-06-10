@@ -22,22 +22,64 @@
       getThemeNames,
     };
     document.adoptedStyleSheets.push(tw.theme.stylesheets.custom);
+    rebuildRelevanceList();
     themeUpdate();
   });
 
   wireUp('tiddler.updated', tiddlerChanged);
-  wireUp('tiddler.deleted', tiddlerChanged);
+  // tiddler.deleted: the tiddler is already gone from the store when the event fires,
+  // so tag checks return nothing. Check relevance against the registry first, then
+  // drop the entry — only rebuild CSS if the deleted tiddler was actually CSS-relevant.
+  wireUp('tiddler.deleted', title => {
+    const wasRelevant = tiddlerIsThemeRelevant(title);
+    addToRelevance(title, false);
+    if (wasRelevant) themeUpdate();
+  });
   function tiddlerChanged(title) {
-    if (tiddlerIsThemeRelevant(title))
+    // Capture pre-sync relevance so that a plugin which *loses* its # StyleSheet
+    // still triggers a rebuild (it's no longer relevant, but its CSS must be removed).
+    const wasRelevant = tiddlerIsThemeRelevant(title);
+    if (tw.run.getTiddler(title)?.tags?.includes('$Plugin'))
+      addToRelevance(title, !!tw.run.getTiddlerTextRaw(`${title}::StyleSheet`));
+    if (wasRelevant || tiddlerIsThemeRelevant(title))
       return themeUpdate();
     if (tiddlerIsATheme(title))
       return themesUpdate();
+  }
+  function addToRelevance(title, present) {
+    const list = tw.tmp.themeRelevantTiddlers || (tw.tmp.themeRelevantTiddlers = []);
+    const idx = list.indexOf(title);
+    if (present && idx === -1) list.push(title);
+    else if (!present && idx !== -1) list.splice(idx, 1);
+  }
+
+  // Boot population: every tiddler whose text contributes to the @layer cascade.
+  // Single source of truth — kept current by themeSwitch (theme + its sheets) and
+  // tiddlerChanged (plugins gaining/losing a # StyleSheet section).
+  function rebuildRelevanceList() {
+    const list = [];
+    list.push(...BASE_SHEETS, USER_SHEET, '$Theme');
+    // Mirror getThemeStyleSheets()'s fallback so the registry agrees with what
+    // buildCss() actually concatenates when $Theme points to a missing tiddler.
+    let theme = getCurrentThemeName();
+    if (!tw.call('tiddlerExists', theme)) theme = '$CoreThemeLight';
+    if (tw.call('tiddlerExists', theme)) {
+      list.push(theme);
+      list.push(...tw.run.getTiddlerList(theme));
+    }
+    tw.tiddlers.all
+      .filter(t => t.tags?.includes('$Plugin') && tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`))
+      .forEach(t => list.push(t.title));
+    tw.tmp.themeRelevantTiddlers = [...new Set(list)];
   }
 
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
     if (!theme) return;
     if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
+    // Swap relevance entries before $Theme is rewritten: drop the old theme tiddler
+    // and its sheets, add the new ones. Base / user / $Theme / plugin entries stay.
+    swapThemeRelevance(getCurrentThemeName(), theme);
     // A theme owns its layout via an optional `# MainLayout` section naming a shared
     // layout tiddler. We persist the choice in the `$Layout` pointer (read at the
     // first paint, before packages load). If it changes, a full reload re-renders the
@@ -84,6 +126,7 @@
   }
 
   const BASE_SHEETS = ['$BaseReset', '$BaseVariables'];
+  const USER_SHEET = '$StyleSheetUser';
 
   wireUp('ui.reloaded', themeUpdate);
   function themeUpdate() {
@@ -93,14 +136,26 @@
   function buildCss() {
     const layers = {
       base: BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
+      plugin: pluginStyles(),
       theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
-      user: [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
+      user: [tw.run.getTiddlerTextRaw(USER_SHEET)],
     };
     const header = `@layer ${Object.keys(layers).join(', ')};`;
     const body = Object.entries(layers)
       .map(([name, bodies]) => `@layer ${name} {\n${bodies.filter(Boolean).join('\n')}\n}`)
       .join('\n\n');
     return header + '\n\n' + body;
+  }
+
+  // Concatenate CSS from every plugin in the relevance registry that exposes a
+  // # StyleSheet section. Disabled plugins ($CodeDisabled) are skipped — their JS
+  // doesn't run, so their CSS doesn't apply either. Sorted for stable cascade order.
+  function pluginStyles() {
+    return [...(tw.tmp.themeRelevantTiddlers || [])]
+      .filter(title => !tw.run.getTiddler(title)?.tags?.includes('$CodeDisabled'))
+      .sort((a, b) => a.localeCompare(b))
+      .map(title => tw.run.getTiddlerTextRaw(`${title}::StyleSheet`))
+      .filter(Boolean);
   }
 
   function tiddlerIsATheme(title) {
@@ -111,9 +166,19 @@
     tw.events.send('tiddler.refresh', '$Themes');
   }
 
+  // Pure array lookup — the registry is the single source of truth, maintained by
+  // rebuildRelevanceList (boot), swapThemeRelevance (theme switch), and addToRelevance
+  // (plugin gains/loses # StyleSheet on edit/delete).
   function tiddlerIsThemeRelevant(title) {
-    let themeName = getCurrentThemeName();
-    return title === '$Theme' || title === themeName || getThemeStyleSheets().includes(title);
+    return (tw.tmp.themeRelevantTiddlers || []).includes(title);
+  }
+  function swapThemeRelevance(oldTheme, newTheme) {
+    if (oldTheme && tw.call('tiddlerExists', oldTheme)) {
+      addToRelevance(oldTheme, false);
+      tw.run.getTiddlerList(oldTheme).forEach(s => addToRelevance(s, false));
+    }
+    addToRelevance(newTheme, true);
+    tw.run.getTiddlerList(newTheme).forEach(s => addToRelevance(s, true));
   }
   function getCurrentThemeName() {
     return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]

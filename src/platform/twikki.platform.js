@@ -1479,6 +1479,10 @@
   function isPackageList(t) {
     return ['$CorePackages', '$ExtensionPackages'].includes(t.title);
   }
+  // TODO: rename `$CodeDisabled` → `$Disabled`. The tag now gates more than code
+  // execution (e.g. $CoreThemeManager skips CSS from $CodeDisabled plugins), so the
+  // narrower name no longer fits. Rename in one pass across the platform, packages,
+  // and docs; provide a migration for existing stores.
   function isActiveCodeTiddler(t) {
     return ['script/js'].includes(t.type) && !t.tags.includes('$CodeDisabled');
   }

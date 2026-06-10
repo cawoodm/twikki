@@ -121,7 +121,7 @@ export function compilePackage(packageName, sourceDir, outputDir) {
 
 function compileAll(sourceSets) {
   for (const {sourceRoot, outputDir} of sourceSets) {
-    if (!existsSync(sourceRoot)) continue;
+    if (!existsSync(sourceRoot)) throw new Error(`sourceRoot "${sourceRoot}" does not exist!`);
     const entries = readdirSync(sourceRoot, {withFileTypes: true}).filter(e => e.isDirectory());
     for (const entry of entries) {
       compilePackage(entry.name, join(sourceRoot, entry.name), outputDir);

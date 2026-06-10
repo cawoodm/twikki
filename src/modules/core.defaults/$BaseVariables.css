@@ -25,8 +25,9 @@
   /* ---- Foreground over accent/error/notify backgrounds ---- */
   --col-on-accent: #fff;
 
-  /* ---- Error / critical ---- */
+  /* ---- Error / critical / warning ---- */
   --col-error: #c0392b;
+  --col-warning: #e0a000;
 
   /* ---- Notification background (rgba components) ---- */
   --notify-rgba: 210, 180, 90;
