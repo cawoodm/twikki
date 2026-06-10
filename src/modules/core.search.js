@@ -206,6 +206,18 @@
     tw.core.dom.$('search')?.addEventListener('blur', searchLoseFocus);
     tw.core.dom.$('search-results').style.display = 'none';
     tw.core.dom.$('search-results').addEventListener('click', publishSearchClick);
+    document.addEventListener('click', onDocumentClick);
+  }
+
+  // Event-triggered search (e.g. #msg:search:$tag:$Shadow) renders results without
+  // focusing the input, so the blur handler never fires. This catches outside
+  // clicks regardless of focus state.
+  function onDocumentClick(event) {
+    let results = tw.core.dom.$('search-results');
+    if (!results || results.style.display === 'none') return;
+    if (event.target.closest('#search-results')) return;
+    if (event.target.closest('#search')) return;
+    results.style.display = 'none';
   }
 
   function publishSearchClick(e) {
