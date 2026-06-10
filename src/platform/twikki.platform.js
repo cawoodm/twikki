@@ -714,6 +714,11 @@
           }
         }
       });
+    // Registry of plugin tiddlers that carry a # StyleSheet section — used by
+    // $CoreThemeManager to gate CSS-layer rebuilds to plugins that actually have CSS.
+    tw.tmp.themeRelevantTiddlers = tw.tiddlers.all
+      .filter(t => t.tags?.includes('$Plugin') && getTiddlerTextRaw(`${t.title}::StyleSheet`))
+      .map(t => t.title);
   }
   function initPlugins() {
     Object.keys(tw.plugins)

@@ -26,15 +26,28 @@
   });
 
   wireUp('tiddler.updated', tiddlerChanged);
-  // tiddler.deleted: the tiddler is already removed from the store when the event
-  // fires, so tag checks return nothing. Rebuild unconditionally so deleted plugin
-  // CSS doesn't linger in @layer plugin until the next unrelated rebuild.
-  wireUp('tiddler.deleted', () => themeUpdate());
+  // tiddler.deleted: the tiddler is already gone from the store when the event fires,
+  // so tag checks return nothing. Remove from the CSS registry (if present) and
+  // rebuild unconditionally so deleted plugin CSS doesn't linger in @layer plugin.
+  wireUp('tiddler.deleted', title => {
+    syncPluginRegistration(title, false);
+    themeUpdate();
+  });
   function tiddlerChanged(title) {
+    // Keep CSS registry current before the relevance check so that adding or
+    // removing a # StyleSheet section is detected on the very same edit.
+    if (tw.run.getTiddler(title)?.tags?.includes('$Plugin'))
+      syncPluginRegistration(title, !!tw.run.getTiddlerTextRaw(`${title}::StyleSheet`));
     if (tiddlerIsThemeRelevant(title))
       return themeUpdate();
     if (tiddlerIsATheme(title))
       return themesUpdate();
+  }
+  function syncPluginRegistration(title, hasCss) {
+    const list = tw.tmp.themeRelevantTiddlers || (tw.tmp.themeRelevantTiddlers = []);
+    const idx = list.indexOf(title);
+    if (hasCss && idx === -1) list.push(title);
+    else if (!hasCss && idx !== -1) list.splice(idx, 1);
   }
 
   wireUp('theme.switch', themeSwitch);
@@ -107,13 +120,12 @@
     return header + '\n\n' + body;
   }
 
-  // Auto-collected from every $Plugin-tagged tiddler that ships a `# StyleSheet`
-  // section. Plugin CSS lives next to plugin JS — the manager doesn't maintain a
-  // list, it just walks the existing $Plugin tag.
+  // Read CSS from the plugins registered in tw.tmp.themeRelevantTiddlers (built at boot
+  // by runExtensionTiddlers and kept current by syncPluginRegistration on each edit).
   function pluginStyles() {
-    return tw.run.getTiddlersByTag('$Plugin')
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .map(t => tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`))
+    return [...(tw.tmp.themeRelevantTiddlers || [])]
+      .sort((a, b) => a.localeCompare(b))
+      .map(title => tw.run.getTiddlerTextRaw(`${title}::StyleSheet`))
       .filter(Boolean);
   }
 
@@ -129,9 +141,9 @@
     let themeName = getCurrentThemeName();
     if (title === '$Theme' || title === themeName) return true;
     if (getThemeStyleSheets().includes(title)) return true;
-    // Edits to any $Plugin tiddler may have touched its `# StyleSheet` section
-    // (the plugin layer); rebuild rather than try to parse out which section changed.
-    return tw.run.getTiddler(title)?.tags?.includes('$Plugin') === true;
+    // Only plugins that actually carry a # StyleSheet section are CSS-relevant;
+    // the registry is built at boot and kept current by syncPluginRegistration.
+    return (tw.tmp.themeRelevantTiddlers || []).includes(title);
   }
   function getCurrentThemeName() {
     return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]
