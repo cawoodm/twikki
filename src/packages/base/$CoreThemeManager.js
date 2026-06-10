@@ -22,38 +22,64 @@
       getThemeNames,
     };
     document.adoptedStyleSheets.push(tw.theme.stylesheets.custom);
+    rebuildRelevanceList();
     themeUpdate();
   });
 
   wireUp('tiddler.updated', tiddlerChanged);
   // tiddler.deleted: the tiddler is already gone from the store when the event fires,
-  // so tag checks return nothing. Remove from the CSS registry (if present) and
-  // rebuild unconditionally so deleted plugin CSS doesn't linger in @layer plugin.
+  // so tag checks return nothing. Check relevance against the registry first, then
+  // drop the entry — only rebuild CSS if the deleted tiddler was actually CSS-relevant.
   wireUp('tiddler.deleted', title => {
-    syncPluginRegistration(title, false);
-    themeUpdate();
+    const wasRelevant = tiddlerIsThemeRelevant(title);
+    addToRelevance(title, false);
+    if (wasRelevant) themeUpdate();
   });
   function tiddlerChanged(title) {
-    // Keep CSS registry current before the relevance check so that adding or
-    // removing a # StyleSheet section is detected on the very same edit.
+    // Capture pre-sync relevance so that a plugin which *loses* its # StyleSheet
+    // still triggers a rebuild (it's no longer relevant, but its CSS must be removed).
+    const wasRelevant = tiddlerIsThemeRelevant(title);
     if (tw.run.getTiddler(title)?.tags?.includes('$Plugin'))
-      syncPluginRegistration(title, !!tw.run.getTiddlerTextRaw(`${title}::StyleSheet`));
-    if (tiddlerIsThemeRelevant(title))
+      addToRelevance(title, !!tw.run.getTiddlerTextRaw(`${title}::StyleSheet`));
+    if (wasRelevant || tiddlerIsThemeRelevant(title))
       return themeUpdate();
     if (tiddlerIsATheme(title))
       return themesUpdate();
   }
-  function syncPluginRegistration(title, hasCss) {
+  function addToRelevance(title, present) {
     const list = tw.tmp.themeRelevantTiddlers || (tw.tmp.themeRelevantTiddlers = []);
     const idx = list.indexOf(title);
-    if (hasCss && idx === -1) list.push(title);
-    else if (!hasCss && idx !== -1) list.splice(idx, 1);
+    if (present && idx === -1) list.push(title);
+    else if (!present && idx !== -1) list.splice(idx, 1);
+  }
+
+  // Boot population: every tiddler whose text contributes to the @layer cascade.
+  // Single source of truth — kept current by themeSwitch (theme + its sheets) and
+  // tiddlerChanged (plugins gaining/losing a # StyleSheet section).
+  function rebuildRelevanceList() {
+    const list = [];
+    list.push(...BASE_SHEETS, USER_SHEET, '$Theme');
+    // Mirror getThemeStyleSheets()'s fallback so the registry agrees with what
+    // buildCss() actually concatenates when $Theme points to a missing tiddler.
+    let theme = getCurrentThemeName();
+    if (!tw.call('tiddlerExists', theme)) theme = '$CoreThemeLight';
+    if (tw.call('tiddlerExists', theme)) {
+      list.push(theme);
+      list.push(...tw.run.getTiddlerList(theme));
+    }
+    tw.tiddlers.all
+      .filter(t => t.tags?.includes('$Plugin') && tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`))
+      .forEach(t => list.push(t.title));
+    tw.tmp.themeRelevantTiddlers = [...new Set(list)];
   }
 
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
     if (!theme) return;
     if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
+    // Swap relevance entries before $Theme is rewritten: drop the old theme tiddler
+    // and its sheets, add the new ones. Base / user / $Theme / plugin entries stay.
+    swapThemeRelevance(getCurrentThemeName(), theme);
     // A theme owns its layout via an optional `# MainLayout` section naming a shared
     // layout tiddler. We persist the choice in the `$Layout` pointer (read at the
     // first paint, before packages load). If it changes, a full reload re-renders the
@@ -100,6 +126,7 @@
   }
 
   const BASE_SHEETS = ['$BaseReset', '$BaseVariables'];
+  const USER_SHEET = '$StyleSheetUser';
 
   wireUp('ui.reloaded', themeUpdate);
   function themeUpdate() {
@@ -111,7 +138,7 @@
       base: BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
       plugin: pluginStyles(),
       theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
-      user: [tw.run.getTiddlerTextRaw('$StyleSheetUser')],
+      user: [tw.run.getTiddlerTextRaw(USER_SHEET)],
     };
     const header = `@layer ${Object.keys(layers).join(', ')};`;
     const body = Object.entries(layers)
@@ -120,8 +147,8 @@
     return header + '\n\n' + body;
   }
 
-  // Read CSS from the plugins registered in tw.tmp.themeRelevantTiddlers (built at boot
-  // by runExtensionTiddlers and kept current by syncPluginRegistration on each edit).
+  // Concatenate CSS from every plugin in the relevance registry that exposes a
+  // # StyleSheet section. Sorted alphabetically for stable cascade order.
   function pluginStyles() {
     return [...(tw.tmp.themeRelevantTiddlers || [])]
       .sort((a, b) => a.localeCompare(b))
@@ -137,13 +164,19 @@
     tw.events.send('tiddler.refresh', '$Themes');
   }
 
+  // Pure array lookup — the registry is the single source of truth, maintained by
+  // rebuildRelevanceList (boot), swapThemeRelevance (theme switch), and addToRelevance
+  // (plugin gains/loses # StyleSheet on edit/delete).
   function tiddlerIsThemeRelevant(title) {
-    let themeName = getCurrentThemeName();
-    if (title === '$Theme' || title === themeName) return true;
-    if (getThemeStyleSheets().includes(title)) return true;
-    // Only plugins that actually carry a # StyleSheet section are CSS-relevant;
-    // the registry is built at boot and kept current by syncPluginRegistration.
     return (tw.tmp.themeRelevantTiddlers || []).includes(title);
+  }
+  function swapThemeRelevance(oldTheme, newTheme) {
+    if (oldTheme && tw.call('tiddlerExists', oldTheme)) {
+      addToRelevance(oldTheme, false);
+      tw.run.getTiddlerList(oldTheme).forEach(s => addToRelevance(s, false));
+    }
+    addToRelevance(newTheme, true);
+    tw.run.getTiddlerList(newTheme).forEach(s => addToRelevance(s, true));
   }
   function getCurrentThemeName() {
     return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]
