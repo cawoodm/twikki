@@ -220,16 +220,16 @@ Surfaced three ways:
 }
 
 .tw-change-status.modified {
-  color: #e0a000;
+  color: var(--col-warning);
 }
 
 .tw-change-status.deleted {
-  color: #d05050;
+  color: var(--col-error);
 }
 
 /* Dirty indicator (header) — hidden via [hidden] until there are unsaved changes */
 #dirty-indicator {
-  color: #e0a000;
+  color: var(--col-warning);
   font-size: 1.1rem;
   line-height: 1;
 }

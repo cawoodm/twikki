@@ -26,7 +26,10 @@
   });
 
   wireUp('tiddler.updated', tiddlerChanged);
-  wireUp('tiddler.deleted', tiddlerChanged);
+  // tiddler.deleted: the tiddler is already removed from the store when the event
+  // fires, so tag checks return nothing. Rebuild unconditionally so deleted plugin
+  // CSS doesn't linger in @layer plugin until the next unrelated rebuild.
+  wireUp('tiddler.deleted', () => themeUpdate());
   function tiddlerChanged(title) {
     if (tiddlerIsThemeRelevant(title))
       return themeUpdate();
