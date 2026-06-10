@@ -17,12 +17,12 @@ The `<dialog>` is built in JS (so it can't collide with layout ids). The
 document-level keydown is bound once (guarded via `tw.tmp`) and is ignored
 while the edit dialog is open, so editing keeps its own keyboard.
 
-# Data
-```json
-{
-  "version": 1.0.0
-}
-```
+# Meta
+name: CommandPalette
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+description: Ctrl/Cmd+K palette for actions and tiddler navigation.
 
 # Code
 ```javascript

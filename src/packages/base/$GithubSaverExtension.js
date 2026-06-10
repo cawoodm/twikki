@@ -1,3 +1,12 @@
+// tags: $Plugin
+/*
+# Meta
+name: GithubSaver
+namespace: base
+version: 0.0.2
+platform: 0.24.0
+description: Save tiddlers to a GitHub repo via the contents API.
+*/
 tw.extensions.registerPlugin('base', 'GithubSaver', () => {
   return {
     name: 'GithubSaver',

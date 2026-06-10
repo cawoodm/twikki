@@ -27,12 +27,12 @@ Interception is via `tiddler.element.created` (fires for show / re-render /
 preview, BEFORE DOM insertion → no flash of raw JSON). The handler is a named
 function so re-evaluating this code tiddler does not register duplicates.
 
-# Data
-```json
-{
-  "version": 1.0.0
-}
-```
+# Meta
+name: SettingsDialog
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+description: Settings JSON viewer/editor surfaced via the command palette.
 
 # Code
 ```javascript

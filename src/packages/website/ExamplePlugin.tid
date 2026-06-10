@@ -59,6 +59,10 @@ This should print out: "Hello John Smith"
 
 
 # Meta
-* Author: Marc Cawood
-* Version: 1.0.1
-* URL: https://cawodm.github.io/packages/example-plugin.json
+name: example.hello
+namespace: example
+version: 1.0.1
+platform: 0.24.0
+author: Marc Cawood
+description: Demo plugin showing macros, settings, data and stylesheet sections.
+homepage: https://cawodm.github.io/packages/example-plugin.json

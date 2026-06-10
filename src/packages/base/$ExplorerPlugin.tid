@@ -11,12 +11,12 @@ and rebuilds live on note create/update/delete and on story changes (to keep
 the "open" highlight current). Reuses `tw.macros.core.allTags()` and
 `tw.util.titleMatch`.
 
-# Data
-```json
-{
-  "version": 1.0.0
-}
-```
+# Meta
+name: Explorer
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+description: Sidebar tree showing all tiddlers grouped by tag.
 
 # Code
 ```javascript

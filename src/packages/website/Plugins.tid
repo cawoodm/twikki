@@ -148,6 +148,55 @@ tw.events.subscribe('ui.loaded', () => {
 
 This is exactly how the built-in syntax-highlighting plugin pulls in Highlight.js.
 
+## Plugin metadata: the `# Meta` section
+
+A plugin tiddler can declare its identity and platform compatibility via a `# Meta` section. The runtime parses this at boot to populate the plugin registry (`tw.pluginRegistry`), which the `<<plugins>>` macro renders as a table.
+
+Add the `$Plugin` tag to your tiddler and include a `# Meta` section with `key: value` lines:
+
+```
+tags: $Plugin
+
+# Meta
+name: MyPlugin
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+author: Your Name
+description: One-line summary of what it does.
+homepage: https://example.com/my-plugin
+```
+
+Fields:
+
+* `name` *(required)* — plugin name (should match the `name` argument of `registerPlugin` if you use it).
+* `namespace` *(required)* — namespace argument of `registerPlugin`.
+* `version` *(required)* — semver of the plugin itself.
+* `platform` *(optional)* — TWikki platform version the plugin was built for; caret-matched against the running platform.
+* `author`, `description`, `homepage` *(optional)* — free text.
+
+If `platform` is declared and does not satisfy the running platform, the `<<plugins>>` widget surfaces a warning (`⚠`) or block (`✗`) status. **The plugin still runs** — the gate is informational, not enforced. If `platform` is omitted, the row shows as exempt (`–`).
+
+In a `.js` source file the `# Meta` section sits inside a `/* … */` block comment, with `# Meta` and the `key: value` lines at column 0 (the section parser scans line prefixes; `// # Meta` does NOT work):
+
+```js
+// tags: $Plugin
+/*
+# Meta
+name: MyPlugin
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+*/
+tw.extensions.registerPlugin('base', 'MyPlugin', () => ({ ... }));
+```
+
+## The `<<plugins>>` macro
+
+Renders a markdown table of every installed plugin — name, namespace, version, package of origin, built-for platform, and compatibility status. Mirrors the core-modules table produced by `<<modules>>`.
+
+> <<plugins>>
+
 ## Distributing plugins
 
 A plugin is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget. A whole plugin can even live in a single multi-section tiddler — see [[ExamplePlugin]].

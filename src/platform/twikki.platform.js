@@ -335,8 +335,21 @@
         },
         registerPlugin(namespace, name, fcn, options) {
           if (!tw.plugins[namespace]) tw.plugins[namespace] = {};
-          tw.plugins[namespace][name] = fcn();
+          const instance = fcn();
+          tw.plugins[namespace][name] = instance;
           if (options) Object.assign(tw.plugins[namespace][name], options);
+          // Correlate with the pre-scan registry, or create an orphan entry on the fly.
+          if (!tw.pluginRegistry) tw.pluginRegistry = [];
+          let entry = tw.pluginRegistry.find(e => e.namespace === namespace && e.name === name);
+          if (!entry) {
+            entry = {
+              name, namespace, source: null, package: null,
+              meta: {}, compat: {compatible: true, severity: 'exempt', reason: 'no # Meta section'},
+              instance: null, error: null,
+            };
+            tw.pluginRegistry.push(entry);
+          }
+          entry.instance = instance;
         },
         // Register a command (or array of commands) for the command palette.
         // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
@@ -563,6 +576,7 @@
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
     if (!qs.safemode) {
+      prescanPluginRegistry();
       runExtensionTiddlers();
       initPlugins();
       runPlugins();
@@ -721,12 +735,14 @@
         let namespace = tw.plugins[n];
         Object.keys(namespace).forEach(p => {
           let plugin = namespace[p];
+          if (typeof plugin?.init !== 'function') return;
           dp('Initializing plugin', plugin.name, plugin.version);
           try {
             plugin.init();
           } catch (e) {
             tw.ui.notify(`Plugin "${p}" failed to initialize: ${e.message}`, 'E');
             plugin.disabled = true;
+            recordPluginError(n, p, 'init', e);
           }
         });
       });
@@ -738,10 +754,21 @@
         Object.keys(namespace).forEach(p => {
           let plugin = namespace[p];
           if (plugin.disabled) return console.warn(`Plugin "${p}" disabled.`);
+          if (typeof plugin?.start !== 'function') return;
           dp('Running plugin', plugin.name, plugin.version);
-          plugin.start();
+          try {
+            plugin.start();
+          } catch (e) {
+            tw.ui.notify(`Plugin "${p}" failed to start: ${e.message}`, 'E');
+            plugin.disabled = true;
+            recordPluginError(n, p, 'start', e);
+          }
         });
       });
+  }
+  function recordPluginError(namespace, name, phase, err) {
+    const entry = tw.pluginRegistry?.find(e => e.namespace === namespace && e.name === name);
+    if (entry) entry.error = {phase, message: err?.message || String(err)};
   }
   function executeCodeTiddler(text, title) {
     if (qs.trace) return executeText(text, title);
@@ -1804,6 +1831,55 @@
       }
     }
     return {name: pck.name, version: meta.version, required, compatible, severity, reason};
+  }
+
+  // Parse a plugin tiddler's `# Meta` section into a plain metadata object.
+  // Returns null if no `# Meta` section exists. Strips parser-injected keys (name/tags/
+  // type/text) — only the authored fields remain (version, platform, author, …).
+  function parsePluginMeta(text) {
+    const section = tw.core?.sections?.getSection?.(text, 'Meta');
+    if (!section) return null;
+    const {name: _n, tags: _t, type: _ty, text: _x, ...meta} = section;
+    return meta;
+  }
+
+  // Classify a plugin's compat with the running platform from its parsed `# Meta`.
+  //   'ok'     — platform field present and caretSatisfies(required, VERSION).
+  //   'warn'   — same major, running older than built-for.
+  //   'block'  — different major.
+  //   'exempt' — no platform field declared (compatibility unknown, plugin still runs).
+  function checkPluginCompat(meta) {
+    const required = meta?.platform;
+    if (!required) return {compatible: true, severity: 'exempt', reason: 'no platform field'};
+    if (caretSatisfies(required, VERSION)) return {compatible: true, severity: 'ok', required};
+    const r = semver(required);
+    const p = semver(VERSION);
+    if (r && p && r.major !== p.major) {
+      return {compatible: false, severity: 'block', reason: `needs platform ${r.major}.x, running ${VERSION}`, required};
+    }
+    return {compatible: false, severity: 'warn', reason: `built for ${required}, running ${VERSION}`, required};
+  }
+
+  // Scan all $Plugin-tagged tiddlers, parse their `# Meta` section, and (re)populate
+  // tw.pluginRegistry. Called BEFORE runExtensionTiddlers, so registerPlugin can correlate
+  // each registered instance to an existing entry by (namespace, name). Plugins that ship
+  // no `# Meta` still get a row (with empty meta and 'exempt' compat); plugins that ship
+  // `# Meta` but never call registerPlugin (legacy IIFE-style) keep instance=null.
+  function prescanPluginRegistry() {
+    const tiddlers = (tw.tiddlers?.all || []).filter(t => t.tags?.includes('$Plugin'));
+    tw.pluginRegistry = tiddlers.map(t => {
+      const meta = parsePluginMeta(t.text || '') || {};
+      return {
+        name: meta.name || t.title,
+        namespace: meta.namespace || 'unknown',
+        source: t.title,
+        package: t.package || null,
+        meta,
+        compat: checkPluginCompat(meta),
+        instance: null,
+        error: null,
+      };
+    });
   }
 
   // A cached module is usable if it carries a payload: code modules have `.code`,
