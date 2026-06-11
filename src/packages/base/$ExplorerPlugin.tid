@@ -11,36 +11,18 @@ and rebuilds live on note create/update/delete and on story changes (to keep
 the "open" highlight current). Reuses `tw.macros.core.allTags()` and
 `tw.util.titleMatch`.
 
-# Data
-```json
-{
-  "version": 1.0.0
-}
-```
-
 # Code
-```javascript
-(function() {
 
+```javascript
+(function () {
   let notesEl;
   let tagsEl;
 
-  // The explorer owns the sidebar, so the toggle command lives here.
-  tw.extensions.registerCommand({
-    label: 'Toggle sidebar',
-    run: () => document.getElementById('sidebar')?.classList.toggle('open'),
-  });
+  function wireUp(event, handler) {
+    tw.events.subscribe(event, handler, 'ExplorerPlugin');
+  }
 
-  wireUp('ui.loaded', init);
-  wireUp('ui.reloaded', init);
-
-  // Keep the note list current as the store changes.
-  ['tiddler.created', 'tiddler.updated', 'tiddler.deleted', 'tiddler.removed', 'tiddler.modified']
-    .forEach(ev => wireUp(ev, render));
-  // Keep the "open" highlight current as tabs open/close.
-  ['story.rendered', 'story.changed'].forEach(ev => wireUp(ev, render));
-
-  function init() {
+  function bindHandlers() {
     notesEl = document.getElementById('explorer-notes');
     tagsEl = document.getElementById('explorer-tags');
     if (notesEl && !notesEl._explorerBound) {
@@ -67,22 +49,26 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
     let titles = tw.tiddlers.all
       .filter(tw.util.titleMatch('!^\\$'))
       .filter(visibleByTag)
-      .map(t => t.title)
+      .map((t) => t.title)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    let rows = titles.map(title =>
-      `<a class="explorer-note${open.has(title) ? ' open' : ''}" data-note="${attr(title)}" title="${attr(title)}">${esc(title)}</a>`,
-    ).join('');
+    let rows = titles
+      .map(
+        (title) =>
+          `<a class="explorer-note${open.has(title) ? ' open' : ''}" data-note="${attr(title)}" title="${attr(title)}">${esc(title)}</a>`
+      )
+      .join('');
     return `<div class="explorer-section-title">Notes</div>${rows || '<div class="explorer-empty">No notes yet</div>'}`;
   }
 
   function tagsHtml() {
-    let tags = tw.macros.core.allTags()
-      .filter(t => !/^\$/.test(t)) // hide system tags
+    let tags = tw.macros.core
+      .allTags()
+      .filter((t) => !/^\$/.test(t)) // hide system tags
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     if (!tags.length) return '';
-    let pills = tags.map(t =>
-      `<a class="explorer-tag" data-tag="${attr(t)}">${esc(t)}</a>`,
-    ).join('');
+    let pills = tags
+      .map((t) => `<a class="explorer-tag" data-tag="${attr(t)}">${esc(t)}</a>`)
+      .join('');
     return `<div class="explorer-section-title">Tags</div><div class="explorer-tags-list">${pills}</div>`;
   }
 
@@ -98,7 +84,10 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
   function onTagClick(e) {
     let row = e.target.closest('[data-tag]');
     if (!row) return;
-    tw.events.send('ui.open.all', {tag: row.getAttribute('data-tag'), title: '*'});
+    tw.events.send('ui.open.all', {
+      tag: row.getAttribute('data-tag'),
+      title: '*'
+    });
     closeDrawer();
   }
 
@@ -114,14 +103,40 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
     return tw.core.common.escapeHtml(String(s));
   }
 
-  function wireUp(event, handler) {
-    tw.events.subscribe(event, handler, 'ExplorerPlugin');
-  }
+  return {
+    meta: {
+      name: 'Explorer',
+      version: '1.0.1',
+      platform: '0.24.0',
+      description: 'Sidebar tree showing all tiddlers grouped by tag.'
+    },
+    init() {
+      // The explorer owns the sidebar, so the toggle command lives here.
+      tw.extensions.registerCommand({
+        label: 'Toggle sidebar',
+        run: () => document.getElementById('sidebar')?.classList.toggle('open')
+      });
 
+      wireUp('ui.loaded', bindHandlers);
+      wireUp('ui.reloaded', bindHandlers);
+
+      // Keep the note list current as the store changes.
+      [
+        'tiddler.created',
+        'tiddler.updated',
+        'tiddler.deleted',
+        'tiddler.removed',
+        'tiddler.modified'
+      ].forEach((ev) => wireUp(ev, render));
+      // Keep the "open" highlight current as tabs open/close.
+      ['story.rendered', 'story.changed'].forEach((ev) => wireUp(ev, render));
+    }
+  };
 })();
 ```
 
 # StyleSheet
+
 ```css
 /* Sidebar explorer — note list + tag pills inside `#explorer-notes` and
    `#explorer-tags`. The container layout lives in $CoreThemeLayout. */

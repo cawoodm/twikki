@@ -1,3 +1,4 @@
+// tags: $Script
 
 // Include the contents of another tiddler
 // <<include $TWikkiVersion>>

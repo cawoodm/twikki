@@ -1,4 +1,4 @@
-tags: $Plugin
+tags: $Script
 
 # Tests (positive)
 * `<<foo.hello John Smith>>`: <<foo.hello John Smith>>

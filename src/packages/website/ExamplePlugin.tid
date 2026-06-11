@@ -1,28 +1,12 @@
 tags: $Plugin
 
-This plugin will do provide some examples of widgets and extensible functions.
+This plugin provides some examples of widgets and extensible functions.
 
-Feel free to customize it's [settings](#ExamplePlugin::Settings) or look at the [code](#ExamplePlugin::Code).
+Feel free to look at the [code](#ExamplePlugin::Code).
 
 # Examples
 ## Greet John Smith
 `<<example.hello "John Smith">>`
-
-# Settings
-* someSetting: hello
-* someValue: 42
-* someOption: true
-
-Some description of the settings here.
-
-# Config
-```json
-{
-  "maxResults": 100,
-  "pageSize": 20,
-  "showRanking": false
-}
-```
 
 # Data
 ```json
@@ -31,14 +15,28 @@ Some description of the settings here.
   {"code": "en", "language": "English"}
 ]
 ```
+
 # Code
 ```javascript
-tw.extensions.registerMacro('example', 'hello', (name) => {
-  return `Hello ${name}`;
-}, {version: '1.0.0'});
-
-// <<example.hello Marc>>
-
+(function () {
+  return {
+    meta: {
+      name: 'ExamplePlugin',
+      version: '1.0.1',
+      platform: '0.24.0',
+      author: 'Marc Cawood',
+      description: 'Demo plugin: shows the {meta, init, start} contract by registering a macro.',
+      url: 'https://cawoodm.github.io/twikki'
+    },
+    init() {
+      // Register a macro at init time, after all plugins are loaded.
+      tw.extensions.registerMacro('example', 'hello', (name) => `Hello ${name}`, {version: '1.0.0'});
+    },
+    start() {
+      // Optional. Empty for this demo — the macro is the only side effect.
+    }
+  };
+})();
 ```
 
 # StyleSheet
@@ -47,18 +45,8 @@ div.example {
   color: red
 }
 ```
-# Theme
-* [[$CoreThemeLayout]]
-* [[$CoreThemeAppearance]]
-* [[$ExampleTheme]]
 
 # Tests
 This should print out: "Hello John Smith"
 
 > <<example.hello "John Smith">>
-
-
-# Meta
-* Author: Marc Cawood
-* Version: 1.0.1
-* URL: https://cawodm.github.io/packages/example-plugin.json

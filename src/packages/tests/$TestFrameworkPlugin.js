@@ -1,4 +1,4 @@
-// tags: $Plugin
+// tags: $Script
 
 /**
  * TestFramework
@@ -11,9 +11,7 @@
  *  because the tests may open the same tiddler which contains them and thus interfere
  */
 
-// TODO: tw.extensions.registerPlugin(...code..., meta{version, etc...})
-
-(function() {
+(function () {
   const WAIT = 300;
   const queue = [];
   const results = [];
@@ -70,17 +68,27 @@
   function doTyping({type, input}) {
     if (!type) return;
     let src = document.querySelector(type);
-    if (!src || typeof src.value === 'undefined') throw new Error(`Failed to find input element matching '${type}!`);
+    if (!src || typeof src.value === 'undefined')
+      throw new Error(`Failed to find input element matching '${type}!`);
     src.value = input;
-    src.dispatchEvent(new KeyboardEvent('keyup', {'keyCode': 13}));
+    src.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 13}));
   }
   function checkExpectations({find, expect, expectNone, expectSome}) {
     if (!find) return;
     let target = document.querySelectorAll(find);
-    let targetIds = target?.length ? Array.from(target).map(t => t.getAttribute('data-tiddler-title')) : [];
-    if (!target?.length && !expectNone) throw new Error(`Failed to find target element matching selector '${find}!`);
-    else if (expect && expect?.length && target?.length !== expect.length) throw new Error(`Failed to find correct number of elements (got ${target?.length || 0} expected ${expect.length})!`);
-    else if (expectSome && expectSome.every(t => targetIds.indexOf(t) > 0)) throw new Error(`Failed to find some elements (expected ${expectSome.join(', ')} missing ${expectSome.find(t => targetIds.indexOf(t) < 0)})!`);
+    let targetIds = target?.length
+      ? Array.from(target).map((t) => t.getAttribute('data-tiddler-title'))
+      : [];
+    if (!target?.length && !expectNone)
+      throw new Error(`Failed to find target element matching selector '${find}!`);
+    else if (expect && expect?.length && target?.length !== expect.length)
+      throw new Error(
+        `Failed to find correct number of elements (got ${target?.length || 0} expected ${expect.length})!`
+      );
+    else if (expectSome && expectSome.every((t) => targetIds.indexOf(t) > 0))
+      throw new Error(
+        `Failed to find some elements (expected ${expectSome.join(', ')} missing ${expectSome.find((t) => targetIds.indexOf(t) < 0)})!`
+      );
     // TODO: expect.all(id => target.find
   }
 
@@ -94,31 +102,43 @@
     return `<div id="${id}">${tw.ui.button(`Run ${suite}`, 'tests.run', {suite, id})}</div>`;
   });
   tw.extensions.registerMacro('tests', 'results', () => {
-    let tests = results.filter(t => !!t.name);
-    let success = tests.filter(t => t.success).length;
-    let error = tests.filter(t => t.error).length;
+    let tests = results.filter((t) => !!t.name);
+    let success = tests.filter((t) => t.success).length;
+    let error = tests.filter((t) => t.error).length;
     let res = `## ${success} passed, ${error} failed: 
-* ${tests.map(t => `${t.success ? '✅' : '❌'} ${t.name} ${t.success || t.error}`).join('\n* ')}
+* ${tests.map((t) => `${t.success ? '✅' : '❌'} ${t.name} ${t.success || t.error}`).join('\n* ')}
     `;
     return res;
   });
 
-  tw.events.subscribe('tests.run', async({suite}) => {
-    results.length = 0;
-    isRunning = true;
-    for (let t of queue.filter(t => !!t.name)) {
-      try {
-        let res = await t.test();
-        results.push({suite, name: t.name, success: res});
-      } catch (e) {
-        results.push({suite, name: t.name, error: e.message});
+  tw.events.subscribe(
+    'tests.run',
+    async ({suite}) => {
+      results.length = 0;
+      isRunning = true;
+      for (let t of queue.filter((t) => !!t.name)) {
+        try {
+          let res = await t.test();
+          results.push({suite, name: t.name, success: res});
+        } catch (e) {
+          results.push({suite, name: t.name, error: e.message});
+        }
       }
-    }
-    isRunning = false;
-    tw.events.send('tiddler.preview', {title: `TestResults: ${suite} (${new Date().toLocaleString()})`, text: '<<tests.results>>', type: 'x-twikki', tags: []});
-  }, 'tests.run');
+      isRunning = false;
+      tw.events.send('tiddler.preview', {
+        title: `TestResults: ${suite} (${new Date().toLocaleString()})`,
+        text: '<<tests.results>>',
+        type: 'x-twikki',
+        tags: []
+      });
+    },
+    'tests.run'
+  );
 
-  function sleep(ms) {return new Promise(r => setTimeout(r, ms));}
-  function randstr() {return Math.random().toString(36).replace('0.', '');}
-
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+  function randstr() {
+    return Math.random().toString(36).replace('0.', '');
+  }
 })();

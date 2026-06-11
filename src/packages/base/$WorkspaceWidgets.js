@@ -1,3 +1,4 @@
+// tags: $Script
 tw.macros.core.WorkspaceSelect = () => {
   let workspace = tw.storage.get('workspace');
   let items = (tw.storage.get('workspaces') || []).map(n =>

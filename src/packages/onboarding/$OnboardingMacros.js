@@ -1,3 +1,4 @@
+// tags: $Script
 tw.macros.welcome = {
   Start() {
     tw.core.dom.$('header').style.display = 'none';

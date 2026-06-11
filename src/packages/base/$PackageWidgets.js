@@ -1,3 +1,4 @@
+// tags: $Script
 tw.macros.packages = {
   // Example: Import package website without overwriting
   // <<packages.import name:website url:./packages/website.json filter:* force:false>>

@@ -1,12 +1,18 @@
-tw.extensions.registerPlugin('base', 'OpenLinksInNewWindow', () => {
+// tags: $Plugin
+(function () {
   return {
-    name: 'OpenLinksInNewWindow',
-    author: 'Marc Cawood',
-    // url: or package:
-    description: 'Open http(s):// links in markdown in new window',
-    version: '0.0.1',
+    meta: {
+      name: 'OpenLinksInNewWindow',
+      version: '0.0.1',
+      platform: '0.24.0',
+      author: 'Marc Cawood',
+      description: 'Open http(s):// links in markdown in a new window'
+    },
     init() {
-      if (!tw.core.markdown?.md) throw new Error('markdown-it not active ($BaseMarkdownPlugin missing or replaced) — OpenLinksInNewWindow disabled!');
+      if (!tw.core.markdown?.md)
+        throw new Error(
+          'markdown-it not active ($BaseMarkdownPlugin missing or replaced) — OpenLinksInNewWindow disabled!'
+        );
     },
     start() {
       // Source: https://www.jsdelivr.com/package/npm/markdown-it-for-inline
@@ -25,9 +31,9 @@ tw.extensions.registerPlugin('base', 'OpenLinksInNewWindow', () => {
         md.core.ruler.push(ruleName, scan);
       }
       tw.core.markdown.md.use(for_inline_plugin, 'url_new_win', 'link_open', function (tokens, idx) {
-      // Open external links in new window
+        // Open external links in new window
         if (tokens[idx].attrs[0][1].match(/^https?:/)) tokens[idx].attrSet('target', '_blank');
       });
-    },
+    }
   };
-});
+})();

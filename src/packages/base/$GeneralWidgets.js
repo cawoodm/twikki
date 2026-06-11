@@ -1,3 +1,4 @@
+// tags: $Script
 // Send any message <<command ui.open.all pck:website>>
 tw.macros.core.command = (msg, payload = '') => {
   return tw.ui.button(`Send: ${msg}:${payload}`, msg, payload, '', 'title="Send Command"');

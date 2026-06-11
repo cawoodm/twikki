@@ -1,4 +1,4 @@
-// tags: $Plugin
+// tags: $Script
 
 (function(){
   // Friendly reminder to backup!

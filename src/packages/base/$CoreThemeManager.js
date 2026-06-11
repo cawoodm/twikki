@@ -1,3 +1,4 @@
+// tags: $Script
 /**
  * ## Description
  * Provides all theme logic
@@ -12,14 +13,13 @@
  * }
  * ```
  */
-(function(){
-
+(function () {
   wireUp('ui.loaded', () => {
     tw.theme = {
       stylesheets: {
-        custom: new CSSStyleSheet(),
+        custom: new CSSStyleSheet()
       },
-      getThemeNames,
+      getThemeNames
     };
     document.adoptedStyleSheets.push(tw.theme.stylesheets.custom);
     rebuildRelevanceList();
@@ -30,7 +30,7 @@
   // tiddler.deleted: the tiddler is already gone from the store when the event fires,
   // so tag checks return nothing. Check relevance against the registry first, then
   // drop the entry — only rebuild CSS if the deleted tiddler was actually CSS-relevant.
-  wireUp('tiddler.deleted', title => {
+  wireUp('tiddler.deleted', (title) => {
     const wasRelevant = tiddlerIsThemeRelevant(title);
     addToRelevance(title, false);
     if (wasRelevant) themeUpdate();
@@ -41,10 +41,8 @@
     const wasRelevant = tiddlerIsThemeRelevant(title);
     if (tw.run.getTiddler(title)?.tags?.includes('$Plugin'))
       addToRelevance(title, !!tw.run.getTiddlerTextRaw(`${title}::StyleSheet`));
-    if (wasRelevant || tiddlerIsThemeRelevant(title))
-      return themeUpdate();
-    if (tiddlerIsATheme(title))
-      return themesUpdate();
+    if (wasRelevant || tiddlerIsThemeRelevant(title)) return themeUpdate();
+    if (tiddlerIsATheme(title)) return themesUpdate();
   }
   function addToRelevance(title, present) {
     const list = tw.tmp.themeRelevantTiddlers || (tw.tmp.themeRelevantTiddlers = []);
@@ -68,15 +66,18 @@
       list.push(...tw.run.getTiddlerList(theme));
     }
     tw.tiddlers.all
-      .filter(t => t.tags?.includes('$Plugin') && tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`))
-      .forEach(t => list.push(t.title));
+      .filter(
+        (t) => t.tags?.includes('$Plugin') && tw.run.getTiddlerTextRaw(`${t.title}::StyleSheet`)
+      )
+      .forEach((t) => list.push(t.title));
     tw.tmp.themeRelevantTiddlers = [...new Set(list)];
   }
 
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
     if (!theme) return;
-    if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
+    if (!tw.call('tiddlerExists', theme))
+      return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
     // Swap relevance entries before $Theme is rewritten: drop the old theme tiddler
     // and its sheets, add the new ones. Base / user / $Theme / plugin entries stay.
     swapThemeRelevance(getCurrentThemeName(), theme);
@@ -85,7 +86,8 @@
     // first paint, before packages load). If it changes, a full reload re-renders the
     // chrome from the pointer; a colour-only switch stays instant.
     let newLayout = tw.core.ui.layoutTitleForTheme(theme);
-    let curLayout = (tw.run.getTiddlerTextRaw('$Layout') || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
+    let curLayout =
+      (tw.run.getTiddlerTextRaw('$Layout') || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
     let layoutChanges = newLayout !== curLayout;
     let tiddler = tw.run.getTiddler('$Theme');
     tiddler.text = `[[${theme}]]`;
@@ -121,8 +123,9 @@
   // highlight directly so every theme picker reflects the new theme — covers picker
   // clicks and command-palette switches alike.
   function syncThemeSelector(theme) {
-    document.querySelectorAll('.picker[data-event="theme.switch"] .picker-item')
-      .forEach(b => b.classList.toggle('active', b.dataset.value === theme));
+    document
+      .querySelectorAll('.picker[data-event="theme.switch"] .picker-item')
+      .forEach((b) => b.classList.toggle('active', b.dataset.value === theme));
   }
 
   const BASE_SHEETS = ['$BaseReset', '$BaseVariables'];
@@ -138,7 +141,7 @@
       base: BASE_SHEETS.map(tw.run.getTiddlerTextRaw),
       plugin: pluginStyles(),
       theme: getThemeStyleSheets().map(tw.run.getTiddlerTextRaw),
-      user: [tw.run.getTiddlerTextRaw(USER_SHEET)],
+      user: [tw.run.getTiddlerTextRaw(USER_SHEET)]
     };
     const header = `@layer ${Object.keys(layers).join(', ')};`;
     const body = Object.entries(layers)
@@ -152,9 +155,9 @@
   // doesn't run, so their CSS doesn't apply either. Sorted for stable cascade order.
   function pluginStyles() {
     return [...(tw.tmp.themeRelevantTiddlers || [])]
-      .filter(title => !tw.run.getTiddler(title)?.tags?.includes('$CodeDisabled'))
+      .filter((title) => !tw.run.getTiddler(title)?.tags?.includes('$CodeDisabled'))
       .sort((a, b) => a.localeCompare(b))
-      .map(title => tw.run.getTiddlerTextRaw(`${title}::StyleSheet`))
+      .map((title) => tw.run.getTiddlerTextRaw(`${title}::StyleSheet`))
       .filter(Boolean);
   }
 
@@ -175,45 +178,55 @@
   function swapThemeRelevance(oldTheme, newTheme) {
     if (oldTheme && tw.call('tiddlerExists', oldTheme)) {
       addToRelevance(oldTheme, false);
-      tw.run.getTiddlerList(oldTheme).forEach(s => addToRelevance(s, false));
+      tw.run.getTiddlerList(oldTheme).forEach((s) => addToRelevance(s, false));
     }
     addToRelevance(newTheme, true);
-    tw.run.getTiddlerList(newTheme).forEach(s => addToRelevance(s, true));
+    tw.run.getTiddlerList(newTheme).forEach((s) => addToRelevance(s, true));
   }
   function getCurrentThemeName() {
     return tw.run.getTiddlerTextRaw('$Theme').replace(/[\[\]]/g, ''); // Remove possible [[links]]
   }
   function getThemeNames() {
-    return tw.run.getTiddlersByTag('$Theme').map(t => t.title);
+    return tw.run.getTiddlersByTag('$Theme').map((t) => t.title);
   }
   function getThemeStyleSheets() {
     let theme = getCurrentThemeName();
     if (!tw.call('tiddlerExists', theme)) {
-      tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreThemeLight', 'W');
+      tw.ui.notify(
+        'Unable to determine theme name from $Theme tiddler! Falling back on $CoreThemeLight',
+        'W'
+      );
       theme = '$CoreThemeLight';
     }
     return tw.run.getTiddlerList(theme);
   }
 
-  tw.macros.core.ThemeSelector = () => {
+  tw.extensions.registerMacro('core', 'ThemeSelector', () => {
     let theme = getCurrentThemeName();
-    let items = getThemeNames().sort().map(n =>
-      `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`,
-    ).join('');
+    let items = getThemeNames()
+      .sort()
+      .map(
+        (n) =>
+          `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`
+      )
+      .join('');
     // Single-line output so the widget can live inside markdown table cells
     return `<span class="picker" data-event="theme.switch">
       <button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button>
       <span class="picker-menu" hidden>${items}</span>
       </span>`.replace(/\n/g, '');
-  };
+  });
 
   // Dynamic command palette entries — one "Switch theme: X" per installed theme.
   // A provider (re-evaluated at palette render) so newly added themes appear live.
   tw.extensions.registerCommandProvider('themes', () =>
-    getThemeNames().sort().map(name => ({
-      label: `Switch theme: ${name.replace(/(^\$)|(Theme)/g, '')}`,
-      event: 'theme.switch', payload: name,
-    })),
+    getThemeNames()
+      .sort()
+      .map((name) => ({
+        label: `Switch theme: ${name.replace(/(^\$)|(Theme)/g, '')}`,
+        event: 'theme.switch',
+        payload: name
+      }))
   );
 
   function wireUp(event, handler) {

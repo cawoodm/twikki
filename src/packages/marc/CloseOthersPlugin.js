@@ -1,4 +1,4 @@
-// tags: $Plugin
+// tags: $Script
 
 /**
  * ## Description

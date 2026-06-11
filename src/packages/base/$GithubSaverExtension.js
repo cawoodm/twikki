@@ -1,13 +1,15 @@
-tw.extensions.registerPlugin('base', 'GithubSaver', () => {
+// tags: $Plugin
+(function () {
   return {
-    name: 'GithubSaver',
-    version: '0.0.2',
-    init() {
+    meta: {
+      name: 'GithubSaver',
+      version: '0.0.2',
+      platform: '0.24.0',
+      description: 'Save tiddlers to a GitHub repo via the contents API.'
     },
-    start() {
-    },
+    init() {},
+    start() {},
     async save({text, token, repo, path, filename, commitMessage, branch, endpoint}) {
-    //
       branch = branch || 'main';
       endpoint = endpoint || 'https://api.github.com';
       commitMessage = 'TWikki Save ' + new Date().toISOString();
@@ -15,10 +17,10 @@ tw.extensions.registerPlugin('base', 'GithubSaver', () => {
       validate({text, token, repo, path, filename, commitMessage});
 
       const headers = {
-        'Accept': 'application/vnd.github.v3+json',
+        Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json;charset=UTF-8',
-        'Authorization': 'Bearer ' + token,
-        'If-None-Match': '',
+        Authorization: 'Bearer ' + token,
+        'If-None-Match': ''
       };
 
       // Normalize path with trailing slash
@@ -30,22 +32,21 @@ tw.extensions.registerPlugin('base', 'GithubSaver', () => {
       let res = await fetch(listUrl, {
         method: 'GET',
         headers: headers,
-        data: {
-          ref: branch,
-        },
+        data: {ref: branch}
       });
 
-      if (res.ok) throw new Error(`GitHubSaver.save() GET files failed ${res.status} for ${listUrl}`);
+      if (res.ok)
+        throw new Error(`GitHubSaver.save() GET files failed ${res.status} for ${listUrl}`);
 
       // Find the sha of the file if it exists
       const files = await res.json();
-      const sha = files.find(file => file.name === filename);
+      const sha = files.find((file) => file.name === filename);
 
       const data = {
         message: commitMessage,
         content: btoa(text),
         branch: branch,
-        sha: sha,
+        sha: sha
       };
 
       // Perform a PUT request to save the file
@@ -53,16 +54,15 @@ tw.extensions.registerPlugin('base', 'GithubSaver', () => {
       res = await fetch(putUrl, {
         method: 'PUT',
         headers: headers,
-        data: JSON.stringify(data),
+        data: JSON.stringify(data)
       });
       if (res.ok) throw new Error(`GitHubSaver.save() PUT file failed ${res.status} for ${putUrl}`);
 
       function validate(obj) {
-        Object.keys.forEach(k => {
+        Object.keys.forEach((k) => {
           if (!obj[k]) throw new Error(`GitHubSaver.save() missing parameter '${k}'!`);
         });
       }
-
-    },
+    }
   };
-});
+})();

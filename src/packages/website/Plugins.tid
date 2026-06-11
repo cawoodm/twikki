@@ -1,153 +1,47 @@
-## Plugins
+tags: Help
 
-In TWikki there is no special "plugin" format — **a plugin is just a tiddler**. Because *code is data*, any tiddler of type `script/js` is executable, so **installing a plugin means adding a tiddler** and uninstalling means deleting it.
+## Installed Plugins
 
-See [[Concepts]] for how tiddler types work, and [[Packages]] for how plugins are shared.
+<<plugins>>
 
-## How code tiddlers run
+Plugins are tiddlers tagged `$Plugin` whose IIFE returns `{meta, init?, start?}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
 
-* A `script/js` tiddler is executed with `eval()` in the **global context**:
-  * once when TWikki starts, and
-  * again whenever you edit and save it, so changes take effect immediately
-* Code tiddlers are run as part of validation on save — if the code throws, the save reports the error
-* Tag a code tiddler with `$CodeDisabled` to stop it from executing
+* **✓ OK** — built for this platform release (caret-compatible).
+* **⚠ …** — minor mismatch: same major, different minor/patch. The plugin still runs.
+* **✗ …** — major mismatch. The plugin still runs but may break — consider updating or removing it.
+* **–** — no `platform` field declared (exempt).
+* **⚠ err: …** — the plugin's `load`, `init`, or `start` phase threw. Other plugins are unaffected.
 
-## The basic shape
+Unlike core modules, the plugin gate is **soft**: an incompatible plugin still runs, the table just surfaces the mismatch so you can decide.
 
-A plugin is usually an immediately-invoked function that hooks into the global `tw` namespace:
+## Plugins vs. Scripts
+
+There are two ways for a tiddler to run code at boot:
+
+* **`$Plugin`** — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
+* **`$Script`** — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
+
+Tiddlers without either tag never auto-execute.
+
+## Authoring a plugin
 
 ```js
-(function() {
-  tw.events.subscribe('ui.loaded', () => {
-    tw.ui.notify('Hello from my plugin!', 'D');
-  }, 'MyPlugin');
+// tags: $Plugin
+(function () {
+  return {
+    meta: { name: 'MyPlugin', version: '1.0.0', platform: '0.24.0' },
+    init() {
+      // event subscriptions, registerMacro/registerCommand, dependency checks
+    },
+    start() {
+      // optional — boot-time effects
+    },
+  };
 })();
 ```
 
-See [[TW API]] for more details
-
-## Plugin stylesheet
-
-A plugin can ship its own CSS alongside its code. Convert the plugin from a plain `.js` file to a multi-section `.tid` file tagged `$Plugin`, with the JS body inside a `# Code` section and the CSS inside a `# StyleSheet` section:
-
-```
-tags: $Plugin
-
-# Description
-What this plugin does.
-
-# Code
-```javascript
-(function() {
-  // … your plugin code …
-})();
-```
-
-# StyleSheet
-```css
-.my-plugin-thing { color: var(--col6); }
-```
-```
-
-`$CoreThemeManager` auto-discovers every `$Plugin`-tagged tiddler with a `# StyleSheet` section and wraps the collected CSS in `@layer plugin`, which sits between the `base` layer (reset + tokens) and the `theme` layer:
-
-```css
-@layer base, plugin, theme, user;
-```
-
-So a plugin's CSS:
-
-* **inherits** the design tokens from `$BaseVariables` (`--col*`, `--colbg*`, `--rad*`, …), so it follows whatever theme the user has on;
-* is **overridable by themes** — a theme can target `.my-plugin-thing` from its own palette and win cross-layer;
-* is **overridable by the user** — `$StyleSheetUser` always wins.
-
-Namespace your selectors (a unique class prefix) so cross-plugin collisions stay rare. Editing a `$Plugin` tiddler's `# StyleSheet` section repaints without a reload — the manager listens for `tiddler.updated` on any `$Plugin`. See [[ExamplePlugin]] for the canonical shape, and [[Themes]] for the full cascade picture.
-
-## Macros
-
-A macro is a speciall command inside `<<...>>` blocks in markdown which runs and produces dynamic content and/or UI elements (like buttons). A macro returns a string of markdown/HTML that is rendered in place.
-
-For example `<<include $TWikkiVersion>>` will include the `$TWikkiVersion` tiddler's content and produce:
-> <<include $TWikkiVersion>>
-
-## User Macros
-Core or base macros reside in the global namespace. When you install a plugin it should have a namespace so that macros don't collide.
-
-```js
-tw.extensions.registerMacro('greet', 'hello', (name) => {
-  return `Hello ${name}!`;
-}, {version: '1.0.0'});
-```
-
-This registers a macro so it can be used as `<<greet.hello "Marc">>` anywhere.
-
-See [[ExamplePlugin]] for a fuller worked example, and [[$GeneralWidgets]] for the built-in widgets.
-
-## Command palette commands
-
-Any plugin or macro can add commands to the command palette (Ctrl/Cmd+K). A command is `{label, event?, payload?, run?}` — either send an event or run a function:
-
-```js
-tw.extensions.registerCommand({label: 'Save all', event: 'save.all'});
-tw.extensions.registerCommand({label: 'Say hi', run: () => tw.ui.notify('Hi!', 'D')});
-```
-
-For lists that change at runtime (themes, workspaces, …), register a **provider** — a keyed function that is re-evaluated each time the palette opens:
-
-```js
-tw.extensions.registerCommandProvider('myThings', () =>
-  myThings().map(t => ({label: `Open: ${t}`, event: 'thing.open', payload: t})));
-```
-
-Commands are deduped by `label` (last registration wins, so you can override a built-in), and registration is reload-safe. Register your command in the same tiddler that defines the widget or macro it drives — that keeps the command available exactly when its feature is installed (e.g. `<<synch.full>>` and "Synch: full" live together in [[$SynchDataPlugin]]).
-
-## Reacting to events
-
-Subscribe to lifecycle events to extend behaviour. Some useful ones:
-
-* `ui.loaded` — the UI has finished its first render
-* `tiddler.rendered` — a tiddler was (re)rendered; the handler receives its element
-* `tiddler.updated` / `tiddler.deleted` — the store changed
-* `script.loaded` — an external script you added has finished loading
-* `theme.switch` — the active theme changed
-
-```js
-tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
-  // decorate freshly-rendered tiddlers here
-}, 'MyPlugin.HandleRenderedTiddler');
-```
-
-Always pass a unique **name** of your handler as the third argument so your handler is identifiable and is not registered twice when the tiddler re-runs.
-
-## Replacing the markdown renderer
-
-Markdown rendering is itself a plugin. The platform renders tiddlers by sending the `markdown.render` event and using the first handler's result; [[$BaseMarkdownPlugin]] subscribes the bundled markdown-it implementation. To swap in your own implementation or flavor, override the handler from any code tiddler:
-
-```js
-tw.events.override('markdown.render', function myMarkdown(text) {
-  return MyRenderer.toHtml(text); // must return an HTML string
-});
-```
-
-Your package's code runs after the base package, so the override wins on every boot and reload. At runtime, follow it with `tw.events.send('ui.reload')` to re-render. If **no** handler is subscribed (e.g. in `?safemode`), TWikki falls back to rendering tiddlers as escaped plain text.
-
-The default markdown-it instance is exposed as `tw.core.markdown.md`, so you can also *extend* rather than replace it (e.g. `tw.core.markdown.md.use(...)` — see [[$OpenLinksInNewWindow]]).
-
-## Loading external libraries
-
-Need a third-party library or stylesheet? Load it from a CDN and react when it is ready:
-
-```js
-tw.events.subscribe('ui.loaded', () => {
-  tw.core.dom.addScript('my-lib', 'https://cdn.example.com/lib.min.js');
-  tw.events.subscribe('script.loaded', (name) => {
-    if (name === 'my-lib') tw.lib.myLib = window.MyLib;
-  }, 'MyPlugin');
-}, 'MyPlugin');
-```
-
-This is exactly how the built-in syntax-highlighting plugin pulls in Highlight.js.
+For the multi-section `.tid` template (with `# Code`, `# StyleSheet`, `# Description`), see [[ExamplePlugin]] and the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
 
 ## Distributing plugins
 
-A plugin is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget. A whole plugin can even live in a single multi-section tiddler — see [[ExamplePlugin]].
+A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget.

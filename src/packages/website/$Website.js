@@ -1,3 +1,4 @@
+// tags: $Script
 tw.events.subscribe('ui.loaded', () => {
   // Show 'Welcome' if no tiddlers are defined
   let t = tw.run.getTiddler('Welcome');

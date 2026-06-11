@@ -125,7 +125,22 @@ User's can import packages by clicking a button:
 - **Use `nooverwrite` for content the user edits** (e.g. the `website` docs) so a reload doesn't discard their changes; use `force` for content you own outright (icons, themes, code).
 - **`$NoImport` protects a single tiddler** from being overwritten by any non-`force` import; **`$NoEdit`** (auto-added to `base`) marks code/system tiddlers read-only in the UI.
 
+## Plugin metadata
+
+A plugin is just a `$Plugin`-tagged tiddler shipped inside a package. To make it appear in `<<plugins>>` with version + built-for platform + compat status, add a `# Meta` section to the source:
+
+```
+# Meta
+name: MyPlugin
+namespace: base
+version: 1.0.0
+platform: 0.24.0
+```
+
+Boot-time `prescanPluginRegistry()` walks `$Plugin` tiddlers, parses `# Meta` via `core.sections`, and populates `tw.pluginRegistry[]`. Unlike modules, the plugin compat gate is **soft** — an incompatible plugin still runs, the widget just surfaces a `⚠`/`✗` for the user. Full field reference and `.js`/`.tid` placement rules are in [PLUGINS.md](./PLUGINS.md).
+
 ## See also
 
 - [COMPILER.md](./COMPILER.md) — source-file → package-JSON build step.
 - [MODULES.md](./MODULES.md) — boot order, core-modules-vs-packages, caching, and the `?reload`/`?update`/`?safemode` refresh model.
+- [PLUGINS.md](./PLUGINS.md) — plugin authoring, the `# Meta` section, the registry, and the `<<plugins>>` widget.
