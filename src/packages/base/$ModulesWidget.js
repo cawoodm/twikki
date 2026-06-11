@@ -1,3 +1,4 @@
+// tags: $Script
 // Lists the installed core modules (tw.modules) with their metadata as a markdown table,
 // including each module's built-for platform and its compatibility with the running
 // platform. The `compat` report is attached to each module by the boot-time gate; if the

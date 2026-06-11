@@ -1,4 +1,4 @@
-// tags: $Plugin
+// tags: $Script
 
 // https://www.jsdelivr.com/package/npm/highlight.js
 // https://cdnjs.com/libraries/highlight.js

@@ -1,3 +1,4 @@
+// tags: $Script
 /**
   * .SYNOPSIS
   * Show a selection of values

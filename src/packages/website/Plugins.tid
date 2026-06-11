@@ -4,29 +4,44 @@ tags: Help
 
 <<plugins>>
 
-Plugins are tiddlers shipped inside a package. Each row shows the plugin's name, namespace, version, the package it came from, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
+Plugins are tiddlers tagged `$Plugin` whose IIFE returns `{meta, init?, start?}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
 
 * **✓ OK** — built for this platform release (caret-compatible).
 * **⚠ …** — minor mismatch: same major, different minor/patch. The plugin still runs.
 * **✗ …** — major mismatch. The plugin still runs but may break — consider updating or removing it.
 * **–** — no `platform` field declared (exempt).
+* **⚠ err: …** — the plugin's `load`, `init`, or `start` phase threw. Other plugins are unaffected.
 
 Unlike core modules, the plugin gate is **soft**: an incompatible plugin still runs, the table just surfaces the mismatch so you can decide.
 
+## Plugins vs. Scripts
+
+There are two ways for a tiddler to run code at boot:
+
+* **`$Plugin`** — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
+* **`$Script`** — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
+
+Tiddlers without either tag never auto-execute.
+
 ## Authoring a plugin
 
-A plugin in its simplest form is just a `script/js` tiddler that hooks into the global `tw` namespace:
-
 ```js
-(function() {
-  tw.events.subscribe('ui.loaded', () => {
-    tw.ui.notify('Hello from my plugin!', 'D');
-  }, 'MyPlugin');
+// tags: $Plugin
+(function () {
+  return {
+    meta: { name: 'MyPlugin', version: '1.0.0', platform: '0.24.0' },
+    init() {
+      // event subscriptions, registerMacro/registerCommand, dependency checks
+    },
+    start() {
+      // optional — boot-time effects
+    },
+  };
 })();
 ```
 
-For a fuller multi-section template (with `# Code`, `# StyleSheet`, `# Meta`) and the field reference for `# Meta`, see [[ExamplePlugin]] and the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
+For the multi-section `.tid` template (with `# Code`, `# StyleSheet`, `# Description`), see [[ExamplePlugin]] and the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
 
 ## Distributing plugins
 
-A plugin is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget.
+A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget.

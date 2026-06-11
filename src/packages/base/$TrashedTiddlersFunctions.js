@@ -1,3 +1,4 @@
+// tags: $Script
 (function(){
 
   tw.extensions.registerCommand([

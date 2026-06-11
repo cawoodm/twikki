@@ -17,27 +17,19 @@ The `<dialog>` is built in JS (so it can't collide with layout ids). The
 document-level keydown is bound once (guarded via `tw.tmp`) and is ignored
 while the edit dialog is open, so editing keeps its own keyboard.
 
-# Meta
-name: CommandPalette
-namespace: base
-version: 1.0.0
-platform: 0.24.0
-description: Ctrl/Cmd+K palette for actions and tiddler navigation.
-
 # Code
-```javascript
-(function() {
 
+```javascript
+(function () {
   let dialog;
   let input;
   let results;
   let items = [];
   let selected = 0;
 
-  tw.tmp = tw.tmp || {};
-
-  wireUp('ui.loaded', init);
-  wireUp('ui.reloaded', init);
+  function wireUp(event, handler) {
+    tw.events.subscribe(event, handler, 'CommandPalette');
+  }
 
   function init() {
     document.getElementById('command-palette')?.remove();
@@ -51,10 +43,15 @@ description: Ctrl/Cmd+K palette for actions and tiddler navigation.
     input = dialog.querySelector('#palette-input');
     results = dialog.querySelector('#palette-results');
 
-    input.addEventListener('input', () => {selected = 0; render();});
+    input.addEventListener('input', () => {
+      selected = 0;
+      render();
+    });
     input.addEventListener('keydown', onInputKeydown);
     results.addEventListener('click', onResultsClick);
-    dialog.addEventListener('close', () => {input.value = '';});
+    dialog.addEventListener('close', () => {
+      input.value = '';
+    });
 
     if (!tw.tmp.commandPaletteBound) {
       tw.tmp.commandPaletteBound = true;
@@ -93,15 +90,15 @@ description: Ctrl/Cmd+K palette for actions and tiddler navigation.
 
   function commandItems(needle) {
     return tw.commands.all()
-      .filter(c => !needle || c.label.toLowerCase().includes(needle))
-      .map(c => ({label: c.label, hint: 'command', run: () => runCommand(c)}));
+      .filter((c) => !needle || c.label.toLowerCase().includes(needle))
+      .map((c) => ({label: c.label, hint: 'command', run: () => runCommand(c)}));
   }
 
   function noteItems(q) {
     return tw.core.search.search(q, tw.tiddlers.all, {all: false})
-      .filter(t => t && t.type) // drop the "No results!" placeholder (no type)
+      .filter((t) => t && t.type) // drop the "No results!" placeholder (no type)
       .slice(0, 50)
-      .map(t => ({label: t.title, hint: t.type, run: () => openNote(t.title)}));
+      .map((t) => ({label: t.title, hint: t.type, run: () => openNote(t.title)}));
   }
 
   function render() {
@@ -111,11 +108,14 @@ description: Ctrl/Cmd+K palette for actions and tiddler navigation.
       results.innerHTML = '<div class="palette-empty">No matches</div>';
       return;
     }
-    results.innerHTML = items.map((it, i) =>
-      `<div class="palette-row${i === selected ? ' selected' : ''}" data-index="${i}">` +
-      `<span class="palette-label">${esc(it.label)}</span>` +
-      `<span class="palette-hint">${esc(it.hint || '')}</span></div>`,
-    ).join('');
+    results.innerHTML = items
+      .map(
+        (it, i) =>
+          `<div class="palette-row${i === selected ? ' selected' : ''}" data-index="${i}">` +
+          `<span class="palette-label">${esc(it.label)}</span>` +
+          `<span class="palette-hint">${esc(it.hint || '')}</span></div>`
+      )
+      .join('');
     // Keep the keyboard-selected row visible as the selection moves past the
     // edge of the scroll viewport. `nearest` only scrolls when needed (no jump).
     results.querySelector('.palette-row.selected')?.scrollIntoView({block: 'nearest'});
@@ -165,14 +165,24 @@ description: Ctrl/Cmd+K palette for actions and tiddler navigation.
     return tw.core.common.escapeHtml(String(s));
   }
 
-  function wireUp(event, handler) {
-    tw.events.subscribe(event, handler, 'CommandPalette');
-  }
-
+  return {
+    meta: {
+      name: 'CommandPalette',
+      version: '1.0.0',
+      platform: '0.24.0',
+      description: 'Ctrl/Cmd+K palette for actions and tiddler navigation.'
+    },
+    init() {
+      tw.tmp = tw.tmp || {};
+      wireUp('ui.loaded', init);
+      wireUp('ui.reloaded', init);
+    }
+  };
 })();
 ```
 
 # StyleSheet
+
 ```css
 /* Command palette — modal `<dialog id="command-palette">` with an input row
    and a scrolling results list. */

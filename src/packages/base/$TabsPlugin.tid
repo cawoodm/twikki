@@ -17,17 +17,10 @@ Sync: render events are coalesced in a microtask. A single-note open
 activates that note; a bulk re-render (open-all / close) keeps the prior
 active tab, or — when the active note was closed — activates its neighbour.
 
-# Meta
-name: Tabs
-namespace: base
-version: 1.0.0
-platform: 0.24.0
-description: Tabbed open-tiddlers view with keyboard navigation.
-
 # Code
-```javascript
-(function() {
 
+```javascript
+(function () {
   const MAX_TABS = 30; // hard upper bound; the rest go in the overflow dropdown
   const MIN_TAB = 96; // px — keeps ≥3 chars + ellipsis legible (matches .tab min-width in CSS)
   const TRAILING = 40; // px reserved for the new-note button / overflow trigger
@@ -40,8 +33,9 @@ description: Tabbed open-tiddlers view with keyboard navigation.
   let scheduled = false;
   let scrollPos = {}; // remembered scrollTop per note title
 
-  wireUp('ui.loaded', init);
-  wireUp('ui.reloaded', init);
+  function wireUp(event, handler) {
+    tw.events.subscribe(event, handler, 'TabsPlugin');
+  }
 
   function init() {
     strip = document.getElementById('tab-strip');
@@ -61,7 +55,7 @@ description: Tabbed open-tiddlers view with keyboard navigation.
       // No tabs: let every open note stack (the .tabbed show/hide rule is off).
       vis.classList.remove('tabbed');
       strip.innerHTML = '';
-      vis.querySelectorAll(':scope > .tiddler.tab-active').forEach(el => el.classList.remove('tab-active'));
+      vis.querySelectorAll(':scope > .tiddler.tab-active').forEach((el) => el.classList.remove('tab-active'));
       return;
     }
 
@@ -74,7 +68,9 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     tw.tmp = tw.tmp || {};
     if (!tw.tmp.tabsResizeBound) {
       tw.tmp.tabsResizeBound = true;
-      window.addEventListener('resize', () => {if (mode === 'tabs') schedule();});
+      window.addEventListener('resize', () => {
+        if (mode === 'tabs') schedule();
+      });
     }
     lastVisible = tw.tiddlers.visible.slice();
     flush();
@@ -88,21 +84,9 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     }
   }
 
-  // Re-apply when the layout mode changes (raw edit emits tiddler.modified; the
-  // settings form saves via updateTiddlerHard + save.silent). Cheap; only re-inits
-  // when the mode actually flips.
-  ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach(ev => wireUp(ev, refreshMode));
   function refreshMode() {
     if (layoutMode() !== mode) init();
   }
-
-  wireUp('tiddler.rendered', ({tiddler}) => {batch.push(tiddler.title); schedule();});
-  wireUp('story.rendered', schedule);
-  wireUp('story.changed', schedule);
-  // Focus a note's tab when it's requested while already open (link/hash/search):
-  // showTiddler early-returns in that case and emits `tiddler.refocus` instead of
-  // re-rendering. (Newly-opened notes are handled via `tiddler.rendered` above.)
-  wireUp('tiddler.refocus', activate);
 
   function schedule() {
     if (scheduled) return;
@@ -112,8 +96,12 @@ description: Tabbed open-tiddlers view with keyboard navigation.
 
   function flush() {
     scheduled = false;
-    if (mode !== 'tabs' || !strip || !vis) {batch = []; return;}
-    let rendered = batch; batch = [];
+    if (mode !== 'tabs' || !strip || !vis) {
+      batch = [];
+      return;
+    }
+    let rendered = batch;
+    batch = [];
     let visible = tw.tiddlers.visible;
     let active = tw.tabs ? tw.tabs.active : null;
 
@@ -132,7 +120,9 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     applyActive(active);
     restoreScroll(active);
     // Forget scroll for notes that are no longer open.
-    Object.keys(scrollPos).forEach(t => {if (!visible.includes(t)) delete scrollPos[t];});
+    Object.keys(scrollPos).forEach((t) => {
+      if (!visible.includes(t)) delete scrollPos[t];
+    });
     lastVisible = visible.slice();
   }
 
@@ -145,7 +135,6 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     restoreScroll(title);
   }
 
-  // Persist/restore scroll position so switching tabs and back keeps your place.
   function saveScroll() {
     if (vis && tw.tabs && tw.tabs.active != null) scrollPos[tw.tabs.active] = vis.scrollTop;
   }
@@ -154,10 +143,6 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     if (vis) vis.scrollTop = scrollPos[title] || 0;
   }
 
-  // How many tabs fit at the legible minimum width, leaving room for the
-  // trailing controls. Falls back to MAX_TABS before the strip has been laid
-  // out (clientWidth 0). When everything fits we only reserve for the new-note
-  // button; otherwise we also reserve for the overflow trigger.
   function capacity(count) {
     let width = strip ? strip.clientWidth : 0;
     if (!width) return MAX_TABS;
@@ -168,37 +153,43 @@ description: Tabbed open-tiddlers view with keyboard navigation.
 
   function rebuildStrip(visible, active) {
     if (!strip) return;
-    // Show as many tabs as fit legibly (capped at MAX_TABS); the rest go in the
-    // overflow dropdown. Always keep the active tab in the visible set.
     let shownCount = Math.min(visible.length, capacity(visible.length), MAX_TABS);
     let shown = visible.slice(0, shownCount);
     if (active && shownCount && !shown.includes(active)) shown[shownCount - 1] = active;
-    let overflow = visible.filter(t => !shown.includes(t));
+    let overflow = visible.filter((t) => !shown.includes(t));
     if (tw.tabs) tw.tabs.overflow = overflow; // read by the `taboverflow` picker source
 
-    let more = overflow.length ? `
+    let more = overflow.length
+      ? `
       <span class="picker tab-overflow" data-source="taboverflow" data-event="tiddler.show">
         <button class="icon picker-trigger" title="${overflow.length} more notes" aria-haspopup="true">⋯</button>
         <span class="picker-menu" hidden></span>
-      </span>` : '';
+      </span>`
+      : '';
 
-    strip.innerHTML = shown.map(title => `
+    strip.innerHTML =
+      shown
+        .map(
+          (title) => `
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
         <button class="tab-close icon" data-msg="tiddler.close" data-params="${attr(title)}" title="Close">✕</button>
-      </div>`).join('') +
+      </div>`
+        )
+        .join('') +
       more +
       '<button class="tab-new icon" data-msg="tiddler.new" title="New note">+</button>';
   }
 
   function applyActive(active) {
     if (!vis) return;
-    vis.querySelectorAll(':scope > .tiddler').forEach(el => {
+    vis.querySelectorAll(':scope > .tiddler').forEach((el) => {
       el.classList.toggle('tab-active', el.getAttribute('data-tiddler-title') === active);
     });
-    if (strip) strip.querySelectorAll('.tab').forEach(t => {
-      t.classList.toggle('active', t.getAttribute('data-tab') === active);
-    });
+    if (strip)
+      strip.querySelectorAll('.tab').forEach((t) => {
+        t.classList.toggle('active', t.getAttribute('data-tab') === active);
+      });
   }
 
   function onStripClick(e) {
@@ -219,14 +210,39 @@ description: Tabbed open-tiddlers view with keyboard navigation.
     return tw.core.common.escapeHtml(String(s));
   }
 
-  function wireUp(event, handler) {
-    tw.events.subscribe(event, handler, 'TabsPlugin');
-  }
+  return {
+    meta: {
+      name: 'Tabs',
+      version: '1.0.0',
+      platform: '0.24.0',
+      description: 'Tabbed open-tiddlers view with keyboard navigation.'
+    },
+    init() {
+      wireUp('ui.loaded', init);
+      wireUp('ui.reloaded', init);
 
+      // Re-apply when the layout mode changes (raw edit emits tiddler.modified; the
+      // settings form saves via updateTiddlerHard + save.silent). Cheap; only re-inits
+      // when the mode actually flips.
+      ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach((ev) => wireUp(ev, refreshMode));
+
+      wireUp('tiddler.rendered', ({tiddler}) => {
+        batch.push(tiddler.title);
+        schedule();
+      });
+      wireUp('story.rendered', schedule);
+      wireUp('story.changed', schedule);
+      // Focus a note's tab when it's requested while already open (link/hash/search):
+      // showTiddler early-returns in that case and emits `tiddler.refocus` instead of
+      // re-rendering. (Newly-opened notes are handled via `tiddler.rendered` above.)
+      wireUp('tiddler.refocus', activate);
+    }
+  };
 })();
 ```
 
 # StyleSheet
+
 ```css
 /* Tab strip — `.tab` items inside `#tab-strip`. The active tab carries a
    `.active` class; the corresponding note carries `.tab-active` (show/hide

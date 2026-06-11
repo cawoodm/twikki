@@ -1,3 +1,4 @@
+// tags: $Script
 Object.assign(tw.macros.core, {
   // List all tiddlers as a bulleted list
   list({tag, title, pck, type} = {}) {

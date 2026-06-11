@@ -1,22 +1,25 @@
-// Lists installed plugins (tw.pluginRegistry) as a markdown table — sibling to
-// the <<modules>> macro for core modules. The registry is populated at boot by
-// prescanPluginRegistry() in the platform: every $Plugin-tagged tiddler gets a
-// row, with its `# Meta` section parsed for version/platform/etc.
+// tags: $Script
+// Lists loaded plugins (tw.plugins) as a markdown table — sibling to the <<modules>>
+// macro for core modules. tw.plugins is populated at boot by loadPlugins() in the
+// platform: each $Plugin-tagged tiddler's IIFE returns {meta, init?, start?}, which
+// becomes a row here.
 tw.macros.core.plugins = () => {
   const platform = window.twikki?.version || '–';
-  const rows = (tw.pluginRegistry || []).slice()
-    .sort((a, b) => (a.namespace + a.name).localeCompare(b.namespace + b.name))
-    .map(p => {
+  const rows = (tw.plugins || [])
+    .slice()
+    .sort((a, b) => (a.meta?.name || a.source).localeCompare(b.meta?.name || b.source))
+    .map((p) => {
       const status = pluginStatus(p);
+      const name = p.meta?.name || `(${p.source})`;
       const builtFor = p.meta?.platform || p.compat?.required || '–';
-      return `| ${p.name} | ${p.namespace} | ${p.meta?.version || '–'} | ${p.package || '–'} | ${builtFor} | ${status} |`;
+      return `| [${name}](#${p.source}) | ${p.source} | ${p.meta?.version || '–'} | ${p.package || '–'} | ${builtFor} | ${status} |`;
     });
   return [
     `Running platform: **v${platform}**`,
     '',
-    '| Plugin | Namespace | Version | Package | Built for | Status |',
+    '| Plugin | Source | Version | Package | Built for | Status |',
     '|---|---|---|---|---|---|',
-    ...rows,
+    ...rows
   ].join('\n');
 };
 

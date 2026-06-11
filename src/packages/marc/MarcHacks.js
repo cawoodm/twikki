@@ -1,3 +1,4 @@
+// tags: $Script
 tw.macros.marc = {
   loadThemeButton(filter, force = true) {
     if (!filter) filter = 'default';

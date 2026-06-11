@@ -1,3 +1,4 @@
+// tags: $Script
 /**
   * Buttons to Show/Hide Tiddlers:
   * Examples:

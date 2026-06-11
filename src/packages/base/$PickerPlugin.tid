@@ -12,26 +12,10 @@ then closes. Outside click / Escape / scroll / resize close any open menu.
 Behaviour is document-level delegation bound once (guarded via `tw.tmp`), so it
 survives UI re-renders without re-binding.
 
-# Meta
-name: Picker
-namespace: base
-version: 1.0.0
-platform: 0.24.0
-description: Generic clickable picker bound via document-level delegation.
-
 # Code
+
 ```javascript
-(function() {
-
-  tw.tmp = tw.tmp || {};
-  if (tw.tmp.pickerBound) return;
-  tw.tmp.pickerBound = true;
-
-  document.addEventListener('click', onClick);
-  document.addEventListener('keydown', e => {if (e.key === 'Escape') closeAll();});
-  window.addEventListener('scroll', closeAll, true);
-  window.addEventListener('resize', closeAll);
-
+(function () {
   function onClick(e) {
     let trigger = e.target.closest('.picker-trigger');
     if (trigger) {
@@ -57,17 +41,18 @@ description: Generic clickable picker bound via document-level delegation.
   // Lazy menu sources: a `.picker[data-source]` builds its items on open (so the
   // list is fresh and not baked into markup). Each returns [{value, label}].
   const SOURCES = {
-    tag: arg => (tw.run.getTiddlersByTag(arg) || [])
-      .map(t => t.title)
-      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-      .map(title => ({value: title, label: title})),
-    package: arg => (tw.run.getTiddlersByPackage(arg) || [])
-      .map(t => t.title)
-      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-      .map(title => ({value: title, label: title})),
+    tag: (arg) =>
+      (tw.run.getTiddlersByTag(arg) || [])
+        .map((t) => t.title)
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+        .map((title) => ({value: title, label: title})),
+    package: (arg) =>
+      (tw.run.getTiddlersByPackage(arg) || [])
+        .map((t) => t.title)
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+        .map((title) => ({value: title, label: title})),
     // Open notes that overflow the tab strip (the split is owned by $TabsPlugin).
-    taboverflow: () => (tw.tabs?.overflow || [])
-      .map(t => ({value: t, label: t.replace(/^\$/, '')})),
+    taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')}))
   };
 
   function populate(picker, menu) {
@@ -108,13 +93,34 @@ description: Generic clickable picker bound via document-level delegation.
   }
 
   function closeAll() {
-    document.querySelectorAll('.picker-menu:not([hidden])').forEach(m => (m.hidden = true));
+    document.querySelectorAll('.picker-menu:not([hidden])').forEach((m) => (m.hidden = true));
   }
 
+  return {
+    meta: {
+      name: 'Picker',
+      version: '1.0.0',
+      platform: '0.24.0',
+      description: 'Generic clickable picker bound via document-level delegation.'
+    },
+    init() {
+      tw.tmp = tw.tmp || {};
+      if (tw.tmp.pickerBound) return;
+      tw.tmp.pickerBound = true;
+
+      document.addEventListener('click', onClick);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAll();
+      });
+      window.addEventListener('scroll', closeAll, true);
+      window.addEventListener('resize', closeAll);
+    }
+  };
 })();
 ```
 
 # StyleSheet
+
 ```css
 /* Icon popup pickers (theme / workspace selectors). An icon trigger opens a
    fixed-positioned menu (positioned in JS) of choices. */
