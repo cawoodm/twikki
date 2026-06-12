@@ -364,6 +364,15 @@ dialog#new-dialog form textarea {
   height: 100%;
 }
 
+/* Tiddler-body editor: monospace for legible code/markup editing across all themes.
+   `ui-monospace` picks the OS default (SF Mono on macOS, Cascadia Mono on Win11). */
+dialog#new-dialog form textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
 dialog#new-dialog div.title input {
   font-size: 1.2rem;
   font-weight: 700;
