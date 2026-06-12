@@ -22,10 +22,6 @@ while the edit dialog is open, so editing keeps its own keyboard.
 
 - version: 1.0.0
 
-# Data
-
-[include](./data.json)
-
 # Code
 
 [include](./CommandPalette.js)

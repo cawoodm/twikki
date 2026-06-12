@@ -4,7 +4,7 @@ tags: Help
 
 <<plugins>>
 
-Plugins are tiddlers tagged <<Tag $Plugin>> whose IIFE returns `{meta, init?, start?}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
+Plugins are tiddlers tagged <<Tag $Plugin>> who, when run (with eval()) return `{meta, init, start}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
 
 - **✓ OK** — built for this platform release (caret-compatible).
 - **⚠ …** — minor mismatch: same major, different minor/patch. The plugin still runs.
@@ -35,13 +35,17 @@ Tiddlers without either tag never auto-execute.
     },
     start() {
       // optional — boot-time effects
-    }
+    },
   };
 })();
 ```
 
-For the multi-section `.tid` template (with `# Code`, `# StyleSheet`, `# Description`), see [[ExamplePlugin]] and the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
+## Formats
+
+Inswide Twikki a plugin can be a single `script/js` tiddler or a multi-part `x-twikki` tiddler (see [[ContentSections]]. The multi-part option is nice because you can include documentation, examples, stylesheets. See [[ExamplePlugin]] for a multi-part example. As a developer you can manage plugins as individual files in a directory which are automatically compiled into multi-part tiddlers. See the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
 
 ## Distributing plugins
 
-A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget.
+A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget:
+
+- <<packages.import name:demo url:./packages/demo.json filter:\* force:false>>

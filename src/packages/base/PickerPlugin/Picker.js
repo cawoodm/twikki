@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'Picker',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Generic clickable picker bound via document-level delegation.',
+  };
+
   function onClick(e) {
     let trigger = e.target.closest('.picker-trigger');
     if (trigger) {
@@ -80,12 +87,7 @@
   }
 
   return {
-    meta: {
-      name: 'Picker',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Generic clickable picker bound via document-level delegation.',
-    },
+    meta,
     init() {
       tw.tmp = tw.tmp || {};
       if (tw.tmp.pickerBound) return;

@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'CommandPalette',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Ctrl/Cmd+K palette for actions and tiddler navigation.',
+  };
+
   let dialog;
   let input;
   let results;
@@ -69,16 +76,16 @@
   function commandItems(needle) {
     return tw.commands
       .all()
-      .filter((c) => !needle || c.label.toLowerCase().includes(needle))
-      .map((c) => ({label: c.label, hint: 'command', run: () => runCommand(c)}));
+      .filter(c => !needle || c.label.toLowerCase().includes(needle))
+      .map(c => ({label: c.label, hint: 'command', run: () => runCommand(c)}));
   }
 
   function noteItems(q) {
     return tw.core.search
       .search(q, tw.tiddlers.all, {all: false})
-      .filter((t) => t && t.type) // drop the "No results!" placeholder (no type)
+      .filter(t => t && t.type) // drop the "No results!" placeholder (no type)
       .slice(0, 50)
-      .map((t) => ({label: t.title, hint: t.type, run: () => openNote(t.title)}));
+      .map(t => ({label: t.title, hint: t.type, run: () => openNote(t.title)}));
   }
 
   function render() {
@@ -146,12 +153,7 @@
   }
 
   return {
-    meta: {
-      name: 'CommandPalette',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Ctrl/Cmd+K palette for actions and tiddler navigation.',
-    },
+    meta,
     init() {
       tw.tmp = tw.tmp || {};
       wireUp('ui.loaded', init);

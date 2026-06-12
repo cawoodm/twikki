@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'Tabs',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Tabbed open-tiddlers view with keyboard navigation.',
+  };
+
   const MAX_TABS = 30; // hard upper bound; the rest go in the overflow dropdown
   const MIN_TAB = 96; // px — keeps ≥3 chars + ellipsis legible (matches .tab min-width in CSS)
   const TRAILING = 40; // px reserved for the new-note button / overflow trigger
@@ -189,12 +196,7 @@
   }
 
   return {
-    meta: {
-      name: 'Tabs',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Tabbed open-tiddlers view with keyboard navigation.',
-    },
+    meta,
     init() {
       wireUp('ui.loaded', init);
       wireUp('ui.reloaded', init);

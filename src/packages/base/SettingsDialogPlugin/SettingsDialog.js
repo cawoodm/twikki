@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'SettingsDialog',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Settings JSON viewer/editor surfaced via the command palette.',
+  };
+
   const TIDDLER = '$GeneralSettings';
   const META = '~'; // companion descriptor key suffix
   const TYPES = ['string', 'text', 'number', 'boolean', 'date', 'secret', 'option', 'selection'];
@@ -320,12 +327,7 @@
   }
 
   return {
-    meta: {
-      name: 'SettingsDialog',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Settings JSON viewer/editor surfaced via the command palette.',
-    },
+    meta,
     init() {
       tw.events.subscribe('tiddler.element.created', settingsDialogOnElementCreated);
     },

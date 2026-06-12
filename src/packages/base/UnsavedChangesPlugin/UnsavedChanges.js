@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'UnsavedChanges',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Tracks unsaved changes and shows them in a dialog.',
+  };
+
   const DIALOG_ID = 'unsaved-changes-dialog';
 
   // --- Change detection (pure: store baseline vs in-memory) ---
@@ -154,12 +161,7 @@
   }
 
   return {
-    meta: {
-      name: 'UnsavedChanges',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Tracks unsaved changes and shows them in a dialog.',
-    },
+    meta,
     init() {
       if (tw.tmp.unsavedChanges) return; // guard against duplicate wiring
       tw.tmp.unsavedChanges = 1;

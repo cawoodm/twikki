@@ -1,4 +1,11 @@
 (function () {
+  const meta = {
+    name: 'Explorer',
+    version: '1.0.1',
+    platform: '0.24.0',
+    description: 'Sidebar tree showing all tiddlers grouped by tag.',
+  };
+
   let notesEl;
   let tagsEl;
 
@@ -88,12 +95,7 @@
   }
 
   return {
-    meta: {
-      name: 'Explorer',
-      version: '1.0.1',
-      platform: '0.24.0',
-      description: 'Sidebar tree showing all tiddlers grouped by tag.',
-    },
+    meta,
     init() {
       // The explorer owns the sidebar, so the toggle command lives here.
       tw.extensions.registerCommand({
