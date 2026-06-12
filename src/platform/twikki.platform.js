@@ -31,7 +31,6 @@
   // Events are alphanumeric with "." e.g. 'foo.bar' (lowercase only)
   const reEventName = /[a-z0-9\.]+/g;
   const reCommand = RegExp.compose(/(reEventName):?(.+)?/, {reEventName});
-  const autoSave = true;
 
   let qs;
   let baseUrl;
@@ -137,7 +136,8 @@
         '/core.common.js', // pure utilities (hash, base64 encoder/decoder, notEmpty) — FIRST, no deps
         '/core.js', // tw.events bus; uses tw.core.common.decoder
         '/core.sections.js',
-        '/core.workspaces.js',
+        '/core.store.js', // owns tw.store (workspace-scoped) + tiddler persistence
+        '/core.workspaces.js', // active-workspace management (→ core.store for scoping)
         '/core.defaults.json',
         '/core.packaging.js',
         '/core.params.js',
@@ -255,37 +255,15 @@
       bootProgress({phase: 'modules-ready'});
 
       tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
-      tw.shadowTiddlers = Array.from(tw.tiddlers.all);
-      tw.shadowTiddlers.forEach(t => {
-        // HACK: Load packages locally for development
-        if (
-          t.title === '$CorePackages' &&
-          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
-        )
-          t.text = t.text.replaceAll(
-            'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host,
-          );
-        if (
-          t.title === '$ExtensionPackages' &&
-          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
-        )
-          t.text = t.text.replaceAll(
-            'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host,
-          );
-      });
-      Object.freeze(tw.shadowTiddlers);
 
-      loadStore();
-
-      wireUpEvents();
-
-      // Basic API which modules may need or override
+      // Basic API which modules may need or override. Assembled BEFORE the store
+      // is hydrated — core.store.loadStore() resolves tiddler helpers through
+      // tw.run/tw.util rather than reaching into this closure.
       tw.run = {
-        save,
-        saveAll,
-        saveVisible,
+        save: tw.core.store.save,
+        saveAll: tw.core.store.saveAll,
+        saveVisible: tw.core.store.saveVisible,
+        setDirty,
         updateTiddler,
         updateTiddlerHard,
         addTiddler,
@@ -320,6 +298,33 @@
           updateText: updateTiddlerText,
         },
       };
+      tw.util = {tagMatch, titleMatch, titleIs, tiddlerValidation, tiddlerExists};
+
+      tw.shadowTiddlers = Array.from(tw.tiddlers.all);
+      tw.shadowTiddlers.forEach(t => {
+        // HACK: Load packages locally for development
+        if (
+          t.title === '$CorePackages' &&
+          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
+        )
+          t.text = t.text.replaceAll(
+            'https://cawoodm.github.io/twikki',
+            'http://' + document.location.host,
+          );
+        if (
+          t.title === '$ExtensionPackages' &&
+          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
+        )
+          t.text = t.text.replaceAll(
+            'https://cawoodm.github.io/twikki',
+            'http://' + document.location.host,
+          );
+      });
+      Object.freeze(tw.shadowTiddlers);
+
+      tw.core.store.loadStore();
+
+      wireUpEvents();
 
       dp(`${tw.modules.length} modules loaded. Running modules...`);
       tw.modules
@@ -372,7 +377,6 @@
 
       // ----------
       // Legacy Aliases
-      tw.util = {tagMatch, titleMatch, titleIs, tiddlerValidation, tiddlerExists};
       tw.lib = {markdown: renderMarkdown};
       Object.assign(tw.ui, tw.core.ui);
       tw.ui.notify = tw.core.notifications.notify;
@@ -715,7 +719,7 @@
       tw.ui.notify(`${count} tiddlers imported from package ${name}`, 'D');
     }
     // tw.ui.notify('Don\'t forget to save!', 'I');
-    saveSilent();
+    tw.core.store.saveSilent();
   }
 
   function wireUpEvents() {
@@ -723,9 +727,9 @@
     tw.events.init();
     wireUp('ui.open.all', showAllTiddlers);
     wireUp('ui.close.all', closeAllTiddlers);
-    wireUp('save', save);
-    wireUp('save.silent', saveSilent);
-    wireUp('save.all', saveAll);
+    wireUp('save', tw.core.store.save);
+    wireUp('save.silent', tw.core.store.saveSilent);
+    wireUp('save.all', tw.core.store.saveAll);
     wireUp('reboot.hard', rebootHard);
     wireUp('ui.reload', reload);
 
@@ -749,7 +753,7 @@
     wireUp('tiddler.created', renderNewTiddler);
     wireUp('tiddler.updated', tiddlerUpdated);
 
-    wireUp('store.load', loadStore);
+    wireUp('store.load', tw.core.store.loadStore);
 
     wireUp('form.done', formDone);
     wireUp('form.cancel', formCancel);
@@ -759,12 +763,6 @@
   }
   function wireUp(event, handler) {
     tw.events.subscribe(event, handler, 'core');
-  }
-
-  function tiddlerIsValid(t) {
-    let msg = tiddlerValidation(t);
-    if (msg.length) console.warn('tiddlerValidation', t.title, msg.join('; '));
-    return msg.length === 0;
   }
 
   function tiddlerToggleTag(title, tag) {
@@ -1309,7 +1307,7 @@
     tw.events.send('tiddler.updated', t.title); // tiddlerUpdated()
     renderAllTiddlers();
     setDirty(true);
-    save();
+    tw.core.store.save();
     // A $Plugin tiddler was edited — validateTiddlerText skipped the eval because the live
     // instance still owns its event subscriptions / DOM bindings. Offer a hard reload so the
     // new plugin code actually takes effect.
@@ -1408,7 +1406,7 @@
     tw.core.dom.divVisibleTiddlers.insertAdjacentElement('afterbegin', newElement);
     if (tw.tiddlers.visible.indexOf(tiddler.title) === -1) tw.tiddlers.visible.push(tiddler.title);
     tw.events.send('tiddler.rendered', {tiddler, newElement});
-    saveVisible();
+    tw.core.store.saveVisible();
   }
   // Split a `Title::Section` reference into {base, section}, or null when the ref
   // holds no section delimiter. The single place that knows the delimiter width.
@@ -1469,12 +1467,12 @@
     else if (tiddlerIsATemplate(t)) loadTemplates();
     else if (isPackageList(t))
       if (confirm('Would you like to reload?')) {
-        save();
+        tw.core.store.save();
         tw.events.send('reboot.hard');
       }
     if (title === '$MainLayout')
       if (confirm('Would you like to reload?')) {
-        save();
+        tw.core.store.save();
         tw.events.send('reboot.hard');
       }
   }
@@ -1535,7 +1533,7 @@
     let visibleTiddlerElement = getTiddlerElement(title);
     if (visibleTiddlerElement) visibleTiddlerElement.outerHTML = ''; // else console.warn('hideTiddler', title, 'failed!');
     tw.tiddlers.visible = tw.tiddlers.visible.filter(t => t !== title);
-    saveVisible();
+    tw.core.store.saveVisible();
     tw.events.send('story.changed', title);
   }
 
@@ -1568,35 +1566,12 @@
       tw.events.send('tiddler.removed', title);
       return;
     } else tw.events.send('tiddler.deleted', title);
-    save();
+    tw.core.store.save();
     // searchShowResults();
   }
   function closeTiddler(title) {
     hideTiddler(title);
     renderAllTiddlers();
-  }
-
-  function save() {
-    if (!autoSave) return;
-    saveAll({});
-  }
-  function saveSilent() {
-    if (!autoSave) return;
-    saveAll({silent: true});
-  }
-  function saveAll() {
-    const oldTiddlers = tw.store.get('tiddlers');
-    // TODO: Better local backups/versioning
-    if (oldTiddlers?.length) tw.store.set('tiddlers-backup1', oldTiddlers);
-    tw.store.set('tiddlers', tw.tiddlers.all.filter(tiddlersToSave));
-    tw.store.set('tiddlers-trashed', tw.tiddlers.trashed);
-    saveVisible();
-    // if (!silent) tw.ui.notify('Saved!');
-    setDirty(false);
-  }
-
-  function saveVisible() {
-    tw.store.set('tiddlers-visible', tw.tiddlers.visible);
   }
 
   // DOM Manipulation
@@ -1742,9 +1717,6 @@
   }
 
   // Filter Functions
-  function tiddlersToSave(t) {
-    return t.doNotSave !== true;
-  }
   function titleIs(title) {
     return t => t.title === title;
   }
@@ -1809,32 +1781,6 @@
     return tw.lib.markdown(
       renderTWikki({text: list.map(t => `* [[${t.title}]]`).join('\n'), title}),
     );
-  }
-
-  /* Store */
-  function loadStore(store) {
-    if (!store) store = tw.store;
-    tw.tiddlers.all = storeLoadTiddlers('tiddlers');
-    tw.shadowTiddlers.filter(t => !tiddlerExists(t.title)).forEach(addTiddlerHard);
-    if (!tw.tiddlers.all.length) {
-      tw.tiddlers.all = [];
-      store.set('tiddlers', []);
-    }
-    tw.tiddlers.visible = store.get('tiddlers-visible')?.length
-      ? store.get('tiddlers-visible')
-      : [];
-
-    tw.tiddlers.trashed = storeLoadTiddlers('tiddlers-trashed', false);
-
-    function storeLoadTiddlers(key, validate = true) {
-      let result = store.get(key) || [];
-      result.forEach(t => {
-        if (validate && !tiddlerIsValid(t)) return;
-        t.created = new Date(t.created || new Date());
-        t.updated = new Date(t.updated || new Date());
-      });
-      return result.filter(t => !!t.title);
-    }
   }
 
   /* Navigation */

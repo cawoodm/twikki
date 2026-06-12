@@ -1,24 +1,22 @@
 /**
  * Workspaces
  * Named workspaces — isolated tiddler stores living under the
- * `/ws/<name>/` localStorage prefix. Installs `tw.store` (a get/set wrapper
- * scoped to the current workspace) and `tw.workspace` (the current name),
- * and handles the workspace.switch/load/create/clone/delete events.
- * Switching prefixes only; `workspace.load` hard-reboots so the UI reloads
+ * `/ws/<name>/` localStorage prefix. Manages which workspace is ACTIVE
+ * (`tw.workspace`, which core.store reads to scope `tw.store`) and handles
+ * the workspace.switch/load/create/clone/delete events. Switching just
+ * repoints `tw.workspace`; `workspace.load` hard-reboots so the UI reloads
  * from the new store. Falls back to 'default' if the saved name is unknown.
  */
 (function(tw) {
 
   const name = 'core.workspaces';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Init
-  if (!tw.storage.get('workspaces')) tw.storage.set('workspaces', ['default']);
-  if (!tw.storage.get('workspace')) tw.storage.set('workspace', 'default');
-  // Load Workspace
-  if (!tw.storage.get('workspace')) workspaceSwitch();
-  tw.workspace = tw.storage.get('workspace');
+  if (!tw.store.global.get('workspaces')) tw.store.global.set('workspaces', ['default']);
+  if (!tw.store.global.get('workspace')) tw.store.global.set('workspace', 'default');
+  tw.workspace = tw.store.global.get('workspace');
   try {
     workspaceSwitch(tw.workspace);
   } catch {
@@ -59,14 +57,14 @@
 
   function workspaceCreate(name, clone) {
   // Remember current workspace (if any)
-    let currentWorkspace = tw.storage.get('workspace');
+    let currentWorkspace = tw.store.global.get('workspace');
     // Check it doesn't already exist
-    let workspaces = tw.storage.get('workspaces');
+    let workspaces = tw.store.global.get('workspaces');
     let index = workspaces.indexOf(name);
     if (index >= 0) throw new Error(`workspaceCreate Failed: Workspace '${name}' already exists!`);
     // Create new workspace
     workspaces.push(name);
-    tw.storage.set('workspaces', workspaces);
+    tw.store.global.set('workspaces', workspaces);
     if (clone) {
     // Copy all data across
       workspaceMigrate(currentWorkspace, name, {
@@ -81,23 +79,12 @@
    */
   function workspaceSwitch(name) {
   // TODO: Save if dirty prompt
-    let workspaces = tw.storage.get('workspaces');
+    let workspaces = tw.store.global.get('workspaces');
     let index = name ? workspaces.indexOf(name) : 0;
-    if (index < 0) throw new Error(`workspaceDelete Failed: Workspace '${name}' not found!`);
+    if (index < 0) throw new Error(`workspaceSwitch Failed: Workspace '${name}' not found!`);
     name = workspaces[index];
-    // Switch to new storage workspace
-    tw.store = {
-      get(key) {
-        if (key[0] !== '/') key = '/' + key;
-        return tw.storage.get('/ws/' + name + key);
-      },
-      set(key, value) {
-        if (key[0] !== '/') key = '/' + key;
-        return tw.storage.set('/ws/' + name + key, value);
-      },
-    };
-    // Remember this switch
-    tw.storage.set('workspace', name);
+    // Repoint the active workspace — tw.store (core.store) scopes by tw.workspace
+    tw.store.global.set('workspace', name);
     tw.workspace = name;
   }
   /**
@@ -109,8 +96,8 @@
     tw.events.send('reboot.hard');
   }
   function workspaceDelete(name) {
-    let workspaces = tw.storage.get('workspaces');
-    let currentWorkspace = tw.storage.get('workspace');
+    let workspaces = tw.store.global.get('workspaces');
+    let currentWorkspace = tw.store.global.get('workspace');
     let index = workspaces.indexOf(name);
     if (index < 0) throw new Error(`workspaceDelete Failed: Workspace '${name}' not found!`);
     if (name === currentWorkspace) throw new Error(`workspaceDelete Failed: Cannot delete current workspace '${name}'! Please switch first.`);
@@ -119,7 +106,7 @@
     // oldStore.clear();
     alert('WORKSPACE CLEANUP NOT IMPLEMENTED!');
     // Object.keys(localStorage).forEach(function(key){
-    tw.storage.set('workspaces', workspaces);
+    tw.store.global.set('workspaces', workspaces);
   }
   function workspaceMigrate(current, name, source) {
     workspaceSwitch(name);
