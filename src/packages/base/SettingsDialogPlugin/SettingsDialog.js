@@ -230,7 +230,8 @@
     t.text = JSON.stringify(parsed, null, 2);
     delete t.doNotSave;
     tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
-    localStorage.setItem('/settings.json', t.text);
+    // /settings.json is global (read by the platform before any workspace exists)
+    tw.store.global.set('/settings.json', t.text);
     tw.events.send('save.silent');
   }
 

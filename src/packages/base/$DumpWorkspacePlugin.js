@@ -22,11 +22,9 @@
   const FORMAT = 'twikki-workspace-v1';
 
   function dumpWorkspace() {
-    const prefix = '/ws/' + tw.workspace + '/';
     const keys = {};
-    Object.keys(localStorage)
-      .filter(k => k.startsWith(prefix))
-      .forEach(k => (keys[k.slice(prefix.length)] = localStorage.getItem(k))); // strip prefix => portable
+    // tw.store.keys() returns the current workspace's keys prefix-stripped => portable
+    tw.store.keys().forEach(k => (keys[k] = tw.store.exportRaw(k)));
     const data = {format: FORMAT, workspace: tw.workspace, keys};
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
@@ -44,10 +42,9 @@
     try {data = JSON.parse(text);} catch {return tw.ui.notify('Invalid JSON', 'E');}
     if (data.format !== FORMAT || typeof data.keys !== 'object' || !data.keys)
       return tw.ui.notify('Not a twikki workspace file', 'E');
-    const prefix = '/ws/' + tw.workspace + '/';
-    Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k)); // wipe
-    Object.entries(data.keys).forEach(([rel, val]) => localStorage.setItem(prefix + rel, val)); // overwrite
-    tw.events.send('reboot.hard'); // reloads everything from the restored localStorage
+    tw.store.keys().forEach(k => tw.store.delete(k)); // wipe
+    Object.entries(data.keys).forEach(([rel, val]) => tw.store.importRaw(rel, val)); // overwrite
+    tw.events.send('reboot.hard'); // reloads everything from the restored store
   }
 
   return {
