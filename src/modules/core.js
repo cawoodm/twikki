@@ -1,19 +1,18 @@
 /**
  * Core (twikki.core)
- * First module loaded; bootstraps the `tw` global namespace skeleton:
- *   - `tw.events` — the pub/sub bus (send/subscribe/override) with a
- *     duplicate-handler guard and `---enc:` base64 param decoding.
- *   - a minimal `tw.run` (just getTiddler) so the first paint can resolve
- *     tiddlers before the platform installs the full action API later in boot.
+ * Bootstraps `tw.events` — the pub/sub bus (send/subscribe/override) with a
+ * duplicate-handler guard. Note `send` passes params through verbatim; only
+ * `tw.events.decode` (called by sendCommand) decodes `---enc:` base64 payloads
+ * (via `tw.core.common.decoder`).
+ * Loads after core.common (which must come first in modulesToLoad).
  */
 (function(tw) {
 
   const name = 'twikki.core';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
 
   dp('TWikki Core started');
-  tw.core = {};
   tw.events = (function() {
     const handlers = [];
     let initialized = false;
@@ -35,7 +34,7 @@
         return result;
       },
       decode(params) {
-        if (typeof params === 'string' && params.match(/^---enc:/)) return decoder(params.substring(7));
+        if (typeof params === 'string' && params.match(/^---enc:/)) return tw.core.common.decoder(params.substring(7));
         return params;
       },
       // TODO: Should have subscribe to listen and override to handle
@@ -67,14 +66,6 @@
       handlers() {return handlers;},
       clear() {dp('clear'); handlers.length = 0;},
     };
-    function decoder(encoded) {
-      const binary = atob(encoded);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return String.fromCharCode(...new Uint16Array(bytes.buffer));
-    }
   })();
 
   return {name, version, platform};

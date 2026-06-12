@@ -120,8 +120,8 @@
       dp('Looking for local TWikki.Core modules...');
 
       let modulesToLoad = [
-        '/core.js',
-        '/core.common.js',
+        '/core.common.js', // pure utilities (hash, base64 encoder/decoder, notEmpty) — FIRST, no deps
+        '/core.js', // tw.events bus; uses tw.core.common.decoder
         '/core.sections.js',
         '/core.workspaces.js',
         '/core.defaults.json',

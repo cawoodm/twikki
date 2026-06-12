@@ -1,13 +1,14 @@
 /**
  * Common
  * Pure, DOM-free utilities shared across modules: `hash` (MD5), `simpleSort`
- * (case-insensitive title sort), `escapeHtml`, and the UTF-16-safe base64
- * `encoder`/`decoder` pair used for `---enc:` message payloads.
+ * (case-insensitive title sort), `escapeHtml`, `notEmpty`, and the UTF-16-safe
+ * base64 `encoder`/`decoder` pair used for `---enc:` message payloads.
+ * Loads FIRST (no dependencies) so every other module can rely on it.
  */
 (function() {
 
   const name = 'core.common';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Exports
@@ -17,6 +18,7 @@
     escapeHtml,
     encoder,
     decoder,
+    notEmpty,
   };
 
   const run = () => {};
@@ -51,6 +53,9 @@
       bytes[i] = binary.charCodeAt(i);
     }
     return String.fromCharCode(...new Uint16Array(bytes.buffer));
+  }
+  function notEmpty(v) {
+    return !!v;
   }
 
 });

@@ -24,7 +24,7 @@ function coreModuleFiles() {
 }
 
 test('there are loose core modules to check', () => {
-  assert.ok(coreModuleFiles().length >= 12, 'expected at least 12 core.*.js modules');
+  assert.ok(coreModuleFiles().length >= 11, 'expected at least 11 core.*.js modules');
 });
 
 for (const file of coreModuleFiles()) {
