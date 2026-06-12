@@ -43,6 +43,9 @@
   --accent: #6db193;
   --accent-2: #8fbfdf;
 
+  /* ---- Search ---- */
+  --search-hit-bg: #fff59d; /* highlighted search hit (SearchHighlightPlugin) */
+
   /* Derive tab colours from the palette so every theme gets sensible
      tabs without redefining them: inactive matches the top-bar/chrome
      (--colbg3); active matches the note pane (--colbg2). A theme can
