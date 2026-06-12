@@ -19,7 +19,7 @@ Surfaced three ways:
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta UnsavedChanges>>
 
 # Code
 

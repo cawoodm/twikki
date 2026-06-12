@@ -19,7 +19,7 @@ active tab, or — when the active note was closed — activates its neighbour.
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta Tabs>>
 
 # Code
 

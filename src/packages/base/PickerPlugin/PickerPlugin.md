@@ -14,7 +14,7 @@ survives UI re-renders without re-binding.
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta Picker>>
 
 # Code
 

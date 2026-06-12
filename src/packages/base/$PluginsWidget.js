@@ -3,7 +3,7 @@
 // macro for core modules. tw.plugins is populated at boot by loadPlugins() in the
 // platform: each $Plugin-tagged tiddler's IIFE returns {meta, init?, start?}, which
 // becomes a row here.
-tw.macros.core.plugins = (() => {
+(() => {
   function pluginStatus(p) {
     if (p.error) return `⚠ err: ${p.error.phase} — ${p.error.message}`;
     const sev = p.compat?.severity;
@@ -13,7 +13,17 @@ tw.macros.core.plugins = (() => {
     if (sev === 'block') return `✗ ${p.compat.reason || 'incompatible'}`;
     return '?';
   }
-  return () => {
+  // Live meta of one plugin as a bullet list — used in plugin tiddlers' # Meta
+  // sections so displayed metadata can never drift from the code's meta object.
+  tw.macros.core.pluginMeta = (name) => {
+    const p = (tw.plugins || []).find(p => p.meta?.name === name || p.source === name);
+    if (!p) return `<span class="error">Plugin '${name}' not found in registry</span>`;
+    const lines = Object.entries(p.meta).map(([k, v]) => `- **${k}**: ${v}`);
+    lines.push(`- **package**: ${p.package || '–'}`);
+    lines.push(`- **status**: ${pluginStatus(p)}`);
+    return lines.join('\n');
+  };
+  tw.macros.core.plugins = () => {
     const platform = window.twikki?.version || '–';
     const rows = (tw.plugins || [])
       .slice()
@@ -33,3 +43,4 @@ tw.macros.core.plugins = (() => {
     ].join('\n');
   };
 })();
+

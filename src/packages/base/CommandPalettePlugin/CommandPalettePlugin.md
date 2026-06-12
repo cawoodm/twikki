@@ -20,7 +20,7 @@ while the edit dialog is open, so editing keeps its own keyboard.
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta CommandPalette>>
 
 # Code
 

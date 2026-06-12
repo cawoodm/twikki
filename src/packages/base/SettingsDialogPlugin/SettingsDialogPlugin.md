@@ -29,7 +29,7 @@ function so re-evaluating this code tiddler does not register duplicates.
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta SettingsDialog>>
 
 # Code
 

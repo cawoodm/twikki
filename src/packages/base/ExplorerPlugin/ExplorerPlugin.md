@@ -13,7 +13,7 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
 
 # Meta
 
-- version: 1.0.0
+<<pluginMeta Explorer>>
 
 # Code
 
