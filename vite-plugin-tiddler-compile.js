@@ -14,6 +14,18 @@ export function getType(ext) {
   }
 }
 
+// Fence language for `[include]` substitution. Falls back to '' for extensions
+// that should be inlined raw (e.g. .md — including markdown into markdown).
+export function fenceLang(ext) {
+  switch (ext) {
+    case '.js': return 'javascript';
+    case '.css': return 'css';
+    case '.json': return 'json';
+    case '.html': return 'html';
+    default: return '';
+  }
+}
+
 export function getAutoTags(packageName, ext) {
   const tags = [];
   if (packageName === 'core.defaults') tags.push('$Shadow');
@@ -97,22 +109,75 @@ export function parseFile(filePath, packageName) {
   return tiddler;
 }
 
+// Substitute every `[include](./X)` (or `[include](X)`) line in the markdown
+// anchor with the file's contents, wrapped in a fenced code block whose
+// language comes from the file extension (.js→javascript, .css→css, .json→json,
+// .html→html). Extensions with no fence language (.md, etc.) are inlined raw.
+// Returns the rewritten text + the list of absolute paths that were included
+// (so callers can fold their mtime into the tiddler's `updated` field).
+export function expandIncludes(text, dirPath) {
+  const includedPaths = [];
+  const out = text.replace(/\[include\]\((?:\.\/)?([^)]+)\)/g, (_, relPath) => {
+    if (relPath.includes('..')) {
+      throw new Error(`include path "${relPath}" must stay inside the plugin dir`);
+    }
+    const absPath = join(dirPath, relPath);
+    if (!existsSync(absPath)) {
+      throw new Error(`include "${relPath}" not found in ${dirPath}`);
+    }
+    includedPaths.push(absPath);
+    const content = readFileSync(absPath, 'utf8').replace(/\r/g, '').trimEnd();
+    const lang = fenceLang(extname(relPath));
+    return lang ? '```' + lang + '\n' + content + '\n```' : content;
+  });
+  return {text: out, includedPaths};
+}
+
+// Parse a composite plugin directory: <dirName>/<dirName>.md is the anchor
+// (carries metadata header + section skeleton + [include] lines); siblings
+// like Code.js / StyleSheet.css / data.json are inlined where their [include]
+// references appear. The compiled tiddler's title is the directory name, and
+// its `.text` is multi-section markdown that core.sections.js parses normally.
+export function parseComposite(dirPath, packageName) {
+  const dirName = basename(dirPath);
+  const mdPath = join(dirPath, `${dirName}.md`);
+  if (!existsSync(mdPath)) {
+    throw new Error(`composite plugin "${dirName}" requires ${dirName}.md`);
+  }
+  const tiddler = parseFile(mdPath, packageName);
+  tiddler.title = dirName;
+  tiddler.type = 'x-twikki';
+  const {text, includedPaths} = expandIncludes(tiddler.text, dirPath);
+  tiddler.text = text;
+  // `updated` should reflect the newest source file, not just the .md anchor —
+  // editing Code.js must bump the tiddler's mtime so downstream caches refresh.
+  let newest = statSync(mdPath).mtime;
+  for (const p of includedPaths) {
+    const m = statSync(p).mtime;
+    if (m > newest) newest = m;
+  }
+  tiddler.updated = newest.toISOString();
+  return tiddler;
+}
+
 export function compilePackage(packageName, sourceDir, outputDir) {
   if (!existsSync(outputDir)) mkdirSync(outputDir, {recursive: true});
-  const files = readdirSync(sourceDir, {withFileTypes: true})
+  const entries = readdirSync(sourceDir, {withFileTypes: true});
+  const files = entries
     .filter(e => e.isFile())
     .map(e => e.name)
     .filter(name => getType(extname(name)) !== ''); // skip temp/non-tiddler files (e.g. atomic-save *.tmp.*)
-  const tiddlers = files
-    .map(name => {
-      try {
-        return parseFile(join(sourceDir, name), packageName);
-      } catch (err) {
-        if (err.code === 'ENOENT') return null; // file vanished mid-compile (atomic-save race)
-        throw err;
-      }
-    })
-    .filter(Boolean);
+  const subdirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+  const fromFiles = files.map(name => {
+    try {
+      return parseFile(join(sourceDir, name), packageName);
+    } catch (err) {
+      if (err.code === 'ENOENT') return null; // file vanished mid-compile (atomic-save race)
+      throw err;
+    }
+  });
+  const fromDirs = subdirs.map(name => parseComposite(join(sourceDir, name), packageName));
+  const tiddlers = [...fromFiles, ...fromDirs].filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
   console.log(`[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`);

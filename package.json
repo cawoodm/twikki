@@ -10,6 +10,7 @@
     "test:e2e:ui": "playwright test --ui",
     "compile": "node vite-plugin-tiddler-compile.js",
     "watch": "npm-watch",
+    "run": "vite --port 8081 --strict-port",
     "build": "vite build --emptyOutDir && cd dist && vite",
     "build-test": "vite build --emptyOutDir && cd dist && vite --open --host",
     "publish": "pwsh ci/publish.ps1"

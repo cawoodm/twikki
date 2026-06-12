@@ -1,4 +1,8 @@
 {
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": ["javascript"],
   "triggerTaskOnSave.tasks": {
     "*** COMPILE": [
       "src/packages/*/*.*",

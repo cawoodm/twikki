@@ -179,7 +179,7 @@ div.tiddler div.tags {
   margin-top: 16px;
 }
 
-/* Tag pills are picker triggers (see $PickerPlugin); style them like the
+/* Tag pills are picker triggers (see PickerPlugin); style them like the
    explorer's tag pills rather than the generic icon trigger. */
 .picker-trigger.tag-pill {
   padding: 2px 10px;

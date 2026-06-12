@@ -1,20 +1,3 @@
-tags: $Plugin
-
-# Description
-
-Generic icon-triggered popup picker. Drives the theme and workspace selectors
-(and any future ones) without per-picker JS: a `.picker` container holds a
-`.picker-trigger` icon button and a hidden `.picker-menu` of `.picker-item`
-buttons. Clicking the trigger toggles the menu. Clicking an item sends the
-container's `data-event` (item may override) with the item's `data-value`,
-then closes. Outside click / Escape / scroll / resize close any open menu.
-
-Behaviour is document-level delegation bound once (guarded via `tw.tmp`), so it
-survives UI re-renders without re-binding.
-
-# Code
-
-```javascript
 (function () {
   function onClick(e) {
     let trigger = e.target.closest('.picker-trigger');
@@ -51,8 +34,8 @@ survives UI re-renders without re-binding.
         .map((t) => t.title)
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         .map((title) => ({value: title, label: title})),
-    // Open notes that overflow the tab strip (the split is owned by $TabsPlugin).
-    taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')}))
+    // Open notes that overflow the tab strip (the split is owned by TabsPlugin).
+    taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')})),
   };
 
   function populate(picker, menu) {
@@ -101,7 +84,7 @@ survives UI re-renders without re-binding.
       name: 'Picker',
       version: '1.0.0',
       platform: '0.24.0',
-      description: 'Generic clickable picker bound via document-level delegation.'
+      description: 'Generic clickable picker bound via document-level delegation.',
     },
     init() {
       tw.tmp = tw.tmp || {};
@@ -114,86 +97,6 @@ survives UI re-renders without re-binding.
       });
       window.addEventListener('scroll', closeAll, true);
       window.addEventListener('resize', closeAll);
-    }
+    },
   };
 })();
-```
-
-# StyleSheet
-
-```css
-/* Icon popup pickers (theme / workspace selectors). An icon trigger opens a
-   fixed-positioned menu (positioned in JS) of choices. */
-.picker {
-  position: relative;
-  display: inline-flex;
-}
-
-.picker-trigger {
-  background: transparent;
-  border: none;
-  color: var(--col1);
-  cursor: pointer;
-  font-size: 1.1rem;
-  line-height: 1;
-  padding: 4px 6px;
-  border-radius: var(--rad1);
-}
-
-.picker-trigger:hover {
-  color: var(--colfg);
-  background: var(--col3);
-}
-
-.picker-menu {
-  position: fixed;
-  z-index: 50;
-  min-width: 180px;
-  max-height: 60vh;
-  overflow-y: auto;
-  padding: 6px;
-  background-color: var(--colbg2);
-  color: var(--colfg);
-  border: 1px solid var(--col4);
-  border-radius: var(--rad1);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
-}
-
-.picker-menu[hidden] {
-  display: none;
-}
-
-.picker-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  color: inherit;
-  border-radius: var(--rad1);
-  cursor: pointer;
-  font: inherit;
-  white-space: nowrap;
-}
-
-.picker-item:hover {
-  background-color: var(--col3);
-  color: var(--col-on-accent);
-}
-
-.picker-item.active {
-  font-weight: 600;
-}
-
-.picker-action {
-  color: var(--col1);
-  font-style: italic;
-}
-
-.picker-empty {
-  padding: 8px 12px;
-  color: var(--col1);
-  font-style: italic;
-}
-```

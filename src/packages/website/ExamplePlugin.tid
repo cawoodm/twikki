@@ -5,10 +5,13 @@ This plugin provides some examples of widgets and extensible functions.
 Feel free to look at the [code](#ExamplePlugin::Code).
 
 # Examples
+
 ## Greet John Smith
+
 `<<example.hello "John Smith">>`
 
 # Data
+
 ```json
 [
   {"code": "de", "language": "German"},
@@ -17,6 +20,7 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 ```
 
 # Code
+
 ```javascript
 (function () {
   return {
@@ -30,7 +34,9 @@ Feel free to look at the [code](#ExamplePlugin::Code).
     },
     init() {
       // Register a macro at init time, after all plugins are loaded.
-      tw.extensions.registerMacro('example', 'hello', (name) => `Hello ${name}`, {version: '1.0.0'});
+      tw.extensions.registerMacro('example', 'hello', (name) => `Hello ${name}`, {
+        version: '1.0.0'
+      });
     },
     start() {
       // Optional. Empty for this demo — the macro is the only side effect.
@@ -40,13 +46,21 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 ```
 
 # StyleSheet
+
 ```css
 div.example {
-  color: red
+  color: red;
 }
 ```
 
+# Theme
+
+- [[$CoreThemeLayout]]
+- [[$CoreThemeAppearance]]
+- [[$ExampleTheme]]
+
 # Tests
+
 This should print out: "Hello John Smith"
 
 > <<example.hello "John Smith">>

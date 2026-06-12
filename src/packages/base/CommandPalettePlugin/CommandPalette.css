@@ -1,0 +1,78 @@
+
+/* Command palette — modal `<dialog id="command-palette">` with an input row
+   and a scrolling results list. */
+dialog#command-palette {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 92vw);
+  max-height: 70vh;
+  padding: 0;
+  background-color: var(--colbg2);
+  color: var(--colfg);
+  border: 1px solid var(--col4);
+  border-radius: var(--rad1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+#palette-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--col4);
+  border-radius: 0;
+  background: transparent;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+}
+
+#palette-results {
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.palette-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--rad1);
+  cursor: pointer;
+}
+
+.palette-row.selected,
+.palette-row:hover {
+  background-color: var(--col3);
+  color: var(--colfg); /* theme-aware: var(--col-on-accent) fails on light --col3 (e.g. Kontrast) */
+  /* Border keeps the row distinguishable where --col3 matches the dialog
+     background (e.g. Kontrast: both #fff) — same trick the filled buttons use. */
+  outline: 1px solid var(--col4);
+  outline-offset: -1px;
+}
+
+.palette-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-hint {
+  font-size: 0.72rem;
+  color: var(--col1);
+  flex: 0 0 auto;
+}
+
+.palette-row.selected .palette-hint,
+.palette-row:hover .palette-hint {
+  color: var(--colfg);
+  opacity: 0.75;
+}
+
+.palette-empty {
+  padding: 14px 16px;
+  color: var(--col1);
+  font-style: italic;
+}

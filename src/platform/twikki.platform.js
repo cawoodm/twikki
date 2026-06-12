@@ -327,7 +327,7 @@
       tw.extend = {
         tiddlerDetails: {
           metaInfo(t) {
-            // The package is a picker (see $PickerPlugin): clicking it lists every
+            // The package is a picker (see PickerPlugin): clicking it lists every
             // tiddler in that package (built lazily from data-source="package");
             // picking one opens it. Raw HTML — the picker needs real markup.
             const parts = [];
@@ -997,7 +997,7 @@
   function makeTiddlerTagLinks(tags) {
     return tags.map(tagPickerHtml).join('');
   }
-  // A single tag rendered as a picker (see $PickerPlugin): clicking it lists every
+  // A single tag rendered as a picker (see PickerPlugin): clicking it lists every
   // tiddler carrying that tag (built lazily from data-source="tag"); picking one
   // opens it. Used by the tag row at the bottom of notes and the <<Tag>> macro.
   function tagPickerHtml(tag) {

@@ -1,25 +1,3 @@
-tags: $Plugin
-
-# Description
-
-Tracks unsaved changes and shows them in a dialog (built with the core
-`tw.ui.dialog` API). The changed set is computed live by diffing the
-in-memory tiddlers (`tw.tiddlers.all`, minus `doNotSave`) against the
-last-saved set in storage (`tw.store.get('tiddlers')`), so it is accurate
-even if the dirty flag under-reports. Each changed tiddler is listed as
-new/modified/deleted with a short summary (≤100 words) as a native tooltip.
-
-Surfaced three ways:
-  - a `●` dirty indicator in the header (toggled by the `dirty.changed`
-    event from the platform) which opens the dialog on click,
-  - the `unsaved.show` event (what the indicator's `data-msg` sends),
-  - automatically ~1s after the user cancels leaving the page: browsers
-    forbid custom UI inside `beforeunload`, so we schedule a timeout there;
-    if the page is still alive and visible afterwards, the user stayed.
-
-# Code
-
-```javascript
 (function () {
   const DIALOG_ID = 'unsaved-changes-dialog';
 
@@ -27,23 +5,35 @@ Surfaced three ways:
 
   function computeChanges() {
     let saved = tw.store.get('tiddlers') || [];
-    let current = tw.tiddlers.all.filter((t) => t.doNotSave !== true);
-    let savedByTitle = new Map(saved.map((t) => [t.title, t]));
-    let currentTitles = new Set(current.map((t) => t.title));
+    let current = tw.tiddlers.all.filter(t => t.doNotSave !== true);
+    let savedByTitle = new Map(saved.map(t => [t.title, t]));
+    let currentTitles = new Set(current.map(t => t.title));
     let changes = [];
-    current.forEach((cur) => {
+    current.forEach(cur => {
       let old = savedByTitle.get(cur.title);
-      if (!old) changes.push({title: cur.title, status: 'new', summary: summarize(cur, null, 'new')});
+      if (!old)
+        changes.push({title: cur.title, status: 'new', summary: summarize(cur, null, 'new')});
       else if (differs(cur, old))
-        changes.push({title: cur.title, status: 'modified', summary: summarize(cur, old, 'modified')});
+        changes.push({
+          title: cur.title,
+          status: 'modified',
+          summary: summarize(cur, old, 'modified'),
+        });
     });
-    saved.forEach((old) => {
+    saved.forEach(old => {
       if (!currentTitles.has(old.title))
-        changes.push({title: old.title, status: 'deleted', summary: summarize(null, old, 'deleted')});
+        changes.push({
+          title: old.title,
+          status: 'deleted',
+          summary: summarize(null, old, 'deleted'),
+        });
     });
     return changes;
   }
 
+  // Compare content fields only — NOT `updated`: in-memory dates are Date
+  // objects while stored ones are ISO strings, and a metadata-only touch
+  // shouldn't count as a change.
   function differs(a, b) {
     return (
       (a.text || '') !== (b.text || '') ||
@@ -52,6 +42,7 @@ Surfaced three ways:
     );
   }
 
+  // Short human summary of what changed, clamped to 100 words (tooltip text).
   function summarize(cur, old, status) {
     let parts = [];
     if (status === 'new') {
@@ -62,7 +53,8 @@ Surfaced three ways:
       parts.push(`Deleted ${old.type} tiddler, ${size(old.text)}.`);
       if (old.tags?.length) parts.push(`Tags: ${old.tags.filter(Boolean).join(', ')}.`);
     } else {
-      if ((cur.text || '') !== (old.text || '')) parts.push(textDelta(old.text || '', cur.text || ''));
+      if ((cur.text || '') !== (old.text || ''))
+        parts.push(textDelta(old.text || '', cur.text || ''));
       if ((cur.type || '') !== (old.type || '')) parts.push(`Type: ${old.type} → ${cur.type}.`);
       let tagChange = tagDelta(old.tags || [], cur.tags || []);
       if (tagChange) parts.push(tagChange);
@@ -79,8 +71,8 @@ Surfaced three ways:
   }
 
   function tagDelta(oldTags, newTags) {
-    let added = newTags.filter((t) => t && !oldTags.includes(t));
-    let removed = oldTags.filter((t) => t && !newTags.includes(t));
+    let added = newTags.filter(t => t && !oldTags.includes(t));
+    let removed = oldTags.filter(t => t && !newTags.includes(t));
     if (!added.length && !removed.length) return '';
     let bits = [];
     if (added.length) bits.push('+' + added.join(' +'));
@@ -91,13 +83,16 @@ Surfaced three ways:
   function size(text) {
     return `${(text || '').length} chars`;
   }
+
   function signed(n) {
     return (n > 0 ? '+' : '') + n;
   }
+
   function excerpt(text, max = 80) {
     let t = text.trim().replace(/\s+/g, ' ');
     return t.length > max ? t.slice(0, max) + '…' : t;
   }
+
   function clampWords(text, max) {
     let words = text.split(/\s+/);
     return words.length > max ? words.slice(0, max).join(' ') + '…' : text;
@@ -105,15 +100,24 @@ Surfaced three ways:
 
   function showDialog() {
     let changes = computeChanges();
-    let html = changes.length ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>` : '<p>No unsaved changes.</p>';
+    let html = changes.length
+      ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>`
+      : '<p>No unsaved changes.</p>';
     let buttons = [{text: 'Close', close: true}];
     if (changes.length) buttons.unshift({text: 'Save', msg: 'save.all', close: true});
-    tw.ui.dialog({id: DIALOG_ID, title: 'Unsaved Changes', html, buttons});
+    tw.ui.dialog({
+      id: DIALOG_ID,
+      title: 'Unsaved Changes',
+      html,
+      buttons,
+    });
   }
 
   function rowHtml(c) {
     let title = tw.core.common.escapeHtml(c.title);
     let tip = attrEscape(c.summary);
+    // Deleted tiddlers can't be opened, render them as plain text.
+    // No href on the link: `#...` hrefs are intercepted as local links before data-msg dispatch.
     let label =
       c.status === 'deleted'
         ? `<span>${title}</span>`
@@ -121,10 +125,12 @@ Surfaced three ways:
     return `<li title="${tip}"><span class="tw-change-status ${c.status}">${c.status}</span>${label}</li>`;
   }
 
+  // Escape for use inside a title="..." attribute (keep line breaks as &#10;).
   function attrEscape(s) {
     return tw.core.common.escapeHtml(String(s)).replace(/\n/g, '&#10;');
   }
 
+  // --- Dirty indicator (in the header layouts) ---
   function refreshIndicator(dirty) {
     let el = document.getElementById('dirty-indicator');
     if (!el) return;
@@ -135,6 +141,8 @@ Surfaced three ways:
     }
   }
 
+  // --- Detect a cancelled leave: no custom UI is allowed in beforeunload,
+  // but if the page is still alive shortly after, the user chose to stay. ---
   function onBeforeUnload() {
     if (!tw.ui.isDirty) return;
     setTimeout(() => {
@@ -150,7 +158,7 @@ Surfaced three ways:
       name: 'UnsavedChanges',
       version: '1.0.0',
       platform: '0.24.0',
-      description: 'Tracks unsaved changes and shows them in a dialog.'
+      description: 'Tracks unsaved changes and shows them in a dialog.',
     },
     init() {
       if (tw.tmp.unsavedChanges) return; // guard against duplicate wiring
@@ -160,58 +168,6 @@ Surfaced three ways:
       tw.events.subscribe('ui.loaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
       tw.events.subscribe('ui.reloaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
       window.addEventListener('beforeunload', onBeforeUnload); // platform's preventBrowserClose stays untouched
-    }
+    },
   };
 })();
-```
-
-# StyleSheet
-
-```css
-/* Unsaved-changes list inside the unsaved-changes dialog, plus the header's
-   dirty indicator (a `●` button toggled by the dirty.changed event). */
-.tw-changes-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.tw-changes-list li {
-  padding: 0.25rem 0;
-  cursor: help;
-}
-
-.tw-changes-list a {
-  color: var(--colfg);
-  cursor: pointer;
-}
-
-.tw-change-status {
-  display: inline-block;
-  min-width: 5em;
-  margin-right: 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.tw-change-status.new {
-  color: var(--col6);
-}
-
-.tw-change-status.modified {
-  color: var(--col-warning);
-}
-
-.tw-change-status.deleted {
-  color: var(--col-error);
-}
-
-/* Dirty indicator (header) — hidden via [hidden] until there are unsaved changes */
-#dirty-indicator {
-  color: var(--col-warning);
-  font-size: 1.1rem;
-  line-height: 1;
-}
-```
