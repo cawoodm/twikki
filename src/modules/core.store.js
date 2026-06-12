@@ -49,6 +49,12 @@
     tiddlersToSave,
   };
 
+  Object.assign(tw.run, {
+    save,
+    saveAll,
+    saveVisible,
+  });
+
   return {name, version, platform, exports};
 
   function prefix() {

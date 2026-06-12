@@ -9,20 +9,24 @@
 (function(tw) {
 
   const name = 'core.notifications';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
 
   // Exports
   const exports = {notify};
 
-  // Run
+  // Run — the #notify div only exists after core.ui's renderLayout has painted
+  // the chrome (this module now loads before core.ui), so wire it on 'ui.loading'.
   const run = () => {
+    tw.events.subscribe('ui.loading', wireNotifyDiv, 'core.notifications');
+  };
+  function wireNotifyDiv() {
     notifyDiv = tw.core.dom.$('notify');
     if (!notifyDiv) return;
     notifyDiv.addEventListener('mouseover', notifyMouseOver);
     notifyDiv.addEventListener('mouseout', notifyMouseOut);
     notifyDiv.addEventListener('click', notifyClick);
-  };
+  }
 
   let notifyDiv;
 

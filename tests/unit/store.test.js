@@ -37,6 +37,7 @@ function freshStore(workspace = 'default') {
       },
     },
     tiddlers: {all: [], visible: [], trashed: []},
+    run: {},
   };
   const code = readFileSync(join(root, 'src/modules/core.store.js'), 'utf8');
   const meta = (0, eval)(code)(tw);
