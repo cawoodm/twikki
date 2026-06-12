@@ -2,13 +2,10 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.validate": ["javascript"],
-  "triggerTaskOnSave.tasks": {
-    "*** COMPILE": [
-      "src/packages/*/*.*",
-      "src/modules/**/*.*"
-    ]
-  },
+  "eslint.validate": [
+    "javascript"
+  ],
+  "triggerTaskOnSave.tasks": {},
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#e75676",
     "activityBar.background": "#e75676",

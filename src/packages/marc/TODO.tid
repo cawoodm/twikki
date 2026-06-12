@@ -2,6 +2,10 @@
 
 - Create a <<macros>> widget
 
+When rendering multi-part tiddlers, the `tags: $StyleSheet` section should display as pills with the `<<Tag>>` macro
+Picker menus are very ugly
+We need a Tag picker widget for editing tiddlers
+
 ## Links
 
 - AllTagsLinked should use tag pills

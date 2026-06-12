@@ -4,13 +4,20 @@ import {fileURLToPath} from 'node:url';
 
 export function getType(ext) {
   switch (ext) {
-    case '.tid': return 'x-twikki';
-    case '.md': return 'markdown';
-    case '.js': return 'script/js';
-    case '.json': return 'json';
-    case '.css': return 'css';
-    case '.html': return 'html';
-    default: return '';
+    case '.tid':
+      return 'x-twikki';
+    case '.md':
+      return 'markdown';
+    case '.js':
+      return 'script/js';
+    case '.json':
+      return 'json';
+    case '.css':
+      return 'css';
+    case '.html':
+      return 'html';
+    default:
+      return '';
   }
 }
 
@@ -18,17 +25,23 @@ export function getType(ext) {
 // that should be inlined raw (e.g. .md — including markdown into markdown).
 export function fenceLang(ext) {
   switch (ext) {
-    case '.js': return 'javascript';
-    case '.css': return 'css';
-    case '.json': return 'json';
-    case '.html': return 'html';
-    default: return '';
+    case '.js':
+      return 'javascript';
+    case '.css':
+      return 'css';
+    case '.json':
+      return 'json';
+    case '.html':
+      return 'html';
+    default:
+      return '';
   }
 }
 
 export function getAutoTags(packageName, ext) {
   const tags = [];
   if (packageName === 'core.defaults') tags.push('$Shadow');
+  // TODO: Why are we blocking edits here?
   if (packageName === 'base') tags.push('$NoEdit');
   if (ext === '.css') tags.push('$StyleSheet');
   return tags;
@@ -63,7 +76,10 @@ export function parseFile(filePath, packageName) {
     if (value === 'true') value = true;
     else if (value === 'false') value = false;
     if (field === 'tags') {
-      const vals = String(value).split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
+      const vals = String(value)
+        .split(/[,\s]+/)
+        .map(v => v.trim())
+        .filter(Boolean);
       tiddler.tags = [...tiddler.tags, ...vals];
     } else {
       tiddler[field] = value;
@@ -93,7 +109,10 @@ export function parseFile(filePath, packageName) {
     // .js/.json sources can declare tags, e.g. `// tags: $Shadow`) or a single-line HTML
     // comment (`<!-- tags: $Template -->`). The comment markers are consumed, keeping
     // .json bodies valid.
-    const metaLine = line.replace(/^\s*<!--\s*/, '').replace(/\s*-->\s*$/, '').replace(/^\/\/\s*/, '');
+    const metaLine = line
+      .replace(/^\s*<!--\s*/, '')
+      .replace(/\s*-->\s*$/, '')
+      .replace(/^\/\/\s*/, '');
     if (/^[a-z]+: /.test(metaLine)) {
       applyMeta(metaLine);
     } else {
@@ -180,7 +199,9 @@ export function compilePackage(packageName, sourceDir, outputDir) {
   const tiddlers = [...fromFiles, ...fromDirs].filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
-  console.log(`[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`);
+  console.log(
+    `[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`,
+  );
   return tiddlers.length;
 }
 
@@ -217,14 +238,16 @@ export default function tiddlerCompile(sourceSets) {
       for (const {sourceRoot} of sourceSets) {
         server.watcher.add(sourceRoot);
       }
-      const handler = (filePath) => {
+      const handler = filePath => {
         if (getType(extname(filePath)) === '') return; // ignore temp/non-tiddler files
         const info = findPackageForFile(filePath, sourceSets);
         if (!info) return;
         try {
           compilePackage(info.packageName, info.sourceDir, info.outputDir);
         } catch (err) {
-          console.warn(`[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`);
+          console.warn(
+            `[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`,
+          );
         }
       };
       server.watcher.on('change', handler);

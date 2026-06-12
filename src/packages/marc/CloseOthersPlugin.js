@@ -1,4 +1,4 @@
-// tags: $Script
+// tags: $Plugin
 
 /**
  * ## Description
@@ -13,22 +13,17 @@
  *   - Tabs layout: `tw.tabs.active` (the selected tab) takes precedence.
  *   - Fallback: the most recently opened note (last in `tw.tiddlers.visible`).
  */
-(function() {
+(function () {
+  const meta = {
+    name: 'CloseOthers',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Command palette action to close every open note except the active one.',
+  };
 
-  tw.tmp = tw.tmp || {};
-
-  // Remember the most recently shown note. Deduped across soft reloads by the
-  // handler name; the title lives on tw.tmp (not this closure) so a re-eval keeps
-  // reading the value the live handler writes.
-  tw.events.subscribe('tiddler.show', recordActiveNote);
   function recordActiveNote(title) {
     if (typeof title === 'string') tw.tmp.activeNote = title;
   }
-
-  tw.extensions.registerCommand({
-    label: 'Close all but active note',
-    run: closeAllButActive, // TODO: This should be pub/sub: event: 'tiddlers.closeAllButActive'
-  });
 
   function activeNote() {
     let open = tw.tiddlers.visible;
@@ -49,4 +44,20 @@
     tw.ui.notify(`Closed ${open.length - 1} note(s), kept '${keep}'`, 'D');
   }
 
+  return {
+    meta,
+    init() {
+      tw.tmp = tw.tmp || {};
+
+      // Remember the most recently shown note. Deduped across soft reloads by the
+      // handler name; the title lives on tw.tmp (not this closure) so a re-eval keeps
+      // reading the value the live handler writes.
+      tw.events.subscribe('tiddler.show', recordActiveNote);
+
+      tw.extensions.registerCommand({
+        label: 'Close all but active note',
+        run: closeAllButActive, // TODO: This should be pub/sub: event: 'tiddlers.closeAllButActive'
+      });
+    },
+  };
 })();

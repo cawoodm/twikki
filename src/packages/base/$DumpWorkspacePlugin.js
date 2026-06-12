@@ -1,4 +1,4 @@
-// tags: $Script
+// tags: $Plugin
 
 /**
  * ## Description
@@ -11,20 +11,15 @@
  * completely overwrites the current workspace (a confirm() guards the wipe),
  * then hard-reboots so everything reloads from the restored localStorage.
  */
-// ## Code
-// ```javascript
-(function() {
-
-  const FORMAT = 'twikki-workspace-v1';
-
-  tw.macros.dump = {
-    dumpButton() {
-      return tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"');
-    },
+(function () {
+  const meta = {
+    name: 'DumpWorkspace',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Dump/restore the current workspace as a single JSON file.',
   };
 
-  tw.events.subscribe('workspace.dump', dumpWorkspace, 'dumpworkspaceplugin');
-  tw.run.registerDropHandler('*.workspace.json', restoreWorkspace);
+  const FORMAT = 'twikki-workspace-v1';
 
   function dumpWorkspace() {
     const prefix = '/ws/' + tw.workspace + '/';
@@ -55,4 +50,17 @@
     tw.events.send('reboot.hard'); // reloads everything from the restored localStorage
   }
 
+  return {
+    meta,
+    init() {
+      tw.macros.dump = {
+        dumpButton() {
+          return tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"');
+        },
+      };
+
+      tw.events.subscribe('workspace.dump', dumpWorkspace, 'dumpworkspaceplugin');
+      tw.run.registerDropHandler('*.workspace.json', restoreWorkspace);
+    },
+  };
 })();

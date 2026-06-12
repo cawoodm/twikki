@@ -18,8 +18,8 @@ Unlike core modules, the plugin gate is **soft**: an incompatible plugin still r
 
 There are two ways for a tiddler to run code at boot:
 
-- **`$Plugin`** — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
-- **`$Script`** — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
+- <<Tag $Plugin>> — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
+- <<Tag $Script>> — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
 
 Tiddlers without either tag never auto-execute.
 

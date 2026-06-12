@@ -1,4 +1,4 @@
-// tags: $Script
+// tags: $Plugin
 
 /**
  * ## Description
@@ -6,23 +6,14 @@
  *   Toggles tag 'Favorite' on current tiddler
  *   for use on $TiddlerDisplay template
  */
-/**
- * ## Data
- * ```json
- * {
- *   "version": 1.0.0
- * }
- * ```
- */
-(function(){
-  tw.macros.favorites = {
-    toggle() {
-      // TODO: How to find the current tiddler/element?
-      // let el = tw.core.dom.nearestAttribute
-      return tw.ui.button('{{$IconFavorite}}', 'favorites.toggle', '$currentTiddler', 'favoriteAdd');
-    },
+(function () {
+  const meta = {
+    name: 'Favorites',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Toggle a Favorite tag on tiddlers and surface a star widget.',
   };
-  tw.events.subscribe('favorites.toggle', favoriteToggle);
+
   function favoriteToggle(title) {
     const t = tw.call('getTiddler', title);
     if (!t) throw new Error(`Unknown tiddler '${title}'!`);
@@ -38,19 +29,37 @@
     // dp(btn.className);
     tw.events.send('save.silent');
   }
-  // Add {{=favoriteClass}} to your $TiddlerDisplay
-  tw.extend.tiddlerDetails.favoriteClass = function(t) {
-    return t.tags.includes('Favorite') ? 'favorite' : '';
-  };
 
-  // Command palette commands (only available when the demo package is installed).
-  tw.extensions.registerCommand([
-    {label: 'Show favorites', event: 'ui.open.all', payload: {tag: 'Favorite', title: '*'}},
-    {label: 'Toggle favorite (active note)', run: () => {
-      const title = tw.tabs?.active;
-      if (!title) return tw.ui.notify('No active note to favorite.', 'W');
-      tw.events.send('favorites.toggle', title);
-    }},
-  ]);
+  return {
+    meta,
+    init() {
+      tw.macros.favorites = {
+        toggle() {
+          // TODO: How to find the current tiddler/element?
+          // let el = tw.core.dom.nearestAttribute
+          return tw.ui.button('{{$IconFavorite}}', 'favorites.toggle', '$currentTiddler', 'favoriteAdd');
+        },
+      };
+      tw.events.subscribe('favorites.toggle', favoriteToggle);
+
+      // Add {{=favoriteClass}} to your $TiddlerDisplay
+      tw.extend.tiddlerDetails.favoriteClass = function (t) {
+        return t.tags.includes('Favorite') ? 'favorite' : '';
+      };
+
+      // Command palette commands (only available when the demo package is installed).
+      tw.extensions.registerCommand([
+        {label: 'Show favorites', event: 'ui.open.all', payload: {tag: 'Favorite', title: '*'}},
+        {
+          label: 'Toggle favorite (active note)',
+          run: () => {
+            const title = tw.tabs?.active;
+            if (!title) return tw.ui.notify('No active note to favorite.', 'W');
+            tw.events.send('favorites.toggle', title);
+          },
+        },
+      ]);
+    },
+  };
 })();
 // TODO: How to add button:yellow svg {fill: yellow;} to theme?
