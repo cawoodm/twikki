@@ -45,6 +45,12 @@
   return {
     meta,
     init() {
+      // Dedup across hot reloads: re-running init() would otherwise stack a second set
+      // of handlers on top of the live ones (the de-dup *key* on subscribe protects
+      // against same-name re-registration but only within a single subscription pass).
+      if (tw.tmp.codeSyntaxHighlightBound) return;
+      tw.tmp.codeSyntaxHighlightBound = true;
+
       tw.events.subscribe('ui.loaded', () => {
         tw.core.dom.addStyleSheet('highlight-light', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css');
         tw.core.dom.addStyleSheet('highlight-dark', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css');

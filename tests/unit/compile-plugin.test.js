@@ -180,6 +180,28 @@ test('parseFile: single-line HTML-comment frontmatter is parsed and consumed', (
   }
 });
 
+test('compilePackage: ignores hidden subdirs (.git, .DS_Store, etc.)', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
+  mkdirSync(srcDir);
+  mkdirSync(outDir);
+  try {
+    // A hidden dir without the required <DirName>.md anchor would normally make
+    // parseComposite throw — compilePackage must skip it instead.
+    const ghost = join(srcDir, '.git');
+    mkdirSync(ghost);
+    writeFileSync(join(ghost, 'HEAD'), 'ref: refs/heads/main\n');
+    writeFileSync(join(srcDir, 'Real.tid'), 'hello\n');
+    compilePackage('mypkg', srcDir, outDir);
+    const result = JSON.parse(readFileSync(join(outDir, 'mypkg.json'), 'utf8'));
+    assert.equal(result.tiddlers.length, 1);
+    assert.equal(result.tiddlers[0].title, 'Real');
+  } finally {
+    rmSync(srcDir, {recursive: true});
+    rmSync(outDir, {recursive: true});
+  }
+});
+
 test('compilePackage: ignores files with unknown extensions (e.g. atomic-save temp files)', () => {
   const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
   const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());

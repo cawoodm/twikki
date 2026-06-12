@@ -186,7 +186,10 @@ export function compilePackage(packageName, sourceDir, outputDir) {
     .filter(e => e.isFile())
     .map(e => e.name)
     .filter(name => getType(extname(name)) !== ''); // skip temp/non-tiddler files (e.g. atomic-save *.tmp.*)
-  const subdirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+  // Skip hidden / system directories (.git, .DS_Store, .idea, .vscode, …). They are
+  // never composite plugin sources; without this filter parseComposite would throw
+  // "missing <DirName>.md" the moment such a dir lands inside a package.
+  const subdirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.')).map(e => e.name);
   const fromFiles = files.map(name => {
     try {
       return parseFile(join(sourceDir, name), packageName);
@@ -195,7 +198,14 @@ export function compilePackage(packageName, sourceDir, outputDir) {
       throw err;
     }
   });
-  const fromDirs = subdirs.map(name => parseComposite(join(sourceDir, name), packageName));
+  const fromDirs = subdirs.map(name => {
+    try {
+      return parseComposite(join(sourceDir, name), packageName);
+    } catch (err) {
+      if (err.code === 'ENOENT') return null; // file vanished mid-compile (watcher race)
+      throw err;
+    }
+  });
   const tiddlers = [...fromFiles, ...fromDirs].filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
