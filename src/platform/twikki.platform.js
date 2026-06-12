@@ -21,7 +21,7 @@
   // since ':' is not a valid title char it can never be confused with a title.
   const reTiddlerRef = new RegExp(
     `${reTiddlerTitle.source}(?:${SECTION_DELIM}${reTiddlerTitle.source})?`,
-    'gi'
+    'gi',
   );
   const reTiddlerTitleComplete = RegExp.compose(/^reTiddlerTitle$/gi, {reTiddlerTitle});
   const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
@@ -66,8 +66,8 @@
     async init() {
       qs = Object.fromEntries(new URLSearchParams(location.search));
       Object.keys(qs)
-        .filter((q) => qs[q] === '')
-        .forEach((q) => (qs[q] = true)); // Empty params are switches => convert to true
+        .filter(q => qs[q] === '')
+        .forEach(q => (qs[q] = true)); // Empty params are switches => convert to true
       window.dp = () => {};
       if (qs.logfilter)
         // Output filtered loggsOverwridden console.log has advantage of filtering logs
@@ -89,7 +89,7 @@
         set(key, value) {
           if (typeof value === 'object') return write(key, JSON.stringify(value));
           return write(key, value);
-        }
+        },
       };
 
       tw.logging = {
@@ -99,7 +99,7 @@
         break(name) {
           // eslint-disable-next-line no-debugger
           if (tw.logging.breakPoint && name.match(new RegExp(tw.logging.breakPoint))) debugger;
-        }
+        },
       };
 
       dp(`TWikki (v${VERSION}) starting...`);
@@ -131,7 +131,7 @@
         '/core.ui.js',
         '/core.notifications.js',
         '/core.templater.js',
-        '/core.search.js'
+        '/core.search.js',
       ];
       let compatReports;
       try {
@@ -142,7 +142,7 @@
         tw.modules = modulesToLoad.map((p, i) => ({
           name: p,
           res: fetchResults[i].res,
-          fetched: fetchResults[i].fetched
+          fetched: fetchResults[i].fetched,
         }));
         compatReports = tw.modules.map(checkModuleCompat);
         // Stash each report on its module so runtime UI (e.g. the <<modules>> widget) can
@@ -155,10 +155,10 @@
         // Give each module an `error` res so the dialog (which re-derives reports from the
         // loaded set) classifies them as block too, and the user can re-check a new URL.
         console.error('Core module download failed', e);
-        tw.modules = modulesToLoad.map((n) => ({
+        tw.modules = modulesToLoad.map(n => ({
           name: n,
           res: {type: 'error', error: e.message},
-          fetched: true
+          fetched: true,
         }));
         compatReports = tw.modules.map(checkModuleCompat);
         tw.modules.forEach((m, i) => {
@@ -170,9 +170,9 @@
       // (newer minor/patch of the same major, or no platform field) halts only for a
       // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
       // in the cache booted before (the user installed it), so it boots again silently.
-      const blocking = compatReports.filter((r) => r.severity === 'block');
+      const blocking = compatReports.filter(r => r.severity === 'block');
       const freshWarn = tw.modules.filter(
-        (m, i) => m.fetched && compatReports[i].severity === 'warn'
+        (m, i) => m.fetched && compatReports[i].severity === 'warn',
       );
       if (blocking.length || freshWarn.length) {
         console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
@@ -182,7 +182,7 @@
       }
       // Compatible (or only previously-installed warnings) — NOW persist anything freshly
       // fetched, so the validated set becomes the installed set.
-      tw.modules.forEach((m) => {
+      tw.modules.forEach(m => {
         if (m.fetched) storeCoreModule(m.name, m.res);
       });
     },
@@ -191,7 +191,7 @@
       if (tw.tmp?.bootAborted) return; // init() found incompatible modules and showed the dialog
       const errMsgs = [];
 
-      tw.modules.forEach((pck) => {
+      tw.modules.forEach(pck => {
         if (pck.res.type === 'code') {
           dp('Installing code module', pck.name);
           if (!qs.trace) {
@@ -217,7 +217,7 @@
           dp(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
         } else if (pck.res.type === 'list') {
           dp('Loading moduled list ', pck.name); // What is a moduled list? Example?
-          pck.res.tiddlers.forEach((t) => {
+          pck.res.tiddlers.forEach(t => {
             t.doNotSave = true; // Don't save unless edited
             t.isRawShadow = true; // TODO: What does this mean exactly?
           });
@@ -234,7 +234,7 @@
 
       tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
       tw.shadowTiddlers = Array.from(tw.tiddlers.all);
-      tw.shadowTiddlers.forEach((t) => {
+      tw.shadowTiddlers.forEach(t => {
         // HACK: Load packages locally for development
         if (
           t.title === '$CorePackages' &&
@@ -242,7 +242,7 @@
         )
           t.text = t.text.replaceAll(
             'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host
+            'http://' + document.location.host,
           );
         if (
           t.title === '$ExtensionPackages' &&
@@ -250,7 +250,7 @@
         )
           t.text = t.text.replaceAll(
             'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host
+            'http://' + document.location.host,
           );
       });
       Object.freeze(tw.shadowTiddlers);
@@ -295,14 +295,14 @@
         registerDropHandler,
         tiddler: {
           getJSONObject,
-          updateText: updateTiddlerText
-        }
+          updateText: updateTiddlerText,
+        },
       };
 
       dp(`${tw.modules.length} modules loaded. Running modules...`);
       tw.modules
-        .filter((pck) => pck.meta?.run)
-        .forEach((pck) => {
+        .filter(pck => pck.meta?.run)
+        .forEach(pck => {
           dp(`Running module '${pck.name}'...`);
           if (!qs.trace) {
             // Normally we try/catch modules to provide user-friendly feedback...
@@ -327,7 +327,7 @@
       tw.extend = {
         tiddlerDetails: {
           metaInfo(t) {
-            // The package is a picker (see $PickerPlugin): clicking it lists every
+            // The package is a picker (see PickerPlugin): clicking it lists every
             // tiddler in that package (built lazily from data-source="package");
             // picking one opens it. Raw HTML — the picker needs real markup.
             const parts = [];
@@ -338,14 +338,14 @@
                 `<span class="picker pck-picker" data-event="tiddler.show" data-source="package" data-source-arg="${arg}">` +
                   `<button class="picker-trigger pck-pill">pck:${label}</button>` +
                   '<div class="picker-menu" hidden></div>' +
-                  '</span>'
+                  '</span>',
               );
             }
             if (t.doNotSave) parts.push('doNotSave ✅');
             if (t.isRawShadow) parts.push('isRawShadow ✅');
             return parts.join(' ');
-          }
-        }
+          },
+        },
       };
 
       // ----------
@@ -362,7 +362,7 @@
         byLabel: {}, // static commands, keyed by label (last-wins)
         providers: [], // {key, fn} — fn() returns commands, evaluated at palette render
         all() {
-          const dynamic = this.providers.flatMap((p) => {
+          const dynamic = this.providers.flatMap(p => {
             try {
               return p.fn() || [];
             } catch (e) {
@@ -371,7 +371,7 @@
             }
           });
           return [...Object.values(this.byLabel), ...dynamic];
-        }
+        },
       };
       tw.extensions = {
         registerMacro(namespace, name, fcn, options) {
@@ -383,7 +383,7 @@
         // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
         // soft reloads don't duplicate and plugins can override a built-in.
         registerCommand(command) {
-          if (Array.isArray(command)) return command.forEach((c) => this.registerCommand(c));
+          if (Array.isArray(command)) return command.forEach(c => this.registerCommand(c));
           if (!command?.label)
             return console.warn('registerCommand: command needs a label', command);
           tw.commands.byLabel[command.label] = command;
@@ -392,11 +392,11 @@
         // palette renders — for runtime-varying lists (themes, workspaces).
         // Re-registration replaces by key.
         registerCommandProvider(key, fn) {
-          const i = tw.commands.providers.findIndex((p) => p.key === key);
+          const i = tw.commands.providers.findIndex(p => p.key === key);
           const entry = {key, fn};
           if (i >= 0) tw.commands.providers[i] = entry;
           else tw.commands.providers.push(entry);
-        }
+        },
       };
       window.markdown = tw.lib.markdown;
       // ----------
@@ -404,12 +404,12 @@
         core: {
           showTiddlerList,
           // <<Tag Foo>> — render tag "Foo" as a picker listing all tiddlers tagged Foo.
-          Tag: (tag) => tagPickerHtml(String(tag ?? '')),
-          disabled: (...rest) => 'This macro is disabled!' + JSON.stringify(rest)
-        }
+          Tag: tag => tagPickerHtml(String(tag ?? '')),
+          disabled: (...rest) => 'This macro is disabled!' + JSON.stringify(rest),
+        },
       };
       tw.plugins = [];
-      tw.plugin = (name) => tw.plugins.find((p) => p.meta?.name === name);
+      tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
 
       dp(`*** TWikki v${VERSION}`);
       if (handleModuleErrors(errMsgs)) return;
@@ -417,12 +417,12 @@
       // TODO: Load External Scripts and Stylesheets
       // TODO: Load Extensions
       onPageLoad();
-    }
+    },
   };
   function handleModuleErrors(errMsgs) {
     if (errMsgs.length === 0) return;
     document.write('<h1>Module Errors Occurred</h1>');
-    errMsgs.forEach((e) => {
+    errMsgs.forEach(e => {
       document.write(`<p class="error">${e}`);
     });
     let traceUrl = document.location.href;
@@ -430,7 +430,7 @@
     document.write('<p class="error">Tips:');
     document.write('<ul>');
     document.write(
-      `<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`
+      `<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`,
     );
     document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
     document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
@@ -455,11 +455,11 @@
   //     modules (offered only when a usable, non-blocking cached set exists).
   // The user can also repoint the source URL and re-check before deciding.
   function showCompatDialog() {
-    const escAttr = (s) =>
+    const escAttr = s =>
       String(s ?? '')
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;');
-    const esc = (s) =>
+    const esc = s =>
       String(s ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -473,19 +473,19 @@
 
     // The set of modules under consideration: starts as what init() loaded, and is replaced
     // wholesale when the user re-checks a different source URL. Each entry is {name, res}.
-    let candidates = tw.modules.map((m) => ({name: m.name, res: m.res}));
+    let candidates = tw.modules.map(m => ({name: m.name, res: m.res}));
 
-    const reportsFor = (set) => set.map((c) => checkModuleCompat({name: c.name, res: c.res}));
-    const hasBlock = (reps) => reps.some((r) => r.severity === 'block');
+    const reportsFor = set => set.map(c => checkModuleCompat({name: c.name, res: c.res}));
+    const hasBlock = reps => reps.some(r => r.severity === 'block');
 
     // The currently-installed (cached) set — used to decide whether "Keep current versions"
     // can boot. Available only if every module has a usable cache and none of them block.
     function cachedSet() {
-      return tw.modules.map((m) => ({name: m.name, res: readObject('/modules' + m.name)}));
+      return tw.modules.map(m => ({name: m.name, res: readObject('/modules' + m.name)}));
     }
     function canKeepCurrent() {
       const cs = cachedSet();
-      if (!cs.every((c) => isCachedModuleUsable(c.res))) return false;
+      if (!cs.every(c => isCachedModuleUsable(c.res))) return false;
       return !hasBlock(reportsFor(cs));
     }
 
@@ -505,7 +505,7 @@
     // (✓) modules, un-ticked but tickable for ⚠ minor mismatches, and disabled for ✗ major
     // mismatches (which can never be installed).
     function selectedIndexes() {
-      return [...dlg.querySelectorAll('.tw-compat-pick:checked')].map((cb) => +cb.dataset.idx);
+      return [...dlg.querySelectorAll('.tw-compat-pick:checked')].map(cb => +cb.dataset.idx);
     }
     function refreshInstallBtn() {
       const btn = dlg.querySelector('#tw-compat-install');
@@ -561,7 +561,7 @@
       dlg.querySelector('#tw-compat-load').onclick = onRecheck;
       dlg.querySelector('#tw-compat-keep').onclick = onKeepCurrent;
       dlg.querySelector('#tw-compat-install').onclick = onUpdate;
-      dlg.querySelectorAll('.tw-compat-pick').forEach((cb) => (cb.onchange = refreshInstallBtn));
+      dlg.querySelectorAll('.tw-compat-pick').forEach(cb => (cb.onchange = refreshInstallBtn));
       refreshInstallBtn();
     }
 
@@ -572,12 +572,12 @@
       const btn = dlg.querySelector('#tw-compat-load');
       btn.disabled = true;
       candidates = await Promise.all(
-        tw.modules.map(async (m) => {
+        tw.modules.map(async m => {
           const r = await tryFetchModule(m.name, url);
           // A failed fetch becomes an un-storable placeholder so its row shows the error and
           // is non-selectable (block) without throwing.
           return {name: m.name, res: r.ok ? r.res : {type: 'error', error: r.error}};
-        })
+        }),
       );
       render();
     }
@@ -587,7 +587,7 @@
       // Then reload (without ?reload) so the next boot reads the cache.
       const idxs = selectedIndexes();
       if (!idxs.length) return;
-      idxs.forEach((i) => storeCoreModule(candidates[i].name, candidates[i].res));
+      idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
       // let url = dlg.querySelector('#tw-compat-url').value.trim();
       // TODO: Write url back to /settings.json (moduleUrl)
       reloadWithoutForce();
@@ -621,7 +621,7 @@
   }
   function reload() {
     // TODO: Clear events.clearAll()
-    tw.tiddlers.visible = tw.tiddlers.visible.filter((title) => tiddlerExists(title));
+    tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tiddlerExists(title));
     runCoreTiddlers();
     if (!qs.safemode) {
       // Three-phase plugin lifecycle, parallel to core modules:
@@ -671,7 +671,7 @@
         params.splice(0, 1);
         let opt = params.join('');
         // "force, save" => ["force", "save"]
-        let options = opt.split(',').map((o) => o.trim().toLowerCase());
+        let options = opt.split(',').map(o => o.trim().toLowerCase());
         overWrite = options.includes('force'); // Overwrite silently
         noOverWrite = options.includes('nooverwrite'); // Never overwrite, skip silently
         doNotSave = options.includes('nosave');
@@ -682,7 +682,7 @@
         name,
         overWrite,
         noOverWrite,
-        doNotSave
+        doNotSave,
       });
       // If name === 'core' AND tw.tiddlers.all.find(t => t.package === 'core') panic or open $CorePackages for edit as it's screwed!
       tw.ui.notify(`${count} tiddlers imported from package ${name}`, 'D');
@@ -704,7 +704,7 @@
 
     wireUp('tiddler.new', formNewTiddler);
     wireUp('tiddler.edit', formEditTiddler);
-    wireUp('tiddler.show', (title) => {
+    wireUp('tiddler.show', title => {
       showTiddler(title);
       scrollToTiddler(title);
     });
@@ -742,8 +742,8 @@
 
   function tiddlerToggleTag(title, tag) {
     let t = getTiddler(title);
-    if (!t.tags.includes(tag)) upsertInArray(t.tags, (tg) => tg === tag, tag);
-    else removeFromArray(t.tags, (tg) => tg === tag);
+    if (!t.tags.includes(tag)) upsertInArray(t.tags, tg => tg === tag, tag);
+    else removeFromArray(t.tags, tg => tg === tag);
     updateTiddler(title, t, true);
     tw.events.send('tiddler.refresh', t.title);
   }
@@ -757,10 +757,10 @@
       tw.tmp.pluginEdited = true;
       return;
     }
-    tiddlerCodeBlocks(t).forEach((b) => executeText(b.text, b.title)); // validate by executing (as code tiddlers do)
+    tiddlerCodeBlocks(t).forEach(b => executeText(b.text, b.title)); // validate by executing (as code tiddlers do)
     if (isActiveCodeTiddler(t))
       alert(
-        'This code tiddler is disabled and will not run. Remove the $CodeDisabled tag to activate.'
+        'This code tiddler is disabled and will not run. Remove the $CodeDisabled tag to activate.',
       );
   }
   function tiddlerValidation(t) {
@@ -787,8 +787,8 @@
   function loadPlugins() {
     const seenNames = new Set();
     tw.plugins = tw.tiddlers.all
-      .filter((t) => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled'))
-      .map((t) => loadOnePlugin(t, seenNames));
+      .filter(t => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled'))
+      .map(t => loadOnePlugin(t, seenNames));
   }
   function loadOnePlugin(t, seenNames) {
     const entry = {
@@ -798,7 +798,7 @@
       source: t.title,
       package: t.package || null,
       compat: {compatible: true, severity: 'exempt', reason: 'no platform field'},
-      error: null
+      error: null,
     };
     const blocks = tiddlerCodeBlocks(t);
     if (!blocks.length) {
@@ -809,10 +809,10 @@
     try {
       // The plugin's value is the LAST code block's return value. (Most plugins have one
       // block; a multi-section .tid file with only a # Code section is still one block.)
-      if (qs.trace) blocks.forEach((b) => (returned = executeText(b.text, b.title)));
+      if (qs.trace) blocks.forEach(b => (returned = executeText(b.text, b.title)));
       else
         try {
-          blocks.forEach((b) => (returned = executeText(b.text, b.title)));
+          blocks.forEach(b => (returned = executeText(b.text, b.title)));
         } catch (e) {
           entry.error = {phase: 'load', message: e.message};
           tw.ui.notify(`Plugin '${t.title}' failed to load (see console log)`, 'E', e.stack);
@@ -828,7 +828,7 @@
     if (!returned || typeof returned !== 'object') {
       entry.error = {
         phase: 'load',
-        message: 'plugin must return { meta: { name, version }, init?, start? }'
+        message: 'plugin must return { meta: { name, version }, init?, start? }',
       };
       return entry;
     }
@@ -846,7 +846,7 @@
     if (seenNames.has(entry.meta.name)) {
       entry.error = {
         phase: 'load',
-        message: `duplicate plugin name '${entry.meta.name}' (first one wins)`
+        message: `duplicate plugin name '${entry.meta.name}' (first one wins)`,
       };
       return entry;
     }
@@ -856,28 +856,32 @@
     return entry;
   }
   function initPlugins() {
-    tw.plugins.forEach((p) => {
-      if (p.error || typeof p.init !== 'function') return;
-      dp('Initializing plugin', p.meta.name, p.meta.version);
+    tw.plugins.forEach(plugin => {
+      if (plugin.error || typeof plugin.init !== 'function') return;
+      dp('Initializing plugin', plugin.meta.name, plugin.meta.version);
       try {
-        p.init();
+        plugin.init();
       } catch (e) {
-        p.error = {phase: 'init', message: e.message};
-        tw.ui.notify(`Plugin '${p.meta.name}' failed to initialize: ${e.message}`, 'E', e.stack);
-        console.error(`Plugin '${p.meta.name}' init failed: ${e.message}`, e.stack);
+        plugin.error = {phase: 'init', message: e.message};
+        tw.ui.notify(
+          `Plugin '${plugin.meta.name}' failed to initialize: ${e.message}`,
+          'E',
+          e.stack,
+        );
+        console.error(`Plugin '${plugin.meta.name}' init failed: ${e.message}`, e.stack);
       }
     });
   }
   function startPlugins() {
-    tw.plugins.forEach((p) => {
-      if (p.error || typeof p.start !== 'function') return;
-      dp('Starting plugin', p.meta.name, p.meta.version);
+    tw.plugins.forEach(plugin => {
+      if (plugin.error || typeof plugin.start !== 'function') return;
+      dp('Starting plugin', plugin.meta.name, plugin.meta.version);
       try {
-        p.start();
+        plugin.start();
       } catch (e) {
-        p.error = {phase: 'start', message: e.message};
-        tw.ui.notify(`Plugin '${p.meta.name}' failed to start: ${e.message}`, 'E', e.stack);
-        console.error(`Plugin '${p.meta.name}' start failed: ${e.message}`, e.stack);
+        plugin.error = {phase: 'start', message: e.message};
+        tw.ui.notify(`Plugin '${plugin.meta.name}' failed to start: ${e.message}`, 'E', e.stack);
+        console.error(`Plugin '${plugin.meta.name}' start failed: ${e.message}`, e.stack);
       }
     });
   }
@@ -886,13 +890,13 @@
   // started so scripts can rely on plugin services (tw.plugin(...), tw.tabs, etc.) being live.
   function runScripts() {
     tw.tiddlers.all
-      .filter((t) => t.tags?.includes('$Script') && !t.tags?.includes('$CodeDisabled'))
-      .forEach((t) => {
+      .filter(t => t.tags?.includes('$Script') && !t.tags?.includes('$CodeDisabled'))
+      .forEach(t => {
         const blocks = tiddlerCodeBlocks(t);
         if (!blocks.length) return;
-        if (qs.trace) return blocks.forEach((b) => executeCodeTiddler(b.text, b.title));
+        if (qs.trace) return blocks.forEach(b => executeCodeTiddler(b.text, b.title));
         try {
-          blocks.forEach((b) => executeCodeTiddler(b.text, b.title));
+          blocks.forEach(b => executeCodeTiddler(b.text, b.title));
         } catch (e) {
           tw.ui.notify(`Script '${t.title}' failed (see console log)`, 'E', e.stack);
           console.error(`Script '${t.title}' failed: ${e.message}`, e.stack);
@@ -942,7 +946,7 @@
       tagLinks: makeTiddlerTagLinks(t.tags),
       modified,
       ...tiddlerDetails(t),
-      ...t
+      ...t,
     });
     let newElement = tw.core.dom.htmlToNode(html);
     newElement.setAttribute('data-tiddler-id', id);
@@ -953,7 +957,7 @@
 
   function tiddlerDetails(t) {
     let res = {};
-    Object.keys(tw.extend.tiddlerDetails).forEach((k) => {
+    Object.keys(tw.extend.tiddlerDetails).forEach(k => {
       res[k] = tw.extend.tiddlerDetails[k](t);
     });
     return res;
@@ -967,7 +971,7 @@
     const results = tw.events.send('markdown.render', text);
     if (results?.length > 1 && !renderMarkdown.warned) {
       console.warn(
-        `${results.length} 'markdown.render' handlers subscribed (first one wins) — replacements should use tw.events.override()!`
+        `${results.length} 'markdown.render' handlers subscribed (first one wins) — replacements should use tw.events.override()!`,
       );
       renderMarkdown.warned = true;
     }
@@ -976,7 +980,7 @@
   function renderPlainText(text) {
     return String(text ?? '')
       .split(/\n{2,}/)
-      .map((p) => `<p>${tw.core.common.escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+      .map(p => `<p>${tw.core.common.escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
       .join('');
   }
   function makeTiddlerText({title, text, type}) {
@@ -997,7 +1001,7 @@
   function makeTiddlerTagLinks(tags) {
     return tags.map(tagPickerHtml).join('');
   }
-  // A single tag rendered as a picker (see $PickerPlugin): clicking it lists every
+  // A single tag rendered as a picker (see PickerPlugin): clicking it lists every
   // tiddler carrying that tag (built lazily from data-source="tag"); picking one
   // opens it. Used by the tag row at the bottom of notes and the <<Tag>> macro.
   function tagPickerHtml(tag) {
@@ -1022,7 +1026,7 @@
     try {
       // TODO: Label this tiddler to update when one of these macros change!
 
-      getMacros(result).forEach((m) => {
+      getMacros(result).forEach(m => {
         let macroNameOrig = m[1];
         let macroName = macroNameOrig;
         const macroCommand = new RegExp(`(?<!\`)<<${macroNameOrig}`);
@@ -1056,7 +1060,7 @@
             result,
             indexOfMacro,
             m[0],
-            `<span class="error">ERROR: Unknown macro &lt;&lt;${m[1]}>></span>`
+            `<span class="error">ERROR: Unknown macro &lt;&lt;${m[1]}>></span>`,
           );
           if (validation) throw new Error(errmsg);
           return;
@@ -1101,14 +1105,14 @@
           console.warn(errmsg, e.stack);
           result = result.replace(
             macroCommand,
-            `<span class="error">${errmsg} (see console log)</span>`
+            `<span class="error">${errmsg} (see console log)</span>`,
           );
           if (validation) throw e;
           return;
         }
       });
       // TODO: Support raw/wikified {{=}} inclusions
-      getInclusions(result).forEach((m) => {
+      getInclusions(result).forEach(m => {
         let includedTitle = m[1];
         try {
           const inclusionSearch = new RegExp(`(?<!\`)${escapeRegExp('{{' + includedTitle)}`);
@@ -1128,14 +1132,14 @@
           result = `<span class="error">ERROR: Inclusion of "${includedTitle}" Failed: ${e.message}</span>`;
           console.error(
             `getInclusions "${includedTitle}" inside "${title}" Failed: ${e.message}`,
-            e.stack
+            e.stack,
           );
         }
       });
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
       }
-      getTiddlerLinks(result).forEach((m) => {
+      getTiddlerLinks(result).forEach(m => {
         let linkName = m[1];
         let linkURL = m[1];
         let wikiLink = `[${linkName}](#${linkURL.replace(/ /g, '%20')})`;
@@ -1159,7 +1163,7 @@
   // and can never collide with real content (or stray digits) on restore.
   function maskCodeRegions(text) {
     const store = []; // holds masked code regions
-    const stash = (m) => {
+    const stash = m => {
       const token = `${store.length}`;
       store.push(m);
       return token;
@@ -1167,7 +1171,7 @@
     // Fenced blocks first (they may contain inline backticks), then inline spans.
     let masked = text.replace(/```[\s\S]*?```/g, stash);
     masked = masked.replace(/`[^`\n]*`/g, stash);
-    const restore = (s) => s.replace(/(\d+)/g, (_, i) => store[Number(i)]);
+    const restore = s => s.replace(/(\d+)/g, (_, i) => store[Number(i)]);
     return {masked, restore};
   }
   function getMacros(text) {
@@ -1218,7 +1222,7 @@
     focusElement.scrollTop = 0;
     setDirty(true);
     tw.core.dom.$('new-types').innerHTML = getKeyValuesArray('$TiddlerTypes')
-      .map((t) => {
+      .map(t => {
         return `<option value="${t.key}">${t.value}</option>`;
       })
       .filter(notEmpty)
@@ -1238,8 +1242,8 @@
       title: tw.core.dom.frm.elements['new-title'].value.trim(),
       text: tw.core.dom.frm.elements['new-body'].value,
       type: tw.core.dom.frm.elements['new-type'].value,
-      tags: tw.core.dom.frm.elements['new-tags'].value.split(/[,\s]/).map((tg) => tg.trim(tg)),
-      updated: new Date()
+      tags: tw.core.dom.frm.elements['new-tags'].value.split(/[,\s]/).map(tg => tg.trim(tg)),
+      updated: new Date(),
     };
     let oldTitle = tw.core.dom.frm.elements['old-title'].value;
     if (!t.created) t.created = t.updated; // Editing shadow tiddlers
@@ -1333,7 +1337,7 @@
     updateTiddlerHard(currentTitle, newTiddler);
     // Move to top of story
     if (userEdit)
-      replaceInArray(tw.tiddlers.visible, (title) => title === currentTitle, newTiddler.title);
+      replaceInArray(tw.tiddlers.visible, title => title === currentTitle, newTiddler.title);
     tw.events.send('tiddler.modified', newTiddler.title);
   }
   function updateTiddlerHard(currentTitle, newTiddler) {
@@ -1404,7 +1408,7 @@
       type: sec.type || base.type,
       tags: [],
       doNotSave: true,
-      isSection: true
+      isSection: true,
     };
   }
   // Edit button on a section card: close the section view and open its parent
@@ -1432,7 +1436,7 @@
     let codeBlocks = tiddlerCodeBlocks(t);
     if (codeBlocks.length)
       // TODO: Try, catch, return error <span class="error">
-      return codeBlocks.forEach((b) => executeCodeTiddler(b.text, b.title));
+      return codeBlocks.forEach(b => executeCodeTiddler(b.text, b.title));
     if (['$SiteTitle', '$SiteSubTitle', '$TitleBar'].includes(title))
       tw.core.dom.$$('*[tiddler-include]')?.forEach(tiddlerSpanInclude);
     else if (tiddlerIsATemplate(t)) loadTemplates();
@@ -1471,21 +1475,21 @@
   function showAllTiddlers({tag, title, pck} = {}) {
     if (!title) title = '!^\\$';
     tiddlerList({title, tag, pck})
-      .map((t) => t.title)
+      .map(t => t.title)
       .forEach(showTiddler);
     renderAllTiddlers();
   }
   function closeAllTiddlers({tag = '', title = '', pck} = {}) {
     if (!title) title = '!^\\$';
     tiddlerList({title, tag, pck})
-      .map((t) => t.title)
+      .map(t => t.title)
       .forEach(hideTiddler);
   }
   function tiddlerList({title, tag, pck} = {}) {
     return tw.tiddlers.all
       .filter(titleMatch(title))
       .filter(tagMatch(tag))
-      .filter((t) => !pck || t.package === pck);
+      .filter(t => !pck || t.package === pck);
   }
   function getTiddlerElement(title) {
     let id = tw.core.common.hash(title);
@@ -1503,7 +1507,7 @@
   function hideTiddler(title) {
     let visibleTiddlerElement = getTiddlerElement(title);
     if (visibleTiddlerElement) visibleTiddlerElement.outerHTML = ''; // else console.warn('hideTiddler', title, 'failed!');
-    tw.tiddlers.visible = tw.tiddlers.visible.filter((t) => t !== title);
+    tw.tiddlers.visible = tw.tiddlers.visible.filter(t => t !== title);
     saveVisible();
     tw.events.send('story.changed', title);
   }
@@ -1583,12 +1587,12 @@
     }
     tw.events.subscribe(
       'tiddler.refresh',
-      (t) => {
+      t => {
         if (t === title) {
           tiddlerSpanInclude(el);
         }
       },
-      'handle.tiddler.refresh.' + title
+      'handle.tiddler.refresh.' + title,
     );
   }
   function macroInclude(el) {
@@ -1650,7 +1654,7 @@
   // 'this #$1# and that #$2#'[foo, bar] => 'this foo and that bar'
   function getTiddlerTextReplaced(title, params) {
     let res = resolveRef(title).text;
-    Array.from(res.matchAll(reInclusionParams) || []).forEach((m) => {
+    Array.from(res.matchAll(reInclusionParams) || []).forEach(m => {
       let all = m[0];
       let key = m[1];
       let def = m[2] || '';
@@ -1664,7 +1668,7 @@
   function getTiddlerList(title) {
     let inFence = false;
     return getTiddlerTextLines(title)
-      .filter((l) => {
+      .filter(l => {
         // Skip lines inside ``` fences (e.g. a `* { }` CSS selector is not a list item)
         if (/^```/.test(l)) {
           inFence = !inFence;
@@ -1672,19 +1676,19 @@
         }
         return !inFence;
       })
-      .filter((l) => l.match(/^[-*] /)) // Only bullet-points
-      .map((l) => l.replace(/^[-*] /, '')) // Remove bullet-point prefix
-      .map((l) => l.replace(/[\[\]]/g, '')) // Remove possible [[links]]
+      .filter(l => l.match(/^[-*] /)) // Only bullet-points
+      .map(l => l.replace(/^[-*] /, '')) // Remove bullet-point prefix
+      .map(l => l.replace(/[\[\]]/g, '')) // Remove possible [[links]]
       .filter(notEmpty);
   }
   function getTiddlerTextList(title) {
     return getTiddlerTextLines(title)
-      .map((l) => l.replace(/^[-*] /, ''))
+      .map(l => l.replace(/^[-*] /, ''))
       .filter(notEmpty);
   }
   function getKeyValuesArray(title) {
     return getTiddlerTextList(title)
-      .map((t) => {
+      .map(t => {
         let s = t.indexOf(':');
         if (s < 0) return;
         let key = t.substring(0, s).trim();
@@ -1695,7 +1699,7 @@
   }
   function getKeyValuesObject(title) {
     let result = {};
-    getKeyValuesArray(title).forEach((i) => {
+    getKeyValuesArray(title).forEach(i => {
       result[i.key] = i.value;
     });
     return result;
@@ -1704,10 +1708,10 @@
     return JSON.parse(getTiddlerTextRaw(title));
   }
   function getTiddlersByPackage(pck) {
-    return tw.tiddlers.all.filter((t) => t.package === pck);
+    return tw.tiddlers.all.filter(t => t.package === pck);
   }
   function getTiddlersByTag(tag) {
-    return tw.tiddlers.all.filter((t) => t.tags.includes(tag));
+    return tw.tiddlers.all.filter(t => t.tags.includes(tag));
   }
 
   // Filter Functions
@@ -1715,7 +1719,7 @@
     return t.doNotSave !== true;
   }
   function titleIs(title) {
-    return (t) => t.title === title;
+    return t => t.title === title;
   }
   function isPackageList(t) {
     return ['$CorePackages', '$ExtensionPackages'].includes(t.title);
@@ -1738,12 +1742,12 @@
     if (!t.text || !t.text.includes('# ')) return []; // fast path: no h1 sections
     const parsed = tw.core.sections.parseSections(t.text);
     return parsed.order
-      .map((n) => parsed.sections[n.toLowerCase()])
-      .filter((s) => s && isActiveCodeTiddler(s))
-      .map((s) => ({text: s.text, title: `${t.title}${SECTION_DELIM}${s.name}`}));
+      .map(n => parsed.sections[n.toLowerCase()])
+      .filter(s => s && isActiveCodeTiddler(s))
+      .map(s => ({text: s.text, title: `${t.title}${SECTION_DELIM}${s.name}`}));
   }
   function runTiddlerCode(t) {
-    tiddlerCodeBlocks(t).forEach((b) => executeCodeTiddler(b.text, b.title));
+    tiddlerCodeBlocks(t).forEach(b => executeCodeTiddler(b.text, b.title));
   }
   function isRunnableTiddler(t) {
     return tiddlerCodeBlocks(t).length > 0;
@@ -1754,14 +1758,14 @@
   function tagMatch(tag) {
     if (!tag || tag === '*') return () => true;
     let re = new RegExp(tag.match(/^!/) ? tag.substr(1) : tag);
-    return (t) =>
-      tag.match(/^!/) ? !t.tags.find((tag) => tag.match(re)) : t.tags.find((tag) => tag.match(re));
+    return t =>
+      tag.match(/^!/) ? !t.tags.find(tag => tag.match(re)) : t.tags.find(tag => tag.match(re));
   }
   function titleMatch(title) {
     if (!title || title === '*') return () => true;
     const negate = title.match(/^!/);
     let re = new RegExp(negate ? title.substr(1) : title);
-    return (t) => (negate ? !t.title.match(re) : t.title.match(re));
+    return t => (negate ? !t.title.match(re) : t.title.match(re));
   }
   function isCommand(str) {
     return str?.match(/^#?msg:(.+)/)?.[1];
@@ -1776,7 +1780,7 @@
   // TODO: Move $to ListTiddlersCoreFunctions
   function showTiddlerList(list, title = 'unknown') {
     return tw.lib.markdown(
-      renderTWikki({text: list.map((t) => `* [[${t.title}]]`).join('\n'), title})
+      renderTWikki({text: list.map(t => `* [[${t.title}]]`).join('\n'), title}),
     );
   }
 
@@ -1784,7 +1788,7 @@
   function loadStore(store) {
     if (!store) store = tw.store;
     tw.tiddlers.all = storeLoadTiddlers('tiddlers');
-    tw.shadowTiddlers.filter((t) => !tiddlerExists(t.title)).forEach(addTiddlerHard);
+    tw.shadowTiddlers.filter(t => !tiddlerExists(t.title)).forEach(addTiddlerHard);
     if (!tw.tiddlers.all.length) {
       tw.tiddlers.all = [];
       store.set('tiddlers', []);
@@ -1797,12 +1801,12 @@
 
     function storeLoadTiddlers(key, validate = true) {
       let result = store.get(key) || [];
-      result.forEach((t) => {
+      result.forEach(t => {
         if (validate && !tiddlerIsValid(t)) return;
         t.created = new Date(t.created || new Date());
         t.updated = new Date(t.updated || new Date());
       });
-      return result.filter((t) => !!t.title);
+      return result.filter(t => !!t.title);
     }
   }
 
@@ -1853,7 +1857,7 @@
 
   function wireEvents() {
     tw.core.dom.frm = tw.core.dom.$('new-form');
-    tw.core.dom.frm.addEventListener('submit', (evt) => evt.preventDefault());
+    tw.core.dom.frm.addEventListener('submit', evt => evt.preventDefault());
     tw.core.dom.frm.addEventListener('keypress', formHotkeys({formDone}));
 
     // Edit Mode
@@ -1862,7 +1866,7 @@
     // Escape behaves like Cancel ('cancel' only fires for user-agent dismissal, not .close())
     tw.core.dom.$('new-dialog').addEventListener('cancel', formCancel);
 
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', event => {
       let el = event.target;
 
       // Only want events from links...
@@ -1898,14 +1902,14 @@
             title: 'Results',
             text: result[0],
             type: 'x-twikki',
-            tags: []
+            tags: [],
           });
           return result;
         }
         target.innerHTML = result[0];
       }
     });
-    document.addEventListener('dblclick', (event) => {
+    document.addEventListener('dblclick', event => {
       let el = event.target;
       let t =
         tw.core.dom.nearestAttribute(el, 'data-tiddler-title', '.tiddler') ||
@@ -1917,22 +1921,22 @@
       return handleHashLink(document.location.hash);
     });
 
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', event => {
       tw.ui.notify('Unhandled: ' + event.message, 'E', event.error.stack);
       console.error('Unhandled:', event.message, event);
     });
 
     // Generic file drag/drop → registered drop handlers (tw.run.registerDropHandler)
-    const hasFiles = (e) => Array.from(e.dataTransfer?.types || []).includes('Files');
-    document.addEventListener('dragenter', (e) => {
+    const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
+    document.addEventListener('dragenter', e => {
       if (!hasFiles(e)) return;
       dragDepth++;
       showDropOverlay();
     });
-    document.addEventListener('dragover', (e) => {
+    document.addEventListener('dragover', e => {
       if (hasFiles(e)) e.preventDefault(); // required to enable drop
     });
-    document.addEventListener('dragleave', (e) => {
+    document.addEventListener('dragleave', e => {
       if (hasFiles(e) && --dragDepth <= 0) hideDropOverlay();
     });
     document.addEventListener('drop', handleDrop);
@@ -1946,8 +1950,8 @@
     hideDropOverlay();
     // Most specific pattern wins: '*.workspace.json' (longer) beats '*.json'
     const sorted = [...dropHandlers].sort((a, b) => b.pattern.length - a.pattern.length);
-    files.forEach((file) => {
-      const match = sorted.find((h) => h.rx.test(file.name));
+    files.forEach(file => {
+      const match = sorted.find(h => h.rx.test(file.name));
       if (!match) return tw.ui.notify(`No handler for '${file.name}'`, 'W');
       const reader = new FileReader();
       reader.onload = () => match.handler(reader.result, file);
@@ -2022,11 +2026,11 @@
   // WITHOUT eval'ing it — eval runs the module's IIFE side effects, so compatibility
   // must be decided from the source text before any module code runs.
   function parseModuleMeta(code) {
-    const grab = (re) => code.match(re)?.[1] ?? null;
+    const grab = re => code.match(re)?.[1] ?? null;
     return {
       name: grab(/const\s+name\s*=\s*'([^']+)'/),
       version: grab(/const\s+version\s*=\s*'([^']+)'/),
-      platform: grab(/const\s+platform\s*=\s*'([^']+)'/)
+      platform: grab(/const\s+platform\s*=\s*'([^']+)'/),
     };
   }
   // {name, version, required, compatible, severity, reason?, exempt?} for one loaded
@@ -2043,7 +2047,7 @@
         name: pck.name,
         compatible: false,
         severity: 'block',
-        reason: 'fetch failed: ' + (pck.res.error || 'error')
+        reason: 'fetch failed: ' + (pck.res.error || 'error'),
       };
     if (pck.res?.type !== 'code')
       return {name: pck.name, compatible: true, exempt: true, severity: 'ok'};
@@ -2087,14 +2091,14 @@
         compatible: false,
         severity: 'block',
         reason: `needs platform ${r.major}.x, running ${VERSION}`,
-        required
+        required,
       };
     }
     return {
       compatible: false,
       severity: 'warn',
       reason: `built for ${required}, running ${VERSION}`,
-      required
+      required,
     };
   }
 
@@ -2139,7 +2143,7 @@
     } catch {}
     if (!result.ok)
       throw new Error(
-        `Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`
+        `Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`,
       );
     if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
       res.code = await result.text();
@@ -2183,7 +2187,7 @@
 
     RegExp.compose = function (re, params) {
       let str = re.source;
-      Object.keys(params).forEach((k) => (str = str.replace(k, params[k].source)));
+      Object.keys(params).forEach(k => (str = str.replace(k, params[k].source)));
       return new RegExp(str, re.flags);
     };
     // eslint-disable-next-line no-extend-native

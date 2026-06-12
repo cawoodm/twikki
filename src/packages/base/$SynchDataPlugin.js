@@ -1,4 +1,4 @@
-// tags: $Script
+// tags: $Plugin
 
 /**
  * ## Description
@@ -32,62 +32,21 @@
  * * v1.0.9
  *   * Don't synch trashed tiddlers
  */
-/**
- * ## Data
- * ```json
- * {
- *   "version": 2.0.0
- * }
- * ```
- */
-// ## Code
-// ```javascript
 // TODO: Pull force, clearing local
 // TODO: Selective Synch: Include/Exclude Tags/Packages
-tw.macros.synch = (function(){
+(function () {
+  const meta = {
+    name: 'SynchData',
+    version: '2.0.0',
+    platform: '0.24.0',
+    description: 'Two-way sync of tiddlers with a private GitHub Gist (per-tiddler files).',
+  };
 
   const META_FILENAME = '_twikki.meta.json';
   const FORMAT = 'twikki-sync-v1';
   const DEFAULT_DESCRIPTION = 'TWikki sync';
 
   const isNoPush = t => t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
-
-  tw.events.override('synch.full', doFull);
-  tw.events.override('synch.push', doPush);
-  tw.events.override('synch.pull', doPull);
-  tw.events.override('synch.upload', doUpload);
-
-  // Command palette entries (synch.upload is intentionally omitted — it overwrites
-  // the remote and is too destructive for a one-keystroke command).
-  tw.extensions.registerCommand([
-    {label: 'Synch: full (pull + push)', event: 'synch.full'},
-    {label: 'Synch: push', event: 'synch.push'},
-    {label: 'Synch: pull', event: 'synch.pull'},
-  ]);
-
-  return {
-    // <<synch.full>>: Push/pull to/from remote
-    full() {
-      return tw.ui.button('{{$IconSynch}}', 'synch.full', null, 'btn-synch', 'title="Synch Data"');
-    },
-    // <<synch.test>>: Simulate push/pull to/from remote
-    test() {
-      return '<button onclick="tw.macros.synch.doTest()">Synch Test</button>';
-    },
-    // <<synch.pull>>: Only import from remote
-    pull() {
-      return tw.ui.button('{{$IconPull}}', 'synch.pull', null, 'btn-synch-pull', 'title="Pull Synched Data"');
-    },
-    // <<synch.push>>: Only write to remote
-    push() {
-      return tw.ui.button('{{$IconPush}}', 'synch.push', null, 'btn-synch-push', 'title="Push Synched Data"');
-    },
-    // <<synch.upload>>: Overwrite remote from local
-    upload() {
-      return tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple');
-    },
-    // TODO: Delete all local and pull (restore)
-  };
 
   async function doFull() {
     return await synch({pull: true, push: true});
@@ -223,7 +182,7 @@ tw.macros.synch = (function(){
     if (push && !dryRun) {
       // Build a Gist files patch: create/update → {content}, delete → null.
       const byTitle = Object.fromEntries(
-        localTiddlers.filter(t => !isNoPush(t)).map(t => [t.title, t])
+        localTiddlers.filter(t => !isNoPush(t)).map(t => [t.title, t]),
       );
       const files = {};
       [...remote.create, ...remote.update].forEach(title => {
@@ -357,4 +316,45 @@ tw.macros.synch = (function(){
     tw.events.send('save.silent');
   }
 
+  return {
+    meta,
+    init() {
+      tw.events.override('synch.full', doFull);
+      tw.events.override('synch.push', doPush);
+      tw.events.override('synch.pull', doPull);
+      tw.events.override('synch.upload', doUpload);
+
+      // Command palette entries (synch.upload is intentionally omitted — it overwrites
+      // the remote and is too destructive for a one-keystroke command).
+      tw.extensions.registerCommand([
+        {label: 'Synch: full (pull + push)', event: 'synch.full'},
+        {label: 'Synch: push', event: 'synch.push'},
+        {label: 'Synch: pull', event: 'synch.pull'},
+      ]);
+
+      tw.macros.synch = {
+        // <<synch.full>>: Push/pull to/from remote
+        full() {
+          return tw.ui.button('{{$IconSynch}}', 'synch.full', null, 'btn-synch', 'title="Synch Data"');
+        },
+        // <<synch.test>>: Simulate push/pull to/from remote
+        test() {
+          return '<button onclick="tw.macros.synch.doTest()">Synch Test</button>';
+        },
+        // <<synch.pull>>: Only import from remote
+        pull() {
+          return tw.ui.button('{{$IconPull}}', 'synch.pull', null, 'btn-synch-pull', 'title="Pull Synched Data"');
+        },
+        // <<synch.push>>: Only write to remote
+        push() {
+          return tw.ui.button('{{$IconPush}}', 'synch.push', null, 'btn-synch-push', 'title="Push Synched Data"');
+        },
+        // <<synch.upload>>: Overwrite remote from local
+        upload() {
+          return tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple');
+        },
+        // TODO: Delete all local and pull (restore)
+      };
+    },
+  };
 })();

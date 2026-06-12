@@ -4,13 +4,13 @@ tags: Help
 
 <<plugins>>
 
-Plugins are tiddlers tagged `$Plugin` whose IIFE returns `{meta, init?, start?}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
+Plugins are tiddlers tagged <<Tag $Plugin>> who, when run (with eval()) return `{meta, init, start}`. Each row above shows the plugin's name, source tiddler, version, package, the platform release it was built for, and a compatibility status. [Plugins Docs](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md)
 
-* **✓ OK** — built for this platform release (caret-compatible).
-* **⚠ …** — minor mismatch: same major, different minor/patch. The plugin still runs.
-* **✗ …** — major mismatch. The plugin still runs but may break — consider updating or removing it.
-* **–** — no `platform` field declared (exempt).
-* **⚠ err: …** — the plugin's `load`, `init`, or `start` phase threw. Other plugins are unaffected.
+- **✓ OK** — built for this platform release (caret-compatible).
+- **⚠ …** — minor mismatch: same major, different minor/patch. The plugin still runs.
+- **✗ …** — major mismatch. The plugin still runs but may break — consider updating or removing it.
+- **–** — no `platform` field declared (exempt).
+- **⚠ err: …** — the plugin's `load`, `init`, or `start` phase threw. Other plugins are unaffected.
 
 Unlike core modules, the plugin gate is **soft**: an incompatible plugin still runs, the table just surfaces the mismatch so you can decide.
 
@@ -18,8 +18,8 @@ Unlike core modules, the plugin gate is **soft**: an incompatible plugin still r
 
 There are two ways for a tiddler to run code at boot:
 
-* **`$Plugin`** — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
-* **`$Script`** — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
+- <<Tag $Plugin>> — structured plugin with a lifecycle. Its IIFE returns `{meta, init?, start?}` and the platform calls the lifecycle hooks.
+- <<Tag $Script>> — code that just runs at boot. No return value, no lifecycle. Use for macros, commands, event subscriptions, one-shot setup.
 
 Tiddlers without either tag never auto-execute.
 
@@ -29,7 +29,7 @@ Tiddlers without either tag never auto-execute.
 // tags: $Plugin
 (function () {
   return {
-    meta: { name: 'MyPlugin', version: '1.0.0', platform: '0.24.0' },
+    meta: {name: 'MyPlugin', version: '1.0.0', platform: '0.24.0'},
     init() {
       // event subscriptions, registerMacro/registerCommand, dependency checks
     },
@@ -40,8 +40,12 @@ Tiddlers without either tag never auto-execute.
 })();
 ```
 
-For the multi-section `.tid` template (with `# Code`, `# StyleSheet`, `# Description`), see [[ExamplePlugin]] and the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
+## Formats
+
+Inswide Twikki a plugin can be a single `script/js` tiddler or a multi-part `x-twikki` tiddler (see [[ContentSections]]. The multi-part option is nice because you can include documentation, examples, stylesheets. See [[ExamplePlugin]] for a multi-part example. As a developer you can manage plugins as individual files in a directory which are automatically compiled into multi-part tiddlers. See the [full developer reference](https://github.com/cawoodm/twikki/blob/main/docs/PLUGINS.md).
 
 ## Distributing plugins
 
-A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget.
+A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget:
+
+- <<packages.import name:demo url:./packages/demo.json filter:\* force:false>>

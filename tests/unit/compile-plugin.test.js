@@ -1,10 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {writeFileSync, mkdirSync, rmSync, readFileSync} from 'node:fs';
+import {writeFileSync, mkdirSync, rmSync, readFileSync, utimesSync, statSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomUUID} from 'node:crypto';
-import {getType, getAutoTags, parseFile, compilePackage} from '../../vite-plugin-tiddler-compile.js';
+import {getType, getAutoTags, parseFile, compilePackage, fenceLang, expandIncludes, parseComposite} from '../../vite-plugin-tiddler-compile.js';
 
 test('getType maps extensions to tiddler types', () => {
   assert.equal(getType('.js'), 'script/js');
@@ -180,6 +180,28 @@ test('parseFile: single-line HTML-comment frontmatter is parsed and consumed', (
   }
 });
 
+test('compilePackage: ignores hidden subdirs (.git, .DS_Store, etc.)', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
+  mkdirSync(srcDir);
+  mkdirSync(outDir);
+  try {
+    // A hidden dir without the required <DirName>.md anchor would normally make
+    // parseComposite throw — compilePackage must skip it instead.
+    const ghost = join(srcDir, '.git');
+    mkdirSync(ghost);
+    writeFileSync(join(ghost, 'HEAD'), 'ref: refs/heads/main\n');
+    writeFileSync(join(srcDir, 'Real.tid'), 'hello\n');
+    compilePackage('mypkg', srcDir, outDir);
+    const result = JSON.parse(readFileSync(join(outDir, 'mypkg.json'), 'utf8'));
+    assert.equal(result.tiddlers.length, 1);
+    assert.equal(result.tiddlers[0].title, 'Real');
+  } finally {
+    rmSync(srcDir, {recursive: true});
+    rmSync(outDir, {recursive: true});
+  }
+});
+
 test('compilePackage: ignores files with unknown extensions (e.g. atomic-save temp files)', () => {
   const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
   const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
@@ -212,6 +234,172 @@ test('compilePackage: writes JSON with correct tiddlers array', () => {
     assert.equal(result.tiddlers.length, 2);
     const titles = result.tiddlers.map(t => t.title).sort();
     assert.deepEqual(titles, ['Hello', 'World']);
+  } finally {
+    rmSync(srcDir, {recursive: true});
+    rmSync(outDir, {recursive: true});
+  }
+});
+
+test('fenceLang: maps fenceable extensions, returns empty for raw-inline extensions', () => {
+  assert.equal(fenceLang('.js'), 'javascript');
+  assert.equal(fenceLang('.css'), 'css');
+  assert.equal(fenceLang('.json'), 'json');
+  assert.equal(fenceLang('.html'), 'html');
+  assert.equal(fenceLang('.md'), '');
+  assert.equal(fenceLang('.tid'), '');
+  assert.equal(fenceLang('.xyz'), '');
+});
+
+test('expandIncludes: substitutes [include](./X) with fenced block at the same position', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    writeFileSync(join(dir, 'Code.js'), '(function(){ return 1; })();\n');
+    const text = '# Description\n\nProse.\n\n# Code\n[include](./Code.js)\n';
+    const {text: out, includedPaths} = expandIncludes(text, dir);
+    assert.ok(out.includes('# Code\n```javascript\n(function(){ return 1; })();\n```'));
+    assert.ok(out.includes('# Description\n\nProse.'));
+    assert.equal(includedPaths.length, 1);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('expandIncludes: bare relative path (no ./) works too', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    writeFileSync(join(dir, 'a.css'), '.x { color: red; }\n');
+    const {text: out} = expandIncludes('# StyleSheet\n[include](a.css)\n', dir);
+    assert.ok(out.includes('```css\n.x { color: red; }\n```'));
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('expandIncludes: missing target throws', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    assert.throws(() => expandIncludes('[include](./nope.js)', dir), /not found/);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('expandIncludes: path escape (../) throws', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    assert.throws(() => expandIncludes('[include](../escape.js)', dir), /must stay inside/);
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('expandIncludes: .md target is inlined raw (no fence)', () => {
+  const dir = join(tmpdir(), 'twikki-test-' + randomUUID());
+  mkdirSync(dir);
+  try {
+    writeFileSync(join(dir, 'notes.md'), '# Sub\n\nNested prose.\n');
+    const {text: out} = expandIncludes('Before\n[include](./notes.md)\nAfter\n', dir);
+    assert.ok(out.includes('Before\n# Sub\n\nNested prose.\nAfter'));
+    assert.ok(!out.includes('```'));
+  } finally {
+    rmSync(dir, {recursive: true});
+  }
+});
+
+test('parseComposite: builds one tiddler from md+js+css+json with title = dir name and type x-twikki', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  mkdirSync(srcDir);
+  const pluginDir = join(srcDir, 'FooPlugin');
+  mkdirSync(pluginDir);
+  try {
+    writeFileSync(join(pluginDir, 'FooPlugin.md'),
+      'tags: $Plugin\n\n# Description\n\nProse.\n\n# Meta\n- version: 0.1.0\n\n# Data\n[include](./data.json)\n\n# Code\n[include](./Foo.js)\n\n# StyleSheet\n[include](./Foo.css)\n');
+    writeFileSync(join(pluginDir, 'Foo.js'), '(function(){})();\n');
+    writeFileSync(join(pluginDir, 'Foo.css'), '.foo { color: red; }\n');
+    writeFileSync(join(pluginDir, 'data.json'), '{"version": "0.1.0"}\n');
+    const t = parseComposite(pluginDir, 'demo');
+    assert.equal(t.title, 'FooPlugin');
+    assert.equal(t.type, 'x-twikki');
+    assert.deepEqual(t.tags, ['$Plugin']);
+    assert.ok(t.text.includes('# Code\n```javascript\n(function(){})();\n```'));
+    assert.ok(t.text.includes('# StyleSheet\n```css\n.foo { color: red; }\n```'));
+    assert.ok(t.text.includes('# Data\n```json\n{"version": "0.1.0"}\n```'));
+    assert.ok(t.text.includes('# Meta\n- version: 0.1.0'));
+    assert.ok(t.text.includes('# Description\n\nProse.'));
+  } finally {
+    rmSync(srcDir, {recursive: true});
+  }
+});
+
+test('parseComposite: missing <DirName>.md throws', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  mkdirSync(srcDir);
+  const pluginDir = join(srcDir, 'BarPlugin');
+  mkdirSync(pluginDir);
+  try {
+    writeFileSync(join(pluginDir, 'Bar.js'), '');
+    assert.throws(() => parseComposite(pluginDir, 'demo'), /requires BarPlugin\.md/);
+  } finally {
+    rmSync(srcDir, {recursive: true});
+  }
+});
+
+test('parseComposite: base package gets $NoEdit auto-tag', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  mkdirSync(srcDir);
+  const pluginDir = join(srcDir, 'BazPlugin');
+  mkdirSync(pluginDir);
+  try {
+    writeFileSync(join(pluginDir, 'BazPlugin.md'), 'tags: $Plugin\n\n# Description\n\nx\n');
+    const t = parseComposite(pluginDir, 'base');
+    assert.deepEqual(t.tags.sort(), ['$NoEdit', '$Plugin']);
+  } finally {
+    rmSync(srcDir, {recursive: true});
+  }
+});
+
+test('parseComposite: updated reflects newest mtime over md + included files', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  mkdirSync(srcDir);
+  const pluginDir = join(srcDir, 'QuxPlugin');
+  mkdirSync(pluginDir);
+  try {
+    writeFileSync(join(pluginDir, 'QuxPlugin.md'), 'tags: $Plugin\n\n# Code\n[include](./Qux.js)\n');
+    writeFileSync(join(pluginDir, 'Qux.js'), '//\n');
+    // Backdate the .md so the .js becomes the newest source.
+    const past = new Date(Date.now() - 60_000);
+    utimesSync(join(pluginDir, 'QuxPlugin.md'), past, past);
+    const t = parseComposite(pluginDir, 'demo');
+    const jsMtime = statSync(join(pluginDir, 'Qux.js')).mtime.toISOString();
+    assert.equal(t.updated, jsMtime);
+  } finally {
+    rmSync(srcDir, {recursive: true});
+  }
+});
+
+test('compilePackage: mixed package (top-level file + composite subdir) emits both tiddlers', () => {
+  const srcDir = join(tmpdir(), 'twikki-src-' + randomUUID());
+  const outDir = join(tmpdir(), 'twikki-out-' + randomUUID());
+  mkdirSync(srcDir);
+  mkdirSync(outDir);
+  const pluginDir = join(srcDir, 'MyPlugin');
+  mkdirSync(pluginDir);
+  try {
+    writeFileSync(join(srcDir, 'Loose.tid'), 'Hello\n');
+    writeFileSync(join(pluginDir, 'MyPlugin.md'), 'tags: $Plugin\n\n# Code\n[include](./My.js)\n');
+    writeFileSync(join(pluginDir, 'My.js'), '/* hi */\n');
+    compilePackage('mypkg', srcDir, outDir);
+    const result = JSON.parse(readFileSync(join(outDir, 'mypkg.json'), 'utf8'));
+    assert.equal(result.tiddlers.length, 2);
+    const titles = result.tiddlers.map(t => t.title).sort();
+    assert.deepEqual(titles, ['Loose', 'MyPlugin']);
+    const composite = result.tiddlers.find(t => t.title === 'MyPlugin');
+    assert.equal(composite.type, 'x-twikki');
+    assert.ok(composite.text.includes('```javascript\n/* hi */\n```'));
   } finally {
     rmSync(srcDir, {recursive: true});
     rmSync(outDir, {recursive: true});

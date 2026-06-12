@@ -1,11 +1,23 @@
+## Macros
+
+- Create a <<macros>> widget
+
+When rendering multi-part tiddlers, the `tags: $StyleSheet` section should display as pills with the `<<Tag>>` macro
+Picker menus are very ugly
+We need a Tag picker widget for editing tiddlers
+
 ## Links
-* Plugin to auto link CamelCase tiddlers if they exist
-* Browser history (back)
+
+- AllTagsLinked should use tag pills
+- Plugin to auto link CamelCase tiddlers if they exist
+- Browser history (back)
 
 ## Tabs:
-* Favories view of favorite tiddlers
-* History view of recently viewed tiddlers
-* Recent view of recently edited tiddlers
+
+- Favories view of favorite tiddlers
+- History view of recently viewed tiddlers
+- Recent view of recently edited tiddlers
 
 # Toolbars
-* favorites.toggle macro should Add to Favorites and toggle visibility of icon ⭐
+
+- favorites.toggle macro should Add to Favorites and toggle visibility of icon ⭐

@@ -1,4 +1,4 @@
-// tags: $Script
+// tags: $Plugin
 
 /**
  * ## Description
@@ -22,28 +22,16 @@
  * Surfaced via the `<<themeImport.button>>` macro (rendered next to the theme
  * selector in `$Themes`) and the `theme.import` event.
  */
-/**
- * ## Data
- * ```json
- * {
- *   "version": 1.0.0
- * }
- * ```
- */
-// ## Code
-// ```javascript
-(function() {
+(function () {
+  const meta = {
+    name: 'ThemeImporter',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Import themes from a packaged JSON gist into the local workspace.',
+  };
 
   const DIALOG_ID = 'theme-import-dialog';
   const DEFAULT_URL = 'https://gist.githubusercontent.com/cawoodm/c43037e0370393ef2928848fee64e95d/raw/themes.json';
-
-  tw.macros.themeImport = {
-    button() {
-      return tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"');
-    },
-  };
-
-  tw.events.subscribe('theme.import', open, 'ThemeImporter');
 
   function open() {
     showDialog(importUrl());
@@ -235,4 +223,16 @@
     return String(s).replace(/(["\\])/g, '\\$1');
   }
 
+  return {
+    meta,
+    init() {
+      tw.macros.themeImport = {
+        button() {
+          return tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"');
+        },
+      };
+
+      tw.events.subscribe('theme.import', open, 'ThemeImporter');
+    },
+  };
 })();

@@ -184,7 +184,7 @@
   /**
    * Visibility predicate built from $GeneralSettings.search (whitelist first, then
    * blacklist). Returns a function (tiddler) → true if it should be VISIBLE.
-   * Shared by search and the sidebar Notes list ($ExplorerPlugin) so tag-based
+   * Shared by search and the sidebar Notes list (ExplorerPlugin) so tag-based
    * hiding is consistent across the UI. Reads settings once; call per render/search.
    */
   function tagFilter() {

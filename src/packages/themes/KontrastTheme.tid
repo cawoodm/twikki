@@ -167,4 +167,7 @@ h1, h2, h3, h4 {
 }
 a:not([class]) { color: #e5322d; font-weight: 600; }
 blockquote { border-left: 6px solid #e5322d; background: #faf2f1; }
+
+/* Picker hover bar is --col4 (#0a0a0a) on a white menu — force white text so it stays legible. */
+.picker-item:hover { color: #fff; }
 ```

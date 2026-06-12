@@ -18,7 +18,7 @@ Base packages are loaded first and provide a useful bunch of features which you 
 * $GeneralWidgets
 * $GistBackupPlugin
 * $GithubSaverExtension
-* $HighlightPlugin
+* $CodeSyntaxHighlightPlugin
 * $IncludeFunctions
 * $ListTiddlersWidgets
 * $ModulesWidget
@@ -127,20 +127,12 @@ User's can import packages by clicking a button:
 
 ## Plugin metadata
 
-A plugin is just a `$Plugin`-tagged tiddler shipped inside a package. To make it appear in `<<plugins>>` with version + built-for platform + compat status, add a `# Meta` section to the source:
+A plugin is just a `$Plugin`-tagged tiddler shipped inside a package. Its metadata lives in one place: the `meta` object returned by the plugin's IIFE (`{meta: {name, version, platform?, …}, init?, start?}`). `loadPlugins()` captures it into `tw.plugins[]` and the `<<plugins>>` widget lists it with version + built-for platform + compat status. Unlike modules, the plugin compat gate is **soft** — an incompatible plugin still runs, the widget just surfaces a `⚠`/`✗` for the user.
 
-```
-# Meta
-name: MyPlugin
-namespace: base
-version: 1.0.0
-platform: 0.24.0
-```
-
-Boot-time `prescanPluginRegistry()` walks `$Plugin` tiddlers, parses `# Meta` via `core.sections`, and populates `tw.pluginRegistry[]`. Unlike modules, the plugin compat gate is **soft** — an incompatible plugin still runs, the widget just surfaces a `⚠`/`✗` for the user. Full field reference and `.js`/`.tid` placement rules are in [PLUGINS.md](./PLUGINS.md).
+To display a plugin's live metadata inside its own tiddler (or anywhere), use the `<<pluginMeta Name>>` macro — it reads the registry entry, so the displayed fields can never drift from the code. Full field reference and `.js`/`.tid` placement rules are in [PLUGINS.md](./PLUGINS.md).
 
 ## See also
 
 - [COMPILER.md](./COMPILER.md) — source-file → package-JSON build step.
 - [MODULES.md](./MODULES.md) — boot order, core-modules-vs-packages, caching, and the `?reload`/`?update`/`?safemode` refresh model.
-- [PLUGINS.md](./PLUGINS.md) — plugin authoring, the `# Meta` section, the registry, and the `<<plugins>>` widget.
+- [PLUGINS.md](./PLUGINS.md) — plugin authoring, the `meta` contract, the registry, and the `<<plugins>>` widget.

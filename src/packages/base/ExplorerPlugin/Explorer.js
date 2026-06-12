@@ -1,20 +1,11 @@
-tags: $Plugin
-
-# Description
-
-Fills the left sidebar with an Obsidian-style explorer: a list of notes
-(non-system tiddlers, sorted) and a list of tags. Rows are clickable —
-notes open + activate their tab; tags open all matching notes.
-
-Renders into `#explorer-notes` / `#explorer-tags` (provided by the layout)
-and rebuilds live on note create/update/delete and on story changes (to keep
-the "open" highlight current). Reuses `tw.macros.core.allTags()` and
-`tw.util.titleMatch`.
-
-# Code
-
-```javascript
 (function () {
+  const meta = {
+    name: 'Explorer',
+    version: '1.0.1',
+    platform: '0.24.0',
+    description: 'Sidebar tree showing all tiddlers grouped by tag.',
+  };
+
   let notesEl;
   let tagsEl;
 
@@ -54,7 +45,7 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
     let rows = titles
       .map(
         (title) =>
-          `<a class="explorer-note${open.has(title) ? ' open' : ''}" data-note="${attr(title)}" title="${attr(title)}">${esc(title)}</a>`
+          `<a class="explorer-note${open.has(title) ? ' open' : ''}" data-note="${attr(title)}" title="${attr(title)}">${esc(title)}</a>`,
       )
       .join('');
     return `<div class="explorer-section-title">Notes</div>${rows || '<div class="explorer-empty">No notes yet</div>'}`;
@@ -86,7 +77,7 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
     if (!row) return;
     tw.events.send('ui.open.all', {
       tag: row.getAttribute('data-tag'),
-      title: '*'
+      title: '*',
     });
     closeDrawer();
   }
@@ -104,99 +95,23 @@ the "open" highlight current). Reuses `tw.macros.core.allTags()` and
   }
 
   return {
-    meta: {
-      name: 'Explorer',
-      version: '1.0.1',
-      platform: '0.24.0',
-      description: 'Sidebar tree showing all tiddlers grouped by tag.'
-    },
+    meta,
     init() {
       // The explorer owns the sidebar, so the toggle command lives here.
       tw.extensions.registerCommand({
         label: 'Toggle sidebar',
-        run: () => document.getElementById('sidebar')?.classList.toggle('open')
+        run: () => document.getElementById('sidebar')?.classList.toggle('open'),
       });
 
       wireUp('ui.loaded', bindHandlers);
       wireUp('ui.reloaded', bindHandlers);
 
       // Keep the note list current as the store changes.
-      [
-        'tiddler.created',
-        'tiddler.updated',
-        'tiddler.deleted',
-        'tiddler.removed',
-        'tiddler.modified'
-      ].forEach((ev) => wireUp(ev, render));
+      ['tiddler.created', 'tiddler.updated', 'tiddler.deleted', 'tiddler.removed', 'tiddler.modified'].forEach(
+        (ev) => wireUp(ev, render),
+      );
       // Keep the "open" highlight current as tabs open/close.
       ['story.rendered', 'story.changed'].forEach((ev) => wireUp(ev, render));
-    }
+    },
   };
 })();
-```
-
-# StyleSheet
-
-```css
-/* Sidebar explorer — note list + tag pills inside `#explorer-notes` and
-   `#explorer-tags`. The container layout lives in $CoreThemeLayout. */
-.explorer-section-title {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--col1);
-  padding: 12px 8px 4px;
-}
-
-a.explorer-note {
-  display: block;
-  padding: 4px 10px;
-  border-radius: var(--rad1);
-  color: var(--colfg);
-  font-size: 0.9rem;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-a.explorer-note:hover {
-  background-color: var(--colbg2);
-  text-decoration: none;
-}
-
-a.explorer-note.open {
-  color: var(--col6);
-}
-
-.explorer-empty {
-  padding: 6px 10px;
-  color: var(--col1);
-  font-size: 0.85rem;
-  font-style: italic;
-}
-
-.explorer-tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 4px 8px;
-}
-
-a.explorer-tag {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background-color: var(--colbg2);
-  border: 1px solid var(--col4);
-  color: var(--col1);
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-a.explorer-tag:hover {
-  color: var(--col6);
-  border-color: var(--col6);
-  text-decoration: none;
-}
-```

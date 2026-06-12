@@ -1,0 +1,46 @@
+/* Unsaved-changes list inside the unsaved-changes dialog, plus the header's
+   dirty indicator (a `●` button toggled by the dirty.changed event). */
+.tw-changes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tw-changes-list li {
+  padding: 0.25rem 0;
+  cursor: help;
+}
+
+.tw-changes-list a {
+  color: var(--colfg);
+  cursor: pointer;
+}
+
+.tw-change-status {
+  display: inline-block;
+  min-width: 5em;
+  margin-right: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tw-change-status.new {
+  color: var(--col6);
+}
+
+.tw-change-status.modified {
+  color: var(--col-warning);
+}
+
+.tw-change-status.deleted {
+  color: var(--col-error);
+}
+
+/* Dirty indicator (header) — hidden via [hidden] until there are unsaved changes */
+#dirty-indicator {
+  color: var(--col-warning);
+  font-size: 1.1rem;
+  line-height: 1;
+}

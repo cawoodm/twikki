@@ -2,13 +2,13 @@
 tw.macros.core.WorkspaceSelect = () => {
   let workspace = tw.storage.get('workspace');
   let items = (tw.storage.get('workspaces') || []).map(n =>
-    `<button class="picker-item${n === workspace ? ' active' : ''}" data-value="${n}">${n}</button>`,
+    `<div class="picker-item${n === workspace ? ' active' : ''}" data-value="${n}">${n}</div>`,
   ).join('');
   // Single-line output so the widget can live inside markdown table cells
   return `<span class="picker" data-event="workspace.load.prompt">
     <button class="icon picker-trigger" title="Workspace" aria-haspopup="true">{{$IconWorkspace}}</button>
     <span class="picker-menu" hidden>
-      <button class="picker-item picker-action" data-value="">– new workspace –</button>
+      <div class="picker-item picker-action" data-value="">– new workspace –</div>
       ${items}</span>
     </span>`.replace(/\n/g, '');
 };

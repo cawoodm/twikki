@@ -4,19 +4,44 @@ import {fileURLToPath} from 'node:url';
 
 export function getType(ext) {
   switch (ext) {
-    case '.tid': return 'x-twikki';
-    case '.md': return 'markdown';
-    case '.js': return 'script/js';
-    case '.json': return 'json';
-    case '.css': return 'css';
-    case '.html': return 'html';
-    default: return '';
+    case '.tid':
+      return 'x-twikki';
+    case '.md':
+      return 'markdown';
+    case '.js':
+      return 'script/js';
+    case '.json':
+      return 'json';
+    case '.css':
+      return 'css';
+    case '.html':
+      return 'html';
+    default:
+      return '';
+  }
+}
+
+// Fence language for `[include]` substitution. Falls back to '' for extensions
+// that should be inlined raw (e.g. .md — including markdown into markdown).
+export function fenceLang(ext) {
+  switch (ext) {
+    case '.js':
+      return 'javascript';
+    case '.css':
+      return 'css';
+    case '.json':
+      return 'json';
+    case '.html':
+      return 'html';
+    default:
+      return '';
   }
 }
 
 export function getAutoTags(packageName, ext) {
   const tags = [];
   if (packageName === 'core.defaults') tags.push('$Shadow');
+  // TODO: Why are we blocking edits here?
   if (packageName === 'base') tags.push('$NoEdit');
   if (ext === '.css') tags.push('$StyleSheet');
   return tags;
@@ -51,7 +76,10 @@ export function parseFile(filePath, packageName) {
     if (value === 'true') value = true;
     else if (value === 'false') value = false;
     if (field === 'tags') {
-      const vals = String(value).split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
+      const vals = String(value)
+        .split(/[,\s]+/)
+        .map(v => v.trim())
+        .filter(Boolean);
       tiddler.tags = [...tiddler.tags, ...vals];
     } else {
       tiddler[field] = value;
@@ -81,7 +109,10 @@ export function parseFile(filePath, packageName) {
     // .js/.json sources can declare tags, e.g. `// tags: $Shadow`) or a single-line HTML
     // comment (`<!-- tags: $Template -->`). The comment markers are consumed, keeping
     // .json bodies valid.
-    const metaLine = line.replace(/^\s*<!--\s*/, '').replace(/\s*-->\s*$/, '').replace(/^\/\/\s*/, '');
+    const metaLine = line
+      .replace(/^\s*<!--\s*/, '')
+      .replace(/\s*-->\s*$/, '')
+      .replace(/^\/\/\s*/, '');
     if (/^[a-z]+: /.test(metaLine)) {
       applyMeta(metaLine);
     } else {
@@ -97,25 +128,90 @@ export function parseFile(filePath, packageName) {
   return tiddler;
 }
 
+// Substitute every `[include](./X)` (or `[include](X)`) line in the markdown
+// anchor with the file's contents, wrapped in a fenced code block whose
+// language comes from the file extension (.js→javascript, .css→css, .json→json,
+// .html→html). Extensions with no fence language (.md, etc.) are inlined raw.
+// Returns the rewritten text + the list of absolute paths that were included
+// (so callers can fold their mtime into the tiddler's `updated` field).
+export function expandIncludes(text, dirPath) {
+  const includedPaths = [];
+  const out = text.replace(/\[include\]\((?:\.\/)?([^)]+)\)/g, (_, relPath) => {
+    if (relPath.includes('..')) {
+      throw new Error(`include path "${relPath}" must stay inside the plugin dir`);
+    }
+    const absPath = join(dirPath, relPath);
+    if (!existsSync(absPath)) {
+      throw new Error(`include "${relPath}" not found in ${dirPath}`);
+    }
+    includedPaths.push(absPath);
+    const content = readFileSync(absPath, 'utf8').replace(/\r/g, '').trimEnd();
+    const lang = fenceLang(extname(relPath));
+    return lang ? '```' + lang + '\n' + content + '\n```' : content;
+  });
+  return {text: out, includedPaths};
+}
+
+// Parse a composite plugin directory: <dirName>/<dirName>.md is the anchor
+// (carries metadata header + section skeleton + [include] lines); siblings
+// like Code.js / StyleSheet.css / data.json are inlined where their [include]
+// references appear. The compiled tiddler's title is the directory name, and
+// its `.text` is multi-section markdown that core.sections.js parses normally.
+export function parseComposite(dirPath, packageName) {
+  const dirName = basename(dirPath);
+  const mdPath = join(dirPath, `${dirName}.md`);
+  if (!existsSync(mdPath)) {
+    throw new Error(`composite plugin "${dirName}" requires ${dirName}.md`);
+  }
+  const tiddler = parseFile(mdPath, packageName);
+  tiddler.title = dirName;
+  tiddler.type = 'x-twikki';
+  const {text, includedPaths} = expandIncludes(tiddler.text, dirPath);
+  tiddler.text = text;
+  // `updated` should reflect the newest source file, not just the .md anchor —
+  // editing Code.js must bump the tiddler's mtime so downstream caches refresh.
+  let newest = statSync(mdPath).mtime;
+  for (const p of includedPaths) {
+    const m = statSync(p).mtime;
+    if (m > newest) newest = m;
+  }
+  tiddler.updated = newest.toISOString();
+  return tiddler;
+}
+
 export function compilePackage(packageName, sourceDir, outputDir) {
   if (!existsSync(outputDir)) mkdirSync(outputDir, {recursive: true});
-  const files = readdirSync(sourceDir, {withFileTypes: true})
+  const entries = readdirSync(sourceDir, {withFileTypes: true});
+  const files = entries
     .filter(e => e.isFile())
     .map(e => e.name)
     .filter(name => getType(extname(name)) !== ''); // skip temp/non-tiddler files (e.g. atomic-save *.tmp.*)
-  const tiddlers = files
-    .map(name => {
-      try {
-        return parseFile(join(sourceDir, name), packageName);
-      } catch (err) {
-        if (err.code === 'ENOENT') return null; // file vanished mid-compile (atomic-save race)
-        throw err;
-      }
-    })
-    .filter(Boolean);
+  // Skip hidden / system directories (.git, .DS_Store, .idea, .vscode, …). They are
+  // never composite plugin sources; without this filter parseComposite would throw
+  // "missing <DirName>.md" the moment such a dir lands inside a package.
+  const subdirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.')).map(e => e.name);
+  const fromFiles = files.map(name => {
+    try {
+      return parseFile(join(sourceDir, name), packageName);
+    } catch (err) {
+      if (err.code === 'ENOENT') return null; // file vanished mid-compile (atomic-save race)
+      throw err;
+    }
+  });
+  const fromDirs = subdirs.map(name => {
+    try {
+      return parseComposite(join(sourceDir, name), packageName);
+    } catch (err) {
+      if (err.code === 'ENOENT') return null; // file vanished mid-compile (watcher race)
+      throw err;
+    }
+  });
+  const tiddlers = [...fromFiles, ...fromDirs].filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
-  console.log(`[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`);
+  console.log(
+    `[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`,
+  );
   return tiddlers.length;
 }
 
@@ -152,14 +248,16 @@ export default function tiddlerCompile(sourceSets) {
       for (const {sourceRoot} of sourceSets) {
         server.watcher.add(sourceRoot);
       }
-      const handler = (filePath) => {
+      const handler = filePath => {
         if (getType(extname(filePath)) === '') return; // ignore temp/non-tiddler files
         const info = findPackageForFile(filePath, sourceSets);
         if (!info) return;
         try {
           compilePackage(info.packageName, info.sourceDir, info.outputDir);
         } catch (err) {
-          console.warn(`[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`);
+          console.warn(
+            `[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`,
+          );
         }
       };
       server.watcher.on('change', handler);

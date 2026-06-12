@@ -5,7 +5,7 @@
 * **Theme importer migrated** to the core dialog API as the first consumer.
 
 ### Unsaved changes
-* **`$UnsavedChangesPlugin`** — shows which tiddlers have unsaved changes (new/modified/deleted) with a short change summary as a tooltip.
+* **`UnsavedChangesPlugin`** — shows which tiddlers have unsaved changes (new/modified/deleted) with a short change summary as a tooltip.
 * **Dirty indicator** — a `●` button in the header appears when there are unsaved changes and opens the dialog.
 * **Cancelled-leave detection** — cancelling the browser's leave-page warning automatically opens the unsaved-changes dialog.
 * **Escape now cancels the editor properly** — same as the Cancel button.
@@ -25,11 +25,11 @@
 * Compiler support for tagging themes via metadata.
 
 ### Settings & Search
-* **Settings dialog** — new `$SettingsDialogPlugin` providing an in-app settings UI.
+* **Settings dialog** — new `SettingsDialogPlugin` providing an in-app settings UI.
 * **Search filtering** — include/exclude tags for search, configurable from the settings dialog (`excludeTags`). Major rewrite of `core.search`.
 
 ### Editing
-* **Code highlighting** — `$HighlightPlugin` for syntax highlighting in code tiddlers.
+* **Code highlighting** — `$CodeSyntaxHighlightPlugin` for syntax highlighting in code tiddlers.
 * Focus the editor automatically when editing a tiddler.
 
 ### Misc

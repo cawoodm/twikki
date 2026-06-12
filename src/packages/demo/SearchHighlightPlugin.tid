@@ -1,4 +1,4 @@
-tags: $Script
+tags: $Plugin
 
 # Description
 
@@ -6,37 +6,29 @@ When a search result is clicked, every case-insensitive substring match for
 the search term inside the opened note is painted yellow for 10 seconds and
 then quietly cleared. Uses the CSS Custom Highlight API
 (`::highlight(search-hit)`), so it overlays text without touching the DOM and
-cannot disturb `$HighlightPlugin`'s syntax-highlighting spans.
+cannot disturb `$CodeSyntaxHighlightPlugin`'s syntax-highlighting spans.
 
 The term arrives via the `search.result.clicked` event published by
 `core.search`. Only terms whose trimmed length is at least 3 characters are
 highlighted, mirroring typical incremental-search ergonomics.
 
-# Data
-
-```json
-{
-  "version": "0.1.0"
-}
-```
-
 # Code
 
 ```javascript
-(function() {
+(function () {
+  const meta = {
+    name: 'SearchHighlight',
+    version: '0.1.0',
+    platform: '0.24.0',
+    description: 'Paint search-term matches in the opened note for 10s via CSS Custom Highlight API.',
+  };
 
   const NAME = 'search-hit';
   const MIN = 3;
   const TTL = 10_000;
 
-  if (typeof Highlight === 'undefined' || !CSS?.highlights) return; // older browser → no-op
-  installSheet();
-
   let pending = null;     // {title, term} captured by search.result.clicked
   let clearTimer = null;  // setTimeout id for the active highlight
-
-  tw.events.subscribe('search.result.clicked', onSearchResultClicked);
-  tw.events.subscribe('tiddler.rendered', onTiddlerRenderedForHighlight);
 
   function onSearchResultClicked({title, term}) {
     if (!title || typeof term !== 'string') return;
@@ -96,5 +88,14 @@ highlighted, mirroring typical incremental-search ergonomics.
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
   }
 
+  return {
+    meta,
+    init() {
+      if (typeof Highlight === 'undefined' || !CSS?.highlights) return; // older browser → no-op
+      installSheet();
+      tw.events.subscribe('search.result.clicked', onSearchResultClicked);
+      tw.events.subscribe('tiddler.rendered', onTiddlerRenderedForHighlight);
+    },
+  };
 })();
 ```

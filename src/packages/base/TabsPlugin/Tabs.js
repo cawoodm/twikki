@@ -1,26 +1,11 @@
-tags: $Plugin
-
-# Description
-
-Obsidian-style tabs for open notes. The platform keeps rendering every
-visible note as a `.tiddler` element inside `#visible-tiddlers`; this plugin
-adds a tab strip (`#tab-strip`) and shows only the *active* note by toggling
-a `.tab-active` class (the show/hide CSS lives in `$CoreThemeLayout`, gated
-behind the `.tabbed` class this plugin adds — so without the plugin notes
-just stack as before).
-
-Exposes `tw.tabs = {active, rebuild(), activate(title)}`. Explorer / search /
-command-palette call `tw.tabs.activate(title)` after `tiddler.show` because
-re-opening an already-open note does not re-render it.
-
-Sync: render events are coalesced in a microtask. A single-note open
-activates that note; a bulk re-render (open-all / close) keeps the prior
-active tab, or — when the active note was closed — activates its neighbour.
-
-# Code
-
-```javascript
 (function () {
+  const meta = {
+    name: 'Tabs',
+    version: '1.0.0',
+    platform: '0.24.0',
+    description: 'Tabbed open-tiddlers view with keyboard navigation.',
+  };
+
   const MAX_TABS = 30; // hard upper bound; the rest go in the overflow dropdown
   const MIN_TAB = 96; // px — keeps ≥3 chars + ellipsis legible (matches .tab min-width in CSS)
   const TRAILING = 40; // px reserved for the new-note button / overflow trigger
@@ -174,7 +159,7 @@ active tab, or — when the active note was closed — activates its neighbour.
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
         <button class="tab-close icon" data-msg="tiddler.close" data-params="${attr(title)}" title="Close">✕</button>
-      </div>`
+      </div>`,
         )
         .join('') +
       more +
@@ -211,12 +196,7 @@ active tab, or — when the active note was closed — activates its neighbour.
   }
 
   return {
-    meta: {
-      name: 'Tabs',
-      version: '1.0.0',
-      platform: '0.24.0',
-      description: 'Tabbed open-tiddlers view with keyboard navigation.'
-    },
+    meta,
     init() {
       wireUp('ui.loaded', init);
       wireUp('ui.reloaded', init);
@@ -236,105 +216,6 @@ active tab, or — when the active note was closed — activates its neighbour.
       // showTiddler early-returns in that case and emits `tiddler.refocus` instead of
       // re-rendering. (Newly-opened notes are handled via `tiddler.rendered` above.)
       wireUp('tiddler.refocus', activate);
-    }
+    },
   };
 })();
-```
-
-# StyleSheet
-
-```css
-/* Tab strip — `.tab` items inside `#tab-strip`. The active tab carries a
-   `.active` class; the corresponding note carries `.tab-active` (show/hide
-   handled by $CoreThemeLayout). */
-.tab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 1 auto;
-  min-width: 96px; /* keep ≥3 chars + ellipsis legible (matches MIN_TAB in this plugin) */
-  max-width: 200px;
-  padding: 8px 12px;
-  background-color: var(--tab-bg);
-  border-right: 1px solid var(--col4);
-  color: var(--col1);
-  font-size: 0.85rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* A clear divider before the first tab so the strip reads as distinct cells. */
-.tab:first-child {
-  border-left: 1px solid var(--col4);
-}
-
-.tab .tab-label {
-  flex: 1 1 auto;
-  min-width: 0; /* allow the label to shrink and ellipsize inside the flex tab */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tab.active {
-  background-color: var(--tab-active-bg);
-  color: var(--colfg);
-  font-weight: 600;
-  box-shadow: inset 0 2px 0 var(--accent);
-}
-
-.tab .tab-close {
-  flex: 0 0 auto;
-  padding: 0 2px;
-  font-size: 0.85rem;
-  line-height: 1;
-  color: var(--col1);
-  background: transparent;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.tab:hover .tab-close,
-.tab.active .tab-close {
-  opacity: 0.7;
-}
-
-.tab .tab-close:hover {
-  opacity: 1;
-  color: var(--col6);
-}
-
-.tab-new {
-  padding: 0 12px;
-  font-size: 1.1rem;
-  color: var(--col1);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.tab-new:hover {
-  color: var(--col6);
-}
-
-/* Trailing controls keep their size — only the tabs shrink to fit. */
-.tab-new,
-.tab-overflow {
-  flex: 0 0 auto;
-}
-
-.tab-overflow {
-  display: inline-flex;
-  align-items: center;
-}
-
-/* Hide the scrollbar on the strip itself (we use overflow-x: hidden in layout). */
-#tab-strip {
-  scrollbar-width: none;
-}
-
-#tab-strip::-webkit-scrollbar {
-  display: none;
-}
-```

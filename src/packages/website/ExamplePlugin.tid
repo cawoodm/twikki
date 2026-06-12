@@ -5,10 +5,13 @@ This plugin provides some examples of widgets and extensible functions.
 Feel free to look at the [code](#ExamplePlugin::Code).
 
 # Examples
+
 ## Greet John Smith
+
 `<<example.hello "John Smith">>`
 
 # Data
+
 ```json
 [
   {"code": "de", "language": "German"},
@@ -17,6 +20,7 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 ```
 
 # Code
+
 ```javascript
 (function () {
   return {
@@ -26,27 +30,37 @@ Feel free to look at the [code](#ExamplePlugin::Code).
       platform: '0.24.0',
       author: 'Marc Cawood',
       description: 'Demo plugin: shows the {meta, init, start} contract by registering a macro.',
-      url: 'https://cawoodm.github.io/twikki'
+      url: 'https://cawoodm.github.io/twikki',
     },
     init() {
       // Register a macro at init time, after all plugins are loaded.
-      tw.extensions.registerMacro('example', 'hello', (name) => `Hello ${name}`, {version: '1.0.0'});
+      tw.extensions.registerMacro('example', 'hello', name => `Hello ${name}`, {
+        version: '1.0.0',
+      });
     },
     start() {
       // Optional. Empty for this demo — the macro is the only side effect.
-    }
+    },
   };
 })();
 ```
 
 # StyleSheet
+
 ```css
 div.example {
-  color: red
+  color: red;
 }
 ```
 
+# Theme
+
+- [[$CoreThemeLayout]]
+- [[$CoreThemeAppearance]]
+- [[$ExampleTheme]]
+
 # Tests
+
 This should print out: "Hello John Smith"
 
 > <<example.hello "John Smith">>
