@@ -6,7 +6,7 @@ When a search result is clicked, every case-insensitive substring match for
 the search term inside the opened note is painted yellow for 10 seconds and
 then quietly cleared. Uses the CSS Custom Highlight API
 (`::highlight(search-hit)`), so it overlays text without touching the DOM and
-cannot disturb `$HighlightPlugin`'s syntax-highlighting spans.
+cannot disturb `$CodeSyntaxHighlightPlugin`'s syntax-highlighting spans.
 
 The term arrives via the `search.result.clicked` event published by
 `core.search`. Only terms whose trimmed length is at least 3 characters are

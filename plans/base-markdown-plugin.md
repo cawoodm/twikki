@@ -8,7 +8,7 @@ Exploration established that markdown is **not** required early in boot:
 - `document.title = renderTiddler('$SiteTitle')` (twikki.platform.js:215) only does macro/inclusion expansion (`renderTWikki`) — no `markdown.render`.
 - The first real `markdown.render` happens in `reload()` → `renderAllTiddlers()`/`makeTiddlerText()` (:586/:588) — **after** `runExtensionTiddlers()` (:351) where base-package scripts execute.
 - 10 of 12 markdown consumers only need `render(text) → html`; only `$OpenLinksInNewWindow.js` touches markdown-it internals (`md.use()`, `md.core.ruler.push()`).
-- Syntax highlighting is already decoupled (`$HighlightPlugin` post-processes `<pre><code>` after render).
+- Syntax highlighting is already decoupled (`$CodeSyntaxHighlightPlugin` post-processes `<pre><code>` after render).
 
 **Chosen mechanism** (agreed with Marc): the `tw.events` bus.
 - Platform renders via `tw.events.send('markdown.render', text)?.[0]`, falling back to plain text when no handler is subscribed.

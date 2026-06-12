@@ -18,7 +18,7 @@ Base packages are loaded first and provide a useful bunch of features which you 
 * $GeneralWidgets
 * $GistBackupPlugin
 * $GithubSaverExtension
-* $HighlightPlugin
+* $CodeSyntaxHighlightPlugin
 * $IncludeFunctions
 * $ListTiddlersWidgets
 * $ModulesWidget

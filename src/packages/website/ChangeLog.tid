@@ -29,7 +29,7 @@
 * **Search filtering** — include/exclude tags for search, configurable from the settings dialog (`excludeTags`). Major rewrite of `core.search`.
 
 ### Editing
-* **Code highlighting** — `$HighlightPlugin` for syntax highlighting in code tiddlers.
+* **Code highlighting** — `$CodeSyntaxHighlightPlugin` for syntax highlighting in code tiddlers.
 * Focus the editor automatically when editing a tiddler.
 
 ### Misc

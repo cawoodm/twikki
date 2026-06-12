@@ -67,21 +67,21 @@
               let el = tw.run.getTiddlerElement(tiddler.title);
               el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
             });
-        }, 'HighlightPlugin');
+        }, 'CodeSyntaxHighlightPlugin');
         // Apply the correct light/dark highlight for the current theme on load.
         // Set the sheet state DIRECTLY (don't fire theme.switch): firing relied on
         // $CoreThemeManager.themeSwitch running and not early-returning, and left a window
         // where both sheets were enabled (dark, added last, wins) — which is why a light
         // theme could come back with dark code blocks after a reload.
         applyHighlightTheme();
-      }, 'HighlightPlugin');
+      }, 'CodeSyntaxHighlightPlugin');
 
       // Re-apply on soft reload too (the highlight <link>s persist in <head>).
-      tw.events.subscribe('ui.reloaded', applyHighlightTheme, 'HighlightPlugin');
+      tw.events.subscribe('ui.reloaded', applyHighlightTheme, 'CodeSyntaxHighlightPlugin');
 
       tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
         newElement.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
-      }, 'HighlightPlugin');
+      }, 'CodeSyntaxHighlightPlugin');
     },
   };
 })();
