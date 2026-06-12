@@ -5,4 +5,5 @@
 * `tw.run` — read/update actions on tiddlers
 * `tw.core.*` — subsystems (`dom`, `markdown`, `search`, `sections`, …)
 * `tw.macros` / `tw.extensions` — register macros and widgets
-* `tw.storage` — the localStorage wrapper
+* `tw.store` — the workspace-scoped storage API (`get`/`set`/`delete`/`keys`, raw `exportRaw`/`importRaw`, `global` for unscoped keys) — what modules and plugins use
+* `tw.storage` — the platform's raw localStorage primitive (platform-internal; use `tw.store`)

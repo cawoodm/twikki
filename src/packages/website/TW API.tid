@@ -8,5 +8,6 @@ Everything hangs off the global `tw` object:
 * `tw.ui` — UI helpers such as `tw.ui.notify(...)` and `tw.ui.button(...)`
 * `tw.macros` / `tw.extensions` — register macros, widgets and command palette commands (see below)
 * `tw.commands` — the command palette registry (`registerCommand` / `registerCommandProvider` via `tw.extensions`)
-* `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, ...)
-* `tw.storage` — the localStorage wrapper
+* `tw.core.*` — core subsystems (`dom`, `markdown`, `search`, `tiddlers`, `render`, `store`, ...)
+* `tw.store` — the workspace-scoped storage API (`get`/`set`/`delete`/`keys`, raw `exportRaw`/`importRaw`, `global` for unscoped keys) — what modules and plugins should use
+* `tw.storage` — the platform's raw localStorage wrapper (platform-internal; use `tw.store`)
