@@ -31,6 +31,21 @@ test('tw.call resolves functions that moved out of the platform closure', async 
   expect(results.getJSONObject).toBe('object');
 });
 
+test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({page}) => {
+  // Serve core.common.js claiming a different MAJOR platform → a hard 'block'.
+  await page.route('**/modules/core.common.js', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(/const platform = '[^']+'/, "const platform = '9.9.9'");
+    await route.fulfill({response, body});
+  });
+  await page.goto('/?reload'); // force network so the tampered module is fetched
+  await expect(page.locator('#tw-compat-dialog')).toBeVisible({timeout: 15000});
+  await expect(page.locator('#tw-compat-dialog tbody tr').first()).toContainText('✗');
+  expect(await page.evaluate(() => tw.tmp.bootAborted)).toBe(true);
+  // The blocked row's checkbox can never be selected for install
+  await expect(page.locator('#tw-compat-dialog .tw-compat-pick').first()).toBeDisabled();
+});
+
 test.describe('?safemode (the no-plugin invariant)', () => {
   test('boots with zero plugins and the full edit round-trip works', async ({page}) => {
     await page.goto('/?safemode&trace');

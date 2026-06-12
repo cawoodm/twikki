@@ -41,18 +41,6 @@
     if (tw.events?.send) tw.events.send('boot.progress', evt);
   }
 
-  // Generic file drag/drop: plugins claim dropped files by filename glob via
-  // tw.run.registerDropHandler('*.workspace.json', (text, file) => {...}).
-  // The most specific (longest) matching pattern wins.
-  const dropHandlers = [];
-  let dragDepth = 0; // counter avoids overlay flicker when dragging over child elements
-  function globToRegex(pattern) {
-    return new RegExp('^' + pattern.replace(/[.]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i');
-  }
-  function registerDropHandler(pattern, handler) {
-    dropHandlers.push({pattern, rx: globToRegex(pattern), handler});
-  }
-
   window.twikki = {
     name: NAME,
     version: VERSION,
@@ -241,13 +229,11 @@
       tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
 
       // The platform's own contributions to the action API (the modules merged
-      // theirs into tw.run at eval): lifecycle, the controlled eval boundary,
-      // drop registration and the preview pane (slated for a plugin).
+      // theirs into tw.run at eval): lifecycle + the controlled eval boundary.
+      // (registerDropHandler and previewTiddler come from the $DropZone and
+      // $EditorTools plugins.)
       Object.assign(tw.run, {
         reload,
-        registerDropHandler,
-        previewTiddler,
-        closePreview,
         executeText,
         executeCodeTiddler,
       });
@@ -280,8 +266,6 @@
       // Lifecycle events the platform owns
       tw.events.subscribe('reboot.hard', rebootHard, 'core');
       tw.events.subscribe('ui.reload', reload, 'core');
-      tw.events.subscribe('tiddler.preview', previewTiddler, 'core');
-      tw.events.subscribe('tiddler.preview.close', closePreview, 'core');
 
       dp(`${tw.modules.length} modules loaded. Running modules...`);
       tw.modules
@@ -337,64 +321,7 @@
       Object.assign(tw.ui, tw.core.ui);
       tw.ui.notify = tw.core.notifications.notify;
       tw.call = call;
-      // Command registry for the command palette. Created once and preserved
-      // across soft reloads (which re-eval extension tiddlers), so re-registration
-      // replaces rather than accumulates.
-      tw.commands = tw.commands || {
-        byLabel: {}, // static commands, keyed by label (last-wins)
-        providers: [], // {key, fn} — fn() returns commands, evaluated at palette render
-        all() {
-          const dynamic = this.providers.flatMap(p => {
-            try {
-              return p.fn() || [];
-            } catch (e) {
-              console.warn('Command provider failed:', p.key, e);
-              return [];
-            }
-          });
-          return [...Object.values(this.byLabel), ...dynamic];
-        },
-      };
-      tw.extensions = {
-        registerMacro(namespace, name, fcn, options) {
-          if (!tw.macros[namespace]) tw.macros[namespace] = {};
-          tw.macros[namespace][name] = fcn;
-          if (options) Object.assign(tw.macros[namespace][name], options);
-        },
-        // Register a command (or array of commands) for the command palette.
-        // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
-        // soft reloads don't duplicate and plugins can override a built-in.
-        registerCommand(command) {
-          if (Array.isArray(command)) return command.forEach(c => this.registerCommand(c));
-          if (!command?.label)
-            return console.warn('registerCommand: command needs a label', command);
-          tw.commands.byLabel[command.label] = command;
-        },
-        // Register a keyed function producing commands, evaluated each time the
-        // palette renders — for runtime-varying lists (themes, workspaces).
-        // Re-registration replaces by key.
-        registerCommandProvider(key, fn) {
-          const i = tw.commands.providers.findIndex(p => p.key === key);
-          const entry = {key, fn};
-          if (i >= 0) tw.commands.providers[i] = entry;
-          else tw.commands.providers.push(entry);
-        },
-      };
-      // ----------
-      tw.macros = {
-        core: {
-          showTiddlerList: tw.core.tiddlers.showTiddlerList,
-          // <<Tag Foo>> — render tag "Foo" as a picker listing all tiddlers tagged Foo.
-          Tag: tag => tw.core.render.tagPickerHtml(String(tag ?? '')),
-          // Plain tags input for the edit form. The base package's TagInput
-          // ($GeneralWidgets) overrides this with an autocomplete version; this
-          // fallback keeps the edit form usable with ZERO plugins/scripts loaded
-          // (?safemode — the no-plugin invariant requires tags to stay editable,
-          // e.g. to add $CodeDisabled to a broken plugin).
-          TagInput: ({id}) => `<input id="${id}" placeholder="Tags"/>`,
-          disabled: (...rest) => 'This macro is disabled!' + JSON.stringify(rest),
-        },
-      };
+      // (tw.commands, tw.extensions and the core macros are installed by core.ui at eval.)
       tw.plugins = [];
       tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
 
@@ -431,168 +358,47 @@
     location.href = url.toString();
   }
 
-  // Boot-time core-module compatibility dialog. Shown by init() when a freshly-fetched
-  // module is incompatible (or a download failed). It runs before any module is eval'd, so
-  // it cannot rely on tw.ui/tw.core or theme stylesheets — everything is plain DOM + inline
-  // styles on a native <dialog>. Crucially it persists NOTHING until the user chooses:
-  //   • Update — store the shown modules and reload (allowed unless a ✗ major-version block).
-  //   • Keep current versions — discard the update and reload using the installed (cached)
-  //     modules (offered only when a usable, non-blocking cached set exists).
-  // The user can also repoint the source URL and re-check before deciding.
+  // Boot halted on an incompatible/missing core module: load the rich compat
+  // dialog (platform/twikki.compat-dialog.js) ON DEMAND and hand it the boot
+  // context. The dialog is an enhancement — if its script cannot load (e.g. the
+  // same network failure that broke the modules), fall back to a plain halt
+  // message with the recovery query-param links. Nothing here depends on any
+  // core module or theme CSS.
   function showCompatDialog() {
-    const escAttr = s =>
-      String(s ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;');
-    const esc = s =>
-      String(s ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
-    const dlg = document.createElement('dialog');
-    dlg.id = 'tw-compat-dialog';
-    dlg.style.cssText =
-      'max-width:700px;width:90%;font:14px/1.45 system-ui,sans-serif;color:#1a1a1a;' +
-      'border:1px solid #999;border-radius:10px;padding:1.5rem;box-shadow:0 8px 32px rgba(0,0,0,.25)';
-
-    // The set of modules under consideration: starts as what init() loaded, and is replaced
-    // wholesale when the user re-checks a different source URL. Each entry is {name, res}.
-    let candidates = tw.modules.map(m => ({name: m.name, res: m.res}));
-
-    const reportsFor = set => set.map(c => checkModuleCompat({name: c.name, res: c.res}));
-    const hasBlock = reps => reps.some(r => r.severity === 'block');
-
-    // The currently-installed (cached) set — used to decide whether "Keep current versions"
-    // can boot. Available only if every module has a usable cache and none of them block.
-    function cachedSet() {
-      return tw.modules.map(m => ({name: m.name, res: readObject('/modules' + m.name)}));
-    }
-    function canKeepCurrent() {
-      const cs = cachedSet();
-      if (!cs.every(c => isCachedModuleUsable(c.res))) return false;
-      return !hasBlock(reportsFor(cs));
-    }
-
-    function statusText(r) {
-      if (r.exempt) return 'list (exempt)';
-      if (r.severity === 'ok') return '✓ OK';
-      if (r.severity === 'warn') return '⚠ ' + (r.reason || 'minor mismatch');
-      return '✗ ' + (r.reason || 'incompatible');
-    }
-    function rowBg(r) {
-      if (r.severity === 'block') return 'background:#fde8e8'; // red — hard block
-      if (r.severity === 'warn') return 'background:#fff4d6'; // amber — overridable
-      return '';
-    }
-
-    // Which rows the user has ticked to install. The checkbox is pre-ticked for compatible
-    // (✓) modules, un-ticked but tickable for ⚠ minor mismatches, and disabled for ✗ major
-    // mismatches (which can never be installed).
-    function selectedIndexes() {
-      return [...dlg.querySelectorAll('.tw-compat-pick:checked')].map(cb => +cb.dataset.idx);
-    }
-    function refreshInstallBtn() {
-      const btn = dlg.querySelector('#tw-compat-install');
-      if (btn) btn.disabled = selectedIndexes().length === 0;
-    }
-
-    function render() {
-      const reps = reportsFor(candidates);
-      const keepable = canKeepCurrent();
-      const rows = reps
-        .map((r, i) => {
-          const cell = 'padding:4px 8px;border:1px solid #ddd';
-          const selectable = r.severity !== 'block';
-          const checkbox =
-            `<input type="checkbox" class="tw-compat-pick" data-idx="${i}"` +
-            `${r.severity === 'ok' ? ' checked' : ''}${selectable ? '' : ' disabled'}>`;
-          return (
-            `<tr style="${rowBg(r)}">` +
-            `<td style="${cell};text-align:center">${checkbox}</td>` +
-            `<td style="${cell}">${esc(r.name)}</td>` +
-            `<td style="${cell}">${esc(r.version ?? '—')}</td>` +
-            `<td style="${cell}">${esc(r.required ?? '—')}</td>` +
-            `<td style="${cell}">${esc(statusText(r))}</td></tr>`
-          );
-        })
+    const ctx = {
+      tw,
+      VERSION,
+      baseUrl,
+      checkModuleCompat,
+      readObject,
+      isCachedModuleUsable,
+      storeCoreModule,
+      tryFetchModule,
+      reloadWithoutForce,
+    };
+    const fallback = () => {
+      const broken = tw.modules
+        .filter(m => m.compat?.severity === 'block' || m.compat?.severity === 'warn')
+        .map(m => `<li><code>${m.name}</code> — ${m.compat.reason || 'incompatible'}</li>`)
         .join('');
-      dlg.innerHTML = `
-        <h2 style="margin:0 0 .5rem">Module compatibility</h2>
-        <p style="margin:.25rem 0">Running platform <b>v${esc(VERSION)}</b>. Tick the modules to install
-        then <b>Update selected</b>, or <b>Keep current versions</b> to change nothing. Compatible (✓)
-        modules are pre-selected; an <b>⚠</b> minor mismatch can be ticked to install it anyway; a
-        <b>✗</b> major mismatch can't be installed.</p>
-        <label style="display:block;margin:.75rem 0 .25rem">Source base URL:</label>
-        <div style="display:flex;gap:.5rem">
-          <input id="tw-compat-url" style="flex:1;padding:.4rem;border:1px solid #aaa;border-radius:6px"
-            value="${escAttr(baseUrl)}">
-          <button id="tw-compat-load" style="padding:.4rem .8rem">Re-check</button>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin:1rem 0;font-size:13px">
-          <thead><tr>
-            <th style="padding:4px 8px;border:1px solid #ddd;text-align:center">Install</th>
-            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Module</th>
-            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Version</th>
-            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Built for</th>
-            <th style="padding:4px 8px;border:1px solid #ddd;text-align:left">Status</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div style="display:flex;gap:.5rem;justify-content:flex-end">
-          <button id="tw-compat-keep" style="padding:.5rem 1rem"${keepable ? '' : ' disabled'}>Keep current versions</button>
-          <button id="tw-compat-install" style="padding:.5rem 1rem;font-weight:600">Update selected &amp; reload</button>
-        </div>`;
-      dlg.querySelector('#tw-compat-load').onclick = onRecheck;
-      dlg.querySelector('#tw-compat-keep').onclick = onKeepCurrent;
-      dlg.querySelector('#tw-compat-install').onclick = onUpdate;
-      dlg.querySelectorAll('.tw-compat-pick').forEach(cb => (cb.onchange = refreshInstallBtn));
-      refreshInstallBtn();
-    }
-
-    async function onRecheck() {
-      const url = dlg.querySelector('#tw-compat-url').value.trim();
-      if (!url) return;
-      // TODO: Write url back to /settings.json (moduleUrl)
-      const btn = dlg.querySelector('#tw-compat-load');
-      btn.disabled = true;
-      candidates = await Promise.all(
-        tw.modules.map(async m => {
-          const r = await tryFetchModule(m.name, url);
-          // A failed fetch becomes an un-storable placeholder so its row shows the error and
-          // is non-selectable (block) without throwing.
-          return {name: m.name, res: r.ok ? r.res : {type: 'error', error: r.error}};
-        }),
-      );
-      render();
-    }
-
-    function onUpdate() {
-      // Persist only the ticked modules; the rest keep their installed (cached) copies.
-      // Then reload (without ?reload) so the next boot reads the cache.
-      const idxs = selectedIndexes();
-      if (!idxs.length) return;
-      idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
-      // let url = dlg.querySelector('#tw-compat-url').value.trim();
-      // TODO: Write url back to /settings.json (moduleUrl)
-      reloadWithoutForce();
-    }
-
-    function onKeepCurrent() {
-      // Discard the update entirely. Nothing was written, so a plain reload boots the
-      // installed (cached) modules.
-      reloadWithoutForce();
-    }
-
-    document.body.appendChild(dlg);
-    render();
-    dlg.showModal();
+      document.body.innerHTML =
+        '<div style="max-width:640px;margin:3rem auto;font:14px/1.5 system-ui,sans-serif">' +
+        `<h1>TWikki v${VERSION} cannot boot</h1>` +
+        '<p>One or more core modules are incompatible or failed to download:</p>' +
+        `<ul>${broken}</ul>` +
+        '<p>Try <a href="?reload">?reload</a> to re-download the modules, or ' +
+        '<a href="?update">?update</a> to fetch updates.</p></div>';
+    };
+    const s = document.createElement('script');
+    s.src = 'platform/twikki.compat-dialog.js';
+    s.onload = () => (window.twikkiCompatDialog ? window.twikkiCompatDialog(ctx) : fallback());
+    s.onerror = fallback;
+    document.head.appendChild(s);
   }
 
   async function onPageLoad() {
     tw.events.send('ui.loading');
     tw.core.ui.wireEvents();
-    wireDropEvents();
     await loadCoreModules();
     if (!qs.safemode) await loadExtensionPackages();
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
@@ -819,71 +625,6 @@
       console.error(`${msg}: ${e.message}`, e.stack);
       throw e; // new Error(`${msg}: ${e.message}`);
     }
-  }
-
-  /* Preview pane (slated to move to an editor plugin) */
-  function previewTiddler(t, template) {
-    // A way of showing a tiddler which may or may not exist
-    if (typeof t === 'string') t = tw.run.getTiddler(t);
-    let newElement = tw.core.render.createTiddlerElement(t, template || tw.templates.TiddlerPreview);
-    tw.core.dom.preview.innerHTML = '';
-    tw.core.dom.preview.insertAdjacentElement('afterbegin', newElement);
-    tw.core.dom.preview.showModal();
-  }
-  function closePreview() {
-    tw.core.dom.preview.close();
-  }
-
-  /* Generic file drag/drop → registered drop handlers (tw.run.registerDropHandler) */
-  function wireDropEvents() {
-    const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
-    document.addEventListener('dragenter', e => {
-      if (!hasFiles(e)) return;
-      dragDepth++;
-      showDropOverlay();
-    });
-    document.addEventListener('dragover', e => {
-      if (hasFiles(e)) e.preventDefault(); // required to enable drop
-    });
-    document.addEventListener('dragleave', e => {
-      if (hasFiles(e) && --dragDepth <= 0) hideDropOverlay();
-    });
-    document.addEventListener('drop', handleDrop);
-  }
-  function handleDrop(event) {
-    const files = Array.from(event.dataTransfer?.files || []);
-    if (!files.length) return;
-    event.preventDefault();
-    dragDepth = 0;
-    hideDropOverlay();
-    // Most specific pattern wins: '*.workspace.json' (longer) beats '*.json'
-    const sorted = [...dropHandlers].sort((a, b) => b.pattern.length - a.pattern.length);
-    files.forEach(file => {
-      const match = sorted.find(h => h.rx.test(file.name));
-      if (!match) return tw.ui.notify(`No handler for '${file.name}'`, 'W');
-      const reader = new FileReader();
-      reader.onload = () => match.handler(reader.result, file);
-      reader.readAsText(file);
-    });
-  }
-  function showDropOverlay() {
-    let el = document.getElementById('drop-overlay');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'drop-overlay';
-      el.textContent = '⤓ Drop a file to import';
-      // Inline styles keep the overlay self-contained (no CSS-tiddler dependency);
-      // pointer-events:none so it never intercepts the drop or fires dragleave itself.
-      el.style.cssText =
-        'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;' +
-        'justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:2em;pointer-events:none;';
-      document.body.appendChild(el);
-    }
-    el.style.display = 'flex';
-  }
-  function hideDropOverlay() {
-    const el = document.getElementById('drop-overlay');
-    if (el) el.style.display = 'none';
   }
 
   // tw.call('fn', ...args) — resolve a platform/core function by name. The

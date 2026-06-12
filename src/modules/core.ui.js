@@ -52,6 +52,66 @@
     setDirty,
   });
 
+  // Command registry for the command palette. Created once and preserved
+  // across soft reloads (which re-eval extension tiddlers), so re-registration
+  // replaces rather than accumulates. Lives in core (not the palette plugin):
+  // plugins register commands at load/init time, and a missing registry would
+  // cascade their failures.
+  tw.commands = tw.commands || {
+    byLabel: {}, // static commands, keyed by label (last-wins)
+    providers: [], // {key, fn} — fn() returns commands, evaluated at palette render
+    all() {
+      const dynamic = this.providers.flatMap(p => {
+        try {
+          return p.fn() || [];
+        } catch (e) {
+          console.warn('Command provider failed:', p.key, e);
+          return [];
+        }
+      });
+      return [...Object.values(this.byLabel), ...dynamic];
+    },
+  };
+  tw.extensions = {
+    registerMacro(namespace, name, fcn, options) {
+      if (!tw.macros[namespace]) tw.macros[namespace] = {};
+      tw.macros[namespace][name] = fcn;
+      if (options) Object.assign(tw.macros[namespace][name], options);
+    },
+    // Register a command (or array of commands) for the command palette.
+    // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
+    // soft reloads don't duplicate and plugins can override a built-in.
+    registerCommand(command) {
+      if (Array.isArray(command)) return command.forEach(c => this.registerCommand(c));
+      if (!command?.label)
+        return console.warn('registerCommand: command needs a label', command);
+      tw.commands.byLabel[command.label] = command;
+    },
+    // Register a keyed function producing commands, evaluated each time the
+    // palette renders — for runtime-varying lists (themes, workspaces).
+    // Re-registration replaces by key.
+    registerCommandProvider(key, fn) {
+      const i = tw.commands.providers.findIndex(p => p.key === key);
+      const entry = {key, fn};
+      if (i >= 0) tw.commands.providers[i] = entry;
+      else tw.commands.providers.push(entry);
+    },
+  };
+  tw.macros = {
+    core: {
+      showTiddlerList: (...args) => tw.core.tiddlers.showTiddlerList(...args),
+      // <<Tag Foo>> — render tag "Foo" as a picker listing all tiddlers tagged Foo.
+      Tag: tag => tw.core.render.tagPickerHtml(String(tag ?? '')),
+      // Plain tags input for the edit form. The base package's TagInput
+      // ($GeneralWidgets) overrides this with an autocomplete version; this
+      // fallback keeps the edit form usable with ZERO plugins/scripts loaded
+      // (?safemode — the no-plugin invariant requires tags to stay editable,
+      // e.g. to add $CodeDisabled to a broken plugin).
+      TagInput: ({id}) => `<input id="${id}" placeholder="Tags"/>`,
+      disabled: (...rest) => 'This macro is disabled!' + JSON.stringify(rest),
+    },
+  };
+
   // Run
   const run = () => {
     renderLayout();
@@ -102,7 +162,7 @@
   function wireEvents() {
     tw.core.dom.frm = tw.core.dom.$('new-form');
     tw.core.dom.frm.addEventListener('submit', evt => evt.preventDefault());
-    tw.core.dom.frm.addEventListener('keypress', formHotkeys({formDone}));
+    // (Edit-form hotkeys are an enhancement — see $EditorToolsPlugin.)
 
     // Edit Mode
     tw.core.dom.$('new-save')?.addEventListener('click', formDone);
@@ -169,12 +229,6 @@
       tw.ui.notify('Unhandled: ' + event.message, 'E', event.error.stack);
       console.error('Unhandled:', event.message, event);
     });
-  }
-
-  function formHotkeys(methods) {
-    return function (e) {
-      if (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter')) return methods.formDone();
-    };
   }
 
   /* ---------- Navigation ---------- */
