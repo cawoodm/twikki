@@ -48,6 +48,20 @@
     return localStorage.setItem(key, value);
   }
 
+  // Boot-progress emit (pre-module primitive). The earliest ticks fire before
+  // tw.events exists, so each event is (1) buffered on tw.tmp.bootProgress and
+  // (2) dispatched as a native DOM CustomEvent — a DOM listener needs zero
+  // TWikki infrastructure and can be wired from index.html before this script.
+  // Once core.js brings up tw.events, events additionally go onto the bus as
+  // 'boot.progress' (core.js replays the buffer when it loads).
+  function bootProgress(evt) {
+    if (!tw.tmp) tw.tmp = {};
+    if (!tw.tmp.bootProgress) tw.tmp.bootProgress = [];
+    tw.tmp.bootProgress.push(evt);
+    window.dispatchEvent(new CustomEvent('twikki.boot.progress', {detail: evt}));
+    if (tw.events?.send) tw.events.send('boot.progress', evt);
+  }
+
   // Generic file drag/drop: plugins claim dropped files by filename glob via
   // tw.run.registerDropHandler('*.workspace.json', (text, file) => {...}).
   // The most specific (longest) matching pattern wins.
@@ -133,12 +147,17 @@
         '/core.templater.js',
         '/core.search.js',
       ];
+      bootProgress({phase: 'init', total: modulesToLoad.length});
       let compatReports;
       try {
         // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
         // to storeCoreModule below, so an incompatible fetch never clobbers the installed
         // (cached) copies the user may want to keep.
-        let fetchResults = await Promise.all(modulesToLoad.map(fetchCoreModule));
+        let fetchResults = await Promise.all(modulesToLoad.map(async (name, index) => {
+          const r = await fetchCoreModule(name);
+          bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
+          return r;
+        }));
         tw.modules = modulesToLoad.map((p, i) => ({
           name: p,
           res: fetchResults[i].res,
@@ -174,6 +193,7 @@
       const freshWarn = tw.modules.filter(
         (m, i) => m.fetched && compatReports[i].severity === 'warn',
       );
+      bootProgress({phase: 'compat', blocking: blocking.length, warnings: freshWarn.length});
       if (blocking.length || freshWarn.length) {
         console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
         tw.tmp.bootAborted = true;
@@ -191,7 +211,8 @@
       if (tw.tmp?.bootAborted) return; // init() found incompatible modules and showed the dialog
       const errMsgs = [];
 
-      tw.modules.forEach(pck => {
+      tw.modules.forEach((pck, index) => {
+        bootProgress({phase: 'eval', name: pck.name, index, total: tw.modules.length});
         if (pck.res.type === 'code') {
           dp('Installing code module', pck.name);
           if (!qs.trace) {
@@ -231,6 +252,7 @@
         }
       });
       if (handleModuleErrors(errMsgs)) return;
+      bootProgress({phase: 'modules-ready'});
 
       tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
       tw.shadowTiddlers = Array.from(tw.tiddlers.all);
@@ -612,6 +634,7 @@
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
     reload();
     if (location.hash) handleHashLink(location.hash);
+    bootProgress({phase: 'ready'});
   }
   /* BEGIN TWikki */
   /* Functions */
@@ -629,8 +652,11 @@
       //   init   — every plugin is loaded before any init() runs, so init() can check deps via tw.plugin().
       //   start  — every plugin is initialised before any start() runs.
       // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
+      bootProgress({phase: 'plugins', step: 'load'});
       loadPlugins();
+      bootProgress({phase: 'plugins', step: 'init'});
       initPlugins();
+      bootProgress({phase: 'plugins', step: 'start'});
       startPlugins();
       runScripts();
     }
@@ -684,6 +710,7 @@
         noOverWrite,
         doNotSave,
       });
+      bootProgress({phase: 'package', name, count});
       // If name === 'core' AND tw.tiddlers.all.find(t => t.package === 'core') panic or open $CorePackages for edit as it's screwed!
       tw.ui.notify(`${count} tiddlers imported from package ${name}`, 'D');
     }

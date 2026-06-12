@@ -68,5 +68,10 @@
     };
   })();
 
+  // Boot-progress bridge: replay the events the platform buffered before the
+  // bus existed; from here on the platform's bootProgress() also sends each
+  // event as 'boot.progress' directly (it checks tw.events?.send).
+  (tw.tmp?.bootProgress || []).forEach(e => tw.events.send('boot.progress', e));
+
   return {name, version, platform};
 });
