@@ -58,7 +58,7 @@
       return;
     }
     for (let it of items) {
-      let b = document.createElement('button');
+      let b = document.createElement('div');
       b.className = 'picker-item';
       b.dataset.value = it.value;
       b.textContent = it.label;

@@ -45,7 +45,7 @@
   text-align: left;
   padding: 8px 12px;
   border: none;
-  background: transparent;
+  background-color: var(--colbg2);
   color: inherit;
   border-radius: var(--rad1);
   cursor: pointer;
@@ -54,8 +54,8 @@
 }
 
 .picker-item:hover {
-  background-color: var(--col3);
-  color: var(--col-on-accent);
+  background-color: var(--col4);
+  color: var(--colfg);
 }
 
 .picker-item.active {

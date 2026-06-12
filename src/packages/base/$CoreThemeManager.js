@@ -207,7 +207,7 @@
       .sort()
       .map(
         (n) =>
-          `<button class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</button>`
+          `<div class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</div>`
       )
       .join('');
     // Single-line output so the widget can live inside markdown table cells
