@@ -309,6 +309,21 @@
         if (typeof value === 'object') return write(key, JSON.stringify(value));
         return write(key, value);
       },
+      remove(key) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.removeItem(key);
+      },
+      keys(prefix) {
+        return Object.keys(localStorage).filter(k => k.startsWith(prefix));
+      },
+      getRaw(key) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.getItem(key);
+      },
+      setRaw(key, raw) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.setItem(key, raw);
+      },
     };
   }
 

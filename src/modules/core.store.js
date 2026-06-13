@@ -27,21 +27,19 @@
       return tw.storage.set(fullKey(key), value);
     },
     delete(key) {
-      return localStorage.removeItem(fullKey(key));
+      return tw.storage.remove(fullKey(key));
     },
     // All keys of the current workspace, prefix-stripped (=> portable).
     keys() {
       const p = prefix();
-      return Object.keys(localStorage)
-        .filter(k => k.startsWith(p))
-        .map(k => k.slice(p.length));
+      return tw.storage.keys(p).map(k => k.slice(p.length));
     },
     // Raw string in/out (no JSON coercion) — for portable dump/restore.
     exportRaw(key) {
-      return localStorage.getItem(fullKey(key));
+      return tw.storage.getRaw(fullKey(key));
     },
     importRaw(key, raw) {
-      return localStorage.setItem(fullKey(key), raw);
+      return tw.storage.setRaw(fullKey(key), raw);
     },
     global: {
       get(key) {
