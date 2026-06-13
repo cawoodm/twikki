@@ -149,7 +149,7 @@ window.twikkiCompatDialog = function (ctx) {
         return {name: m.name, res: r.ok ? r.res : {type: 'error', error: r.error}};
       }),
     );
-    tw.store.global.set('/moduleUrl', url);
+    tw.storage.set('/moduleUrl', url);
     render();
   }
 
@@ -160,7 +160,8 @@ window.twikkiCompatDialog = function (ctx) {
     const idxs = selectedIndexes();
     if (!idxs.length) return;
     idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
-    // TODO: Write url back to /moduleUrl
+    const url = dlg.querySelector('#tw-compat-url').value.trim();
+    if (url) tw.storage.set('/moduleUrl', url);
     reloadWithoutForce();
   }
 
