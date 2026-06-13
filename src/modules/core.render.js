@@ -54,6 +54,14 @@
     renderAllTiddlers,
     rerenderTiddler,
   });
+  // Extension point: contributors register functions onto tw.extend.tiddlerDetails;
+  // each is called with the tiddler in createTiddlerElement and its return lands
+  // in the template as {{=<key>}}. See $TiddlerMetaInfoPlugin (base) and
+  // $FavoritesPlugin (demo) for examples. The `||` guard makes it idempotent
+  // across soft reloads (which re-eval modules and would otherwise wipe
+  // contributions that already-loaded plugins put on the registry).
+  tw.extend = tw.extend || {tiddlerDetails: {}};
+
   // Legacy aliases
   tw.lib = {markdown: renderMarkdown};
   window.markdown = renderMarkdown;

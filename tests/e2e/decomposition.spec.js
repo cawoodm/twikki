@@ -8,6 +8,56 @@
 import {expect, test} from '@playwright/test';
 import {bootApp, card} from './helpers.js';
 
+test('metaInfo lives in TiddlerMetaInfo plugin: normal boot shows pck: pill', async ({page}) => {
+  await bootApp(page);
+  const plugin = await page.evaluate(() => tw.plugin('TiddlerMetaInfo'));
+  expect(plugin).toBeTruthy();
+  expect(plugin.meta.dependencies).toEqual(['Picker']);
+  expect(plugin.missingDependencies).toBeUndefined(); // Picker is loaded in normal boot
+  // Show any tiddler that has a .package field (set by core.packaging on import).
+  const title = await page.evaluate(() => {
+    const t = tw.tiddlers.all.find(x => x.package);
+    if (!t) return null;
+    tw.run.showTiddler(t.title);
+    return t.title;
+  });
+  expect(title).toBeTruthy();
+  // The metaInfo plugin renders a pck: pill button into the .meta region of the card.
+  await expect(page.locator(`.tiddler[data-tiddler-title="${title}"] .meta .pck-pill`))
+    .toContainText('pck:');
+});
+
+test('meta.dependencies: missing dep yields missingDependencies + console warn; plugin still runs', async ({page}) => {
+  const warnings = [];
+  page.on('console', msg => { if (msg.type() === 'warning') warnings.push(msg.text()); });
+  await page.addInitScript(() => {
+    // Inject a $Plugin tiddler that declares an impossible dep.
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase === 'modules-ready') {
+        tw.tiddlers.all.push({
+          title: '$DepProbe', type: 'script/js', tags: ['$Plugin'],
+          created: new Date(), updated: new Date(),
+          package: 'test',
+          text: `(function () {
+            window.__depProbeInitRan = true;
+            return {meta: {name: 'DepProbe', version: '1.0.0', dependencies: ['DoesNotExist']}, init() {}};
+          })()`,
+        });
+      }
+    });
+  });
+  await bootApp(page);
+  const entry = await page.evaluate(() => {
+    const p = tw.plugin('DepProbe');
+    return p ? {missing: p.missingDependencies, ran: !!window.__depProbeInitRan, error: p.error} : null;
+  });
+  expect(entry).toBeTruthy();
+  expect(entry.error).toBeNull();
+  expect(entry.missing).toEqual(['DoesNotExist']);
+  expect(entry.ran).toBe(true); // soft check: plugin still runs
+  expect(warnings.some(w => w.includes('DepProbe') && w.includes('DoesNotExist'))).toBe(true);
+});
+
 test('all shipped plugins load, init and start without errors', async ({page}) => {
   await bootApp(page);
   const plugins = await page.evaluate(() =>
@@ -39,7 +89,7 @@ test('module eval failure: one error page, names the failing module(s)', async (
   // more errors and re-invoked it).
   await page.route('**/modules/core.dom.js', async route => {
     const response = await route.fetch();
-    const body = (await response.text()).replace('(function(tw)', '(function(tw-)');
+    const body = (await response.text()).replace(/\(function\s*\(\s*tw\s*\)/, '(function(tw-)');
     await route.fulfill({response, body});
   });
   await page.goto('/?reload');

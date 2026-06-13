@@ -128,11 +128,13 @@
         // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
         // to storeCoreModule below, so an incompatible fetch never clobbers the installed
         // (cached) copies the user may want to keep.
-        let fetchResults = await Promise.all(modulesToLoad.map(async (name, index) => {
-          const r = await fetchCoreModule(name);
-          bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
-          return r;
-        }));
+        let fetchResults = await Promise.all(
+          modulesToLoad.map(async (name, index) => {
+            const r = await fetchCoreModule(name);
+            bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
+            return r;
+          }),
+        );
         tw.modules = modulesToLoad.map((p, i) => ({
           name: p,
           res: fetchResults[i].res,
@@ -290,29 +292,6 @@
       if (handleModuleErrors(errMsgs)) return;
 
       document.title = tw.core.render.renderTiddler('$SiteTitle');
-      tw.extend = {
-        tiddlerDetails: {
-          metaInfo(t) {
-            // The package is a picker (see PickerPlugin): clicking it lists every
-            // tiddler in that package (built lazily from data-source="package");
-            // picking one opens it. Raw HTML — the picker needs real markup.
-            const parts = [];
-            if (t.package) {
-              const arg = String(t.package).replace(/"/g, '&quot;');
-              const label = tw.core.common.escapeHtml(t.package);
-              parts.push(
-                `<span class="picker pck-picker" data-event="tiddler.show" data-source="package" data-source-arg="${arg}">` +
-                  `<button class="picker-trigger pck-pill">pck:${label}</button>` +
-                  '<div class="picker-menu" hidden></div>' +
-                  '</span>',
-              );
-            }
-            if (t.doNotSave) parts.push('doNotSave ✅');
-            if (t.isRawShadow) parts.push('isRawShadow ✅');
-            return parts.join(' ');
-          },
-        },
-      };
 
       // ----------
       // Legacy Aliases
@@ -340,9 +319,10 @@
     if (handleModuleErrors.handled) return true;
     handleModuleErrors.handled = true;
     const names = errMsgs.map(e => e.name.replace(/^\//, '').replace(/\.js$/, ''));
-    const heading = names.length === 1
-      ? `Module '${names[0]}' failed to load`
-      : `${names.length} modules failed to load: ${names.join(', ')}`;
+    const heading =
+      names.length === 1
+        ? `Module '${names[0]}' failed to load`
+        : `${names.length} modules failed to load: ${names.join(', ')}`;
     document.write(`<h1>${heading}</h1>`);
     errMsgs.forEach(e => {
       const name = e.name.replace(/^\//, '');
@@ -411,7 +391,7 @@
   async function onPageLoad() {
     tw.events.send('ui.loading');
     tw.core.ui.wireEvents();
-    await loadCoreModules();
+    await loadCorePackages();
     if (!qs.safemode) await loadExtensionPackages();
     // TODO: Load registered scripts/css here like our highlighter core, css and languages
     reload();
@@ -435,6 +415,7 @@
       // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
       bootProgress({phase: 'plugins', step: 'load'});
       loadPlugins();
+      checkPluginDependencies();
       bootProgress({phase: 'plugins', step: 'init'});
       initPlugins();
       bootProgress({phase: 'plugins', step: 'start'});
@@ -450,7 +431,7 @@
     else tw.events.send('ui.reloaded', tw.tmp.rebootCount);
     tw.core.render.renderAllTiddlers();
   }
-  async function loadCoreModules() {
+  async function loadCorePackages() {
     let packages = tw.run.getTiddlerList('$CorePackages');
     await loadPackages(packages);
   }
@@ -566,6 +547,25 @@
     entry.compat = checkPluginCompat(entry.meta);
     dp('Loaded plugin', entry.meta.name, entry.meta.version);
     return entry;
+  }
+  // Soft dependency check, between load and init: a plugin may declare
+  // `meta.dependencies: ['OtherName']` (matched against meta.name). Missing
+  // ones land on the entry as `missingDependencies` (surfaced by the
+  // <<plugins>> widget) and produce a console warning. The plugin still runs —
+  // soft, matching the existing plugin compat stance. For runtime checks
+  // inside init() (branching behaviour), keep using tw.plugin(name).
+  function checkPluginDependencies() {
+    tw.plugins.forEach(p => {
+      const deps = p.meta?.dependencies;
+      if (!Array.isArray(deps) || !deps.length) return;
+      const missing = deps.filter(d => !tw.plugin(d));
+      if (missing.length) {
+        p.missingDependencies = missing;
+        console.warn(
+          `Plugin '${p.meta.name}' declares missing dependencies: ${missing.join(', ')}`,
+        );
+      }
+    });
   }
   function initPlugins() {
     tw.plugins.forEach(plugin => {
