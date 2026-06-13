@@ -39,8 +39,15 @@
 
       if (!tw.tmp.editorHotkeysBound) {
         tw.tmp.editorHotkeysBound = true;
-        tw.core.dom.frm?.addEventListener('keypress', e => {
-          if (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter')) tw.events.send('form.done');
+        // `keydown` (not the deprecated `keypress`): keypress is no longer
+        // dispatched by automation tools (Playwright, chrome-devtools MCP) so
+        // the hotkey is undriveable from tests. `preventDefault()` suppresses
+        // the textarea's default Enter→newline insertion.
+        tw.core.dom.frm?.addEventListener('keydown', e => {
+          if (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter')) {
+            e.preventDefault();
+            tw.events.send('form.done');
+          }
         });
       }
     },

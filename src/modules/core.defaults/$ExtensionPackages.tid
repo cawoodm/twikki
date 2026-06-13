@@ -1,6 +1,6 @@
 type: list
 
-- ./packages/icons.json force
-- ./packages/demo.json force
-- ./packages/website.json nooverwrite
-- ./packages/themes.json force
+- /packages/icons.json force
+- /packages/demo.json force
+- /packages/website.json nooverwrite
+- /packages/themes.json force
