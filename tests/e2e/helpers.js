@@ -12,17 +12,52 @@ const TRASH_KEY = '/ws/default/tiddlers-trashed';
  * stack traces instead of the platform swallowing them.
  */
 export async function bootApp(page) {
+  // Capture browser-side diagnostics so a CI timeout dumps why boot stalled.
+  // Passing runs are unaffected: the dump only fires inside the catch.
+  const lines = [];
+  page.on('console', m => lines.push(`[${m.type()}] ${m.text()}`));
+  page.on('pageerror', e => lines.push(`[pageerror] ${e.message}\n${e.stack || ''}`));
+  page.on('requestfailed', r =>
+    lines.push(`[requestfailed] ${r.method()} ${r.url()} — ${r.failure()?.errorText}`));
   await page.goto('/?trace');
   // Wait for the *full* boot: templates are loaded near the end of reload()
   // (after the store/plugins), and rendering any card needs them — so gate on
   // tw.templates, not just tw.tiddlers, to avoid racing ahead of loadTemplates().
-  await page.waitForFunction(
-    () => !!(window.tw && tw.tiddlers?.all?.length && tw.run &&
-             tw.templates?.TiddlerDisplay && tw.templates?.TiddlerPreview &&
-             document.querySelector('#visible-tiddlers')),
-    null,
-    {timeout: 30000},
-  );
+  try {
+    await page.waitForFunction(
+      () => !!(window.tw && tw.tiddlers?.all?.length && tw.run &&
+               tw.templates?.TiddlerDisplay && tw.templates?.TiddlerPreview &&
+               document.querySelector('#visible-tiddlers')),
+      null,
+      {timeout: 30000},
+    );
+  } catch (e) {
+    const snapshot = await page.evaluate(() => ({
+      twExists: !!window.tw,
+      bootAborted: tw?.tmp?.bootAborted,
+      moduleCount: tw?.modules?.length,
+      moduleCompat: tw?.modules?.map(m => `${m.name}:${m.compat?.severity || 'ok'}`),
+      tiddlerCount: tw?.tiddlers?.all?.length,
+      visibleCount: tw?.tiddlers?.visible?.length,
+      rebootCount: tw?.tmp?.rebootCount,
+      templates: Object.keys(tw?.templates || {}),
+      coreUiKeys: Object.keys(tw?.core?.ui || {}),
+      coreRenderKeys: Object.keys(tw?.core?.render || {}),
+      plugins: (tw?.plugins || []).map(
+        p => `${p.meta?.name || p.source}${p.error ? '!' + p.error.phase + ':' + p.error.message : ''}`,
+      ),
+      bodyChildren: document.body?.childElementCount,
+      hasVisibleContainer: !!document.querySelector('#visible-tiddlers'),
+    })).catch(err => ({snapshotError: err.message}));
+    // eslint-disable-next-line no-console
+    console.error(
+      'bootApp timed out — captured browser output:\n' +
+      lines.join('\n') +
+      '\n--- state snapshot ---\n' +
+      JSON.stringify(snapshot, null, 2),
+    );
+    throw e;
+  }
 }
 
 /** Auto-accept any confirm()/prompt() dialogs (Playwright otherwise dismisses them). */
