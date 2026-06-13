@@ -27,18 +27,18 @@
     return localStorage.setItem(key, value);
   }
 
-  // Boot-progress emit (pre-module primitive). The earliest ticks fire before
-  // tw.events exists, so each event is (1) buffered on tw.tmp.bootProgress and
-  // (2) dispatched as a native DOM CustomEvent — a DOM listener needs zero
-  // TWikki infrastructure and can be wired from index.html before this script.
-  // Once core.js brings up tw.events, events additionally go onto the bus as
-  // 'boot.progress' (core.js replays the buffer when it loads).
+  // Boot-progress emit. Dispatched as a native window CustomEvent so a
+  // listener wired before this script (in index.html) sees every tick LIVE —
+  // what a splashscreen needs. This is the sole channel; there is no buffer
+  // and no bus event, since neither would deliver in real time anyway (early
+  // ticks fire before any module exists).
+  //
+  //   <script>
+  //     window.addEventListener('twikki.boot.progress', e => render(e.detail));
+  //   </script>
+  //   <script src="platform/twikki.platform.js"></script>
   function bootProgress(evt) {
-    if (!tw.tmp) tw.tmp = {};
-    if (!tw.tmp.bootProgress) tw.tmp.bootProgress = [];
-    tw.tmp.bootProgress.push(evt);
     window.dispatchEvent(new CustomEvent('twikki.boot.progress', {detail: evt}));
-    if (tw.events?.send) tw.events.send('boot.progress', evt);
   }
 
   window.twikki = {

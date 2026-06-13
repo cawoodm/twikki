@@ -113,14 +113,18 @@ Changes vs. today: `core.common` moved to first; three new modules
 The platform emits progress so a future splashscreen can render a progress bar.
 The earliest ticks fire **before `tw.events` exists** (defined in `core.js`).
 
-- **Pre-module:** a platform primitive `bootProgress(evt)` (near `read`/`write`)
-  pushes onto `tw.tmp.bootProgress = []` *and* dispatches a native DOM event:
-  `window.dispatchEvent(new CustomEvent('twikki.boot.progress', {detail: evt}))`.
-  A DOM listener needs zero TWikki infrastructure and can be wired from
-  `index.html` before the platform script — sidestepping the deferred
-  "splashscreen plugin before modules" problem.
-- **Bridge:** once `core.js` brings up `tw.events`, replay the buffered array onto
-  the bus; thereafter `bootProgress` also `tw.events.send('boot.progress', evt)`.
+The platform primitive `bootProgress(evt)` (near `read`/`write`) dispatches a
+native window CustomEvent: `window.dispatchEvent(new CustomEvent('twikki.boot.progress',
+{detail: evt}))`. A DOM listener needs zero TWikki infrastructure and can be
+wired from `index.html` before the platform script — sidestepping the deferred
+"splashscreen plugin before modules" problem.
+
+This is the **sole channel** — there is no `tw.tmp.bootProgress` buffer and no
+`tw.events.send('boot.progress', …)` bus event. Both were considered and dropped:
+a buffer only helps "late consumers" reconstruct history (no current use case),
+and the bus would be forward-only (the early `init`/`fetch`/`compat` ticks all
+fire before the bus exists). Neither delivers the real-time goal that the
+CustomEvent already meets.
 
 | Point | Payload |
 |---|---|
