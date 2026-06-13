@@ -17,8 +17,7 @@
  *     so a tiddler can always be created, edited, validated and saved with
  *     ZERO plugins loaded (the no-plugin invariant).
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.ui';
   const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
@@ -83,8 +82,7 @@
     // soft reloads don't duplicate and plugins can override a built-in.
     registerCommand(command) {
       if (Array.isArray(command)) return command.forEach(c => this.registerCommand(c));
-      if (!command?.label)
-        return console.warn('registerCommand: command needs a label', command);
+      if (!command?.label) return console.warn('registerCommand: command needs a label', command);
       tw.commands.byLabel[command.label] = command;
     },
     // Register a keyed function producing commands, evaluated each time the
@@ -121,7 +119,6 @@
 
   /* ---------- Event wiring (bus) ---------- */
   function wireUpEvents() {
-    tw.events.init();
     wireUp('ui.open.all', tw.core.tiddlers.showAllTiddlers);
     wireUp('ui.close.all', tw.core.tiddlers.closeAllTiddlers);
     wireUp('save', tw.core.store.save);
@@ -289,6 +286,7 @@
     }
     formEditShow(tiddler);
   }
+
   function formEditShow(tiddler = {}, saveButton = true) {
     tw.core.dom.frm.elements['old-title'].value = tiddler.title || '';
     tw.core.dom.frm.elements['new-title'].value = tiddler.title || '';
@@ -305,22 +303,26 @@
     focusElement.setSelectionRange(0, 0);
     focusElement.scrollTop = 0;
     setDirty(true);
-    tw.core.dom.$('new-types').innerHTML = tw.core.tiddlers.getKeyValuesArray('$TiddlerTypes')
+    tw.core.dom.$('new-types').innerHTML = tw.core.tiddlers
+      .getKeyValuesArray('$TiddlerTypes')
       .map(t => {
         return `<option value="${t.key}">${t.value}</option>`;
       })
       .filter(tw.core.common.notEmpty)
       .join('\n');
   }
+
   function formNewTiddler() {
     formEditShow(tw.core.tiddlers.emptyTiddler());
   }
+
   function formCancel() {
     let title = tw.core.dom.frm.elements['old-title'].value;
     if (!tw.core.tiddlers.getTiddler(title)) tw.core.tiddlers.hideTiddler(title);
     tw.core.dom.$('new-dialog').close();
     setDirty(false);
   }
+
   function formDone() {
     const t = {
       title: tw.core.dom.frm.elements['new-title'].value.trim(),
@@ -371,9 +373,11 @@
     // new plugin code actually takes effect.
     if (tw.tmp.pluginEdited) {
       tw.tmp.pluginEdited = false;
-      if (confirm(`Plugin '${t.title}' was edited. Reload now to apply changes?`)) tw.events.send('reboot.hard');
+      if (confirm(`Plugin '${t.title}' was edited. Reload now to apply changes?`))
+        tw.events.send('reboot.hard');
     }
   }
+
   // Edit button on a section card: close the section view and open its parent
   // tiddler in the edit form (a section is not independently editable).
   function editTiddlerSection(sectionTitle) {
@@ -382,6 +386,7 @@
     tw.core.tiddlers.closeTiddler(sectionTitle);
     formEditTiddler(ref.base);
   }
+
   function setDirty(dirty) {
     if (dirty) {
       tw.ui.isDirty = true;
@@ -392,6 +397,7 @@
     }
     tw.events.send('dirty.changed', dirty);
   }
+
   function preventBrowserClose(event) {
     event.preventDefault();
     event.returnValue = 'Tiddlers were not yet saved!';
@@ -401,10 +407,13 @@
   function renderNewTiddler(title) {
     tw.core.tiddlers.showTiddler(title);
   }
+
   function tiddlerDeleted(t) {
     if (tw.core.tiddlers.isRunnableTiddler(t))
-      if (confirm('Code tiddler deleted - would you like to reload?')) tw.events.send('reboot.hard');
+      if (confirm('Code tiddler deleted - would you like to reload?'))
+        tw.events.send('reboot.hard');
   }
+
   function tiddlerUpdated(title) {
     let t = tw.core.tiddlers.getTiddler(title);
     let codeBlocks = tw.core.tiddlers.tiddlerCodeBlocks(t);
@@ -446,7 +455,9 @@
 
   // `$Layout` holds `[[LayoutTiddler]]`; strip the link brackets to get the title.
   function currentLayoutTitle() {
-    return (tw.run.getTiddler('$Layout')?.text || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
+    return (
+      (tw.run.getTiddler('$Layout')?.text || '').replace(/[\[\]]/g, '').trim() || '$MainLayout'
+    );
   }
 
   // Which layout a theme wants: its `# MainLayout` section names a shared layout
@@ -461,12 +472,11 @@
 
   /* ---------- HTML builders ---------- */
   function button(text, message, payload, id = '', attr = '', className = '') {
-  // TODO: Would be nice to return an element here to which we could bind a real event and payload
+    // TODO: Would be nice to return an element here to which we could bind a real event and payload
     if (text.match(/[<\{]/))
-    // WikiText
+      // WikiText
       text = tw.core.render.renderTWikki({text});
-    else
-      text = tw.core.common.escapeHtml(text);
+    else text = tw.core.common.escapeHtml(text);
     if (text.match(/<svg/)) className += ' icon';
     let paramAttribute = '';
     if (payload) {
@@ -506,7 +516,10 @@
     let api = {el, content, toolbar, close, setContent: h => (content.innerHTML = h)};
 
     buttons.forEach(b => {
-      toolbar.insertAdjacentHTML('beforeend', button(b.text, b.msg || '', b.payload, b.id || '', b.attr || '', b.className || ''));
+      toolbar.insertAdjacentHTML(
+        'beforeend',
+        button(b.text, b.msg || '', b.payload, b.id || '', b.attr || '', b.className || ''),
+      );
       let btnEl = toolbar.lastElementChild;
       btnEl.addEventListener('click', ev => {
         // msg dispatch (if any) is handled by the document-level data-msg listener
@@ -549,5 +562,4 @@
   function randstr() {
     return Math.random().toString(36).replace('0.', '');
   }
-
 });

@@ -14,8 +14,17 @@
 // ctx (from the platform): {tw, VERSION, baseUrl, checkModuleCompat, readObject,
 //   isCachedModuleUsable, storeCoreModule, tryFetchModule, reloadWithoutForce}
 window.twikkiCompatDialog = function (ctx) {
-  const {tw, VERSION, baseUrl, checkModuleCompat, readObject, isCachedModuleUsable,
-    storeCoreModule, tryFetchModule, reloadWithoutForce} = ctx;
+  const {
+    tw,
+    VERSION,
+    baseUrl,
+    checkModuleCompat,
+    readObject,
+    isCachedModuleUsable,
+    storeCoreModule,
+    tryFetchModule,
+    reloadWithoutForce,
+  } = ctx;
 
   const escAttr = s =>
     String(s ?? '')
@@ -130,7 +139,6 @@ window.twikkiCompatDialog = function (ctx) {
   async function onRecheck() {
     const url = dlg.querySelector('#tw-compat-url').value.trim();
     if (!url) return;
-    // TODO: Write url back to /settings.json (moduleUrl)
     const btn = dlg.querySelector('#tw-compat-load');
     btn.disabled = true;
     candidates = await Promise.all(
@@ -141,16 +149,18 @@ window.twikkiCompatDialog = function (ctx) {
         return {name: m.name, res: r.ok ? r.res : {type: 'error', error: r.error}};
       }),
     );
+    tw.store.global.set('/moduleUrl', url);
     render();
   }
 
   function onUpdate() {
+    // TODO: Possible bug: does it read the URL the user entered?
     // Persist only the ticked modules; the rest keep their installed (cached) copies.
     // Then reload (without ?reload) so the next boot reads the cache.
     const idxs = selectedIndexes();
     if (!idxs.length) return;
     idxs.forEach(i => storeCoreModule(candidates[i].name, candidates[i].res));
-    // TODO: Write url back to /settings.json (moduleUrl)
+    // TODO: Write url back to /moduleUrl
     reloadWithoutForce();
   }
 

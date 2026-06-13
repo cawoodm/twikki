@@ -49,265 +49,269 @@
       Object.keys(qs)
         .filter(q => qs[q] === '')
         .forEach(q => (qs[q] = true)); // Empty params are switches => convert to true
-      window.dp = () => {};
-      if (qs.logfilter)
-        // Output filtered loggsOverwridden console.log has advantage of filtering logs
-        window.dp = function () {
-          if (!tw.logging.logFilter.test(JSON.stringify(Array.from(arguments)))) return;
-          console.log.apply(console, arguments);
-        };
+
       tw.core = {};
       tw.modules = [];
       tw.tmp = {};
       tw.templates = {};
       tw.tiddlers = {all: [], visible: [], trashed: []};
-      tw.run = {}; // the action API — modules merge their contributions at eval
-      tw.storage = {
-        get(key) {
-          let res = read(key);
-          if (res?.match(/^[\[\{]/)) return JSON.parse(res);
-          return res;
-        },
-        set(key, value) {
-          if (typeof value === 'object') return write(key, JSON.stringify(value));
-          return write(key, value);
-        },
-      };
 
-      tw.logging = {
-        logFilter: new RegExp(qs.logfilter || '.', 'i'),
-        debugMode: qs.debug,
-        trace: qs.trace,
-        breakPoint: qs.breakpoint,
-        break(name) {
-          // eslint-disable-next-line no-debugger
-          if (tw.logging.breakPoint && name.match(new RegExp(tw.logging.breakPoint))) debugger;
-        },
+      tw.logging = initLogging(qs);
+      tw.storage = initStorage();
+      tw.run = {
+        reload,
+        executeText,
+        executeCodeTiddler,
       };
 
       dp(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      let settings = localStorage.getItem('/settings.json');
-      try {
-        settings = JSON.parse(settings);
-      } catch {
-        dp('Invalid /settings.json in localStorage!');
-        settings = null;
-      }
-
-      baseUrl = settings?.urls?.moduleUrl || window.MODULE_URL || document.location.origin;
-      // Local dev: serve modules/packages from the dev server, not the published copy
-      if (document.location.host.match(/^(localhost):\d+$/)) baseUrl = document.location.origin;
-
-      dp('Looking for local TWikki.Core modules...');
-
-      // Ordered by logical dependency. (Most cross-module references are runtime
-      // tw.run.*/tw.events calls resolved after every module eval'd, so eval order
-      // is looser than the call graph — but ordering by dependency stays robust.)
-      let modulesToLoad = [
-        '/core.common.js', // pure utilities (hash, base64 encoder/decoder, notEmpty) — FIRST, no deps
-        '/core.js', // tw.events bus; uses tw.core.common.decoder
-        '/core.sections.js', // section-reference grammar + text slicing, no deps
-        '/core.params.js', // macro/widget arg parsing, no deps
-        '/core.templater.js', // pure mustache engine, no deps
-        '/core.dom.js', // DOM helpers
-        '/core.store.js', // owns tw.store (workspace-scoped) + tiddler persistence
-        '/core.tiddlers.js', // tiddler store + CRUD; merges the tiddler API into tw.run
-        '/core.render.js', // TWikki render pipeline + loadTemplates
-        '/core.defaults.json', // shadow tiddlers: $MainLayout, $TiddlerDisplay, $CorePackages, themes
-        '/core.notifications.js', // tw.ui.notify
-        '/core.ui.js', // event wiring, nav, basic edit round-trip
-        '/core.workspaces.js', // active-workspace management (→ core.store for scoping)
-        '/core.packaging.js', // HTTP import/merge of {tiddlers:[]} bundles
-        '/core.search.js', // search
-      ];
-      bootProgress({phase: 'init', total: modulesToLoad.length});
-      let compatReports;
-      try {
-        // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
-        // to storeCoreModule below, so an incompatible fetch never clobbers the installed
-        // (cached) copies the user may want to keep.
-        let fetchResults = await Promise.all(
-          modulesToLoad.map(async (name, index) => {
-            const r = await fetchCoreModule(name);
-            bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
-            return r;
-          }),
-        );
-        tw.modules = modulesToLoad.map((p, i) => ({
-          name: p,
-          res: fetchResults[i].res,
-          fetched: fetchResults[i].fetched,
-        }));
-        compatReports = tw.modules.map(checkModuleCompat);
-        // Stash each report on its module so runtime UI (e.g. the <<modules>> widget) can
-        // show built-for platform + compatibility status without re-deriving it.
-        tw.modules.forEach((m, i) => {
-          m.compat = compatReports[i];
-        });
-      } catch (e) {
-        // A download failed outright — a hard stop (block), surfaced in the same dialog.
-        // Give each module an `error` res so the dialog (which re-derives reports from the
-        // loaded set) classifies them as block too, and the user can re-check a new URL.
-        console.error('Core module download failed', e);
-        tw.modules = modulesToLoad.map(n => ({
-          name: n,
-          res: {type: 'error', error: e.message},
-          fetched: true,
-        }));
-        compatReports = tw.modules.map(checkModuleCompat);
-        tw.modules.forEach((m, i) => {
-          m.compat = compatReports[i];
-        });
-      }
-
-      // A 'block' (major-version gap or failed download) always halts the boot. A 'warn'
-      // (newer minor/patch of the same major, or no platform field) halts only for a
-      // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
-      // in the cache booted before (the user installed it), so it boots again silently.
-      const blocking = compatReports.filter(r => r.severity === 'block');
-      const freshWarn = tw.modules.filter(
-        (m, i) => m.fetched && compatReports[i].severity === 'warn',
-      );
-      bootProgress({phase: 'compat', blocking: blocking.length, warnings: freshWarn.length});
-      if (blocking.length || freshWarn.length) {
-        console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
-        tw.tmp.bootAborted = true;
-        showCompatDialog();
-        return;
-      }
-      // Compatible (or only previously-installed warnings) — NOW persist anything freshly
-      // fetched, so the validated set becomes the installed set.
-      tw.modules.forEach(m => {
-        if (m.fetched) storeCoreModule(m.name, m.res);
-      });
+      await fetchModules();
+      dp(`*** TWikki v${VERSION} platform intialized`);
     },
-    // eslint-disable-next-line require-await
+
     async start() {
       if (tw.tmp?.bootAborted) return; // init() found incompatible modules and showed the dialog
-      const errMsgs = [];
 
-      tw.modules.forEach((pck, index) => {
-        bootProgress({phase: 'eval', name: pck.name, index, total: tw.modules.length});
-        if (pck.res.type === 'code') {
-          dp('Installing code module', pck.name);
-          if (!qs.trace) {
-            // Normally we try/catch modules to provide user-friendly feedback...
-            try {
-              pck.meta = (1, eval)(pck.res.code)(tw);
-            } catch (e) {
-              errMsgs.push({name: pck.name, message: e.message});
-              console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
-              return;
-            }
-          } else {
-            // ...however, developers want to know where exactly the error occurred
-            //   and this is only possible when we let the original event bubble up unhandled!!
-            pck.meta = (1, eval)(pck.res.code)(tw);
-          }
-          if (pck.meta.exports) {
-            let p = pck.meta.name.split('.');
-            eval('tw.core.' + p[1] + '={};');
-            Object.assign(eval('tw.' + pck.meta.name), pck.meta.exports);
-          }
-          dp(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
-        } else if (pck.res.type === 'list') {
-          dp('Loading moduled list ', pck.name); // What is a moduled list? Example?
-          pck.res.tiddlers.forEach(t => {
-            t.doNotSave = true; // Don't save unless edited
-            t.isRawShadow = true; // TODO: What does this mean exactly?
-          });
-          tw.tiddlers.all = tw.tiddlers.all.concat(pck.res.tiddlers);
-          dp(`Loaded ${pck.res.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
-        } else {
-          console.warn(`Skipping unknown module type '${pck.res.type}' in module '${pck.name}'!`);
-        }
-      });
-      if (handleModuleErrors(errMsgs)) return;
-      bootProgress({phase: 'modules-ready'});
+      if (!loadModules()) return;
 
-      tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
+      legacyAliases();
 
-      // The platform's own contributions to the action API (the modules merged
-      // theirs into tw.run at eval): lifecycle + the controlled eval boundary.
-      // (registerDropHandler and previewTiddler come from the $DropZone and
-      // $EditorTools plugins.)
-      Object.assign(tw.run, {
-        reload,
-        executeText,
-        executeCodeTiddler,
-      });
-
-      tw.shadowTiddlers = Array.from(tw.tiddlers.all);
-      tw.shadowTiddlers.forEach(t => {
-        // HACK: Load packages locally for development
-        if (
-          t.title === '$CorePackages' &&
-          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
-        )
-          t.text = t.text.replaceAll(
-            'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host,
-          );
-        if (
-          t.title === '$ExtensionPackages' &&
-          document.location.host.match(/^(localhost)|(\d+\.\d+\.\d+\.\d+):\d+$/)
-        )
-          t.text = t.text.replaceAll(
-            'https://cawoodm.github.io/twikki',
-            'http://' + document.location.host,
-          );
-      });
-      Object.freeze(tw.shadowTiddlers);
-
+      // Load workspace data
       tw.core.store.loadStore();
 
+      // Start the event bus
+      tw.events.init();
       tw.core.ui.wireUpEvents();
       // Lifecycle events the platform owns
       tw.events.subscribe('reboot.hard', rebootHard, 'core');
       tw.events.subscribe('ui.reload', reload, 'core');
 
-      dp(`${tw.modules.length} modules loaded. Running modules...`);
-      tw.modules
-        .filter(pck => pck.meta?.run)
-        .forEach(pck => {
-          dp(`Running module '${pck.name}'...`);
-          if (!qs.trace) {
-            // Normally we try/catch modules to provide user-friendly feedback...
-            try {
-              pck.meta.run();
-            } catch (e) {
-              errMsgs.push({name: pck.name, message: e.message});
-              console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
-              return;
-            }
-          } else {
-            // ...however, developers want to know where exactly the error occurred
-            //   and this is only possible when we let the original event bubble up unhandled!!
-            pck.meta.run();
-          }
-        });
-      dp('Modules run');
-      if (handleModuleErrors(errMsgs)) return;
+      if (!runModules()) return;
 
+      dp(`*** TWikki v${VERSION} platform started`);
       document.title = tw.core.render.renderTiddler('$SiteTitle');
 
-      // ----------
-      // Legacy Aliases
-      Object.assign(tw.ui, tw.core.ui);
-      tw.ui.notify = tw.core.notifications.notify;
-      tw.call = call;
-      // (tw.commands, tw.extensions and the core macros are installed by core.ui at eval.)
-      tw.plugins = [];
-      tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
+      tw.events.send('ui.loading');
+      tw.core.ui.wireEvents();
+      await loadCorePackages();
+      if (!qs.safemode) await loadExtensionPackages();
+      // TODO: Load registered scripts/css here like our highlighter core, css and languages
+      reload();
+      if (location.hash) tw.core.ui.handleHashLink(location.hash);
+      bootProgress({phase: 'ready'});
 
-      dp(`*** TWikki v${VERSION}`);
-      if (handleModuleErrors(errMsgs)) return;
-
-      onPageLoad();
+      dp(`*** TWikki v${VERSION} ui ready`);
     },
   };
+
+  function legacyAliases() {
+    // Mainly for backward compatability and shorthand
+    tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
+    Object.assign(tw.ui, tw.core.ui);
+    tw.call = call;
+    // (tw.commands, tw.extensions and the core macros are installed by core.ui at eval.)
+    tw.plugins = [];
+    tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
+  }
+
+  async function fetchModules() {
+    let customModuleUrl = tw.storage.get('/moduleUrl');
+
+    baseUrl = customModuleUrl || window.MODULE_URL || document.location.origin;
+
+    dp('Looking for local TWikki.Core modules...');
+
+    // Ordered by logical dependency. (Most cross-module references are runtime
+    // tw.run.*/tw.events calls resolved after every module eval'd, so eval order
+    // is looser than the call graph — but ordering by dependency stays robust.)
+    let modulesToLoad = [
+      '/core.common.js', // pure utilities (hash, base64 encoder/decoder, notEmpty) — FIRST, no deps
+      '/core.js', // tw.events bus; uses tw.core.common.decoder
+      '/core.sections.js', // section-reference grammar + text slicing, no deps
+      '/core.params.js', // macro/widget arg parsing, no deps
+      '/core.templater.js', // pure mustache engine, no deps
+      '/core.dom.js', // DOM helpers
+      '/core.store.js', // owns tw.store (workspace-scoped) + tiddler persistence
+      '/core.tiddlers.js', // tiddler store + CRUD; merges the tiddler API into tw.run
+      '/core.render.js', // TWikki render pipeline + loadTemplates
+      '/core.defaults.json', // shadow tiddlers: $MainLayout, $TiddlerDisplay, $CorePackages, themes
+      '/core.notifications.js', // tw.ui.notify
+      '/core.ui.js', // event wiring, nav, basic edit round-trip
+      '/core.workspaces.js', // active-workspace management (→ core.store for scoping)
+      '/core.packaging.js', // HTTP import/merge of {tiddlers:[]} bundles
+      '/core.search.js', // search
+    ];
+    bootProgress({phase: 'init', total: modulesToLoad.length});
+    let compatReports;
+    try {
+      // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
+      // to storeCoreModule below, so an incompatible fetch never clobbers the installed
+      // (cached) copies the user may want to keep.
+      let fetchResults = await Promise.all(
+        modulesToLoad.map(async (name, index) => {
+          const r = await fetchCoreModule(name);
+          bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
+          return r;
+        }),
+      );
+      tw.modules = modulesToLoad.map((p, i) => ({
+        name: p,
+        res: fetchResults[i].res,
+        fetched: fetchResults[i].fetched,
+      }));
+      compatReports = tw.modules.map(checkModuleCompat);
+      // Stash each report on its module so runtime UI (e.g. the <<modules>> widget) can
+      // show built-for platform + compatibility status without re-deriving it.
+      tw.modules.forEach((m, i) => {
+        m.compat = compatReports[i];
+      });
+    } catch (e) {
+      // A download failed outright — a hard stop (block), surfaced in the same dialog.
+      // Give each module an `error` res so the dialog (which re-derives reports from the
+      // loaded set) classifies them as block too, and the user can re-check a new URL.
+      console.error('Core module download failed', e);
+      tw.modules = modulesToLoad.map(n => ({
+        name: n,
+        res: {type: 'error', error: e.message},
+        fetched: true,
+      }));
+      compatReports = tw.modules.map(checkModuleCompat);
+      tw.modules.forEach((m, i) => {
+        m.compat = compatReports[i];
+      });
+    }
+
+    // A 'block' (major-version gap or failed download) always halts the boot. A 'warn'
+    // (newer minor/patch of the same major, or no platform field) halts only for a
+    // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
+    // in the cache booted before (the user installed it), so it boots again silently.
+    const blocking = compatReports.filter(r => r.severity === 'block');
+    const freshWarn = tw.modules.filter(
+      (m, i) => m.fetched && compatReports[i].severity === 'warn',
+    );
+    bootProgress({phase: 'compat', blocking: blocking.length, warnings: freshWarn.length});
+    if (blocking.length || freshWarn.length) {
+      console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
+      tw.tmp.bootAborted = true;
+      showCompatDialog();
+      return;
+    }
+    // Compatible (or only previously-installed warnings) — NOW persist anything freshly
+    // fetched, so the validated set becomes the installed set.
+    tw.modules.forEach(m => {
+      if (m.fetched) storeCoreModule(m.name, m.res);
+    });
+  }
+
+  function runModules() {
+    const errMsgs = [];
+    dp(`${tw.modules.length} modules loaded. Running modules...`);
+    tw.modules
+      .filter(pck => pck.meta?.run)
+      .forEach(pck => {
+        dp(`Running module '${pck.name}'...`);
+        if (!qs.trace) {
+          // Normally we try/catch modules to provide user-friendly feedback...
+          try {
+            pck.meta.run();
+          } catch (e) {
+            errMsgs.push({name: pck.name, message: e.message});
+            console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
+            return;
+          }
+        } else {
+          // ...however, developers want to know where exactly the error occurred
+          //   and this is only possible when we let the original event bubble up unhandled!!
+          pck.meta.run();
+        }
+      });
+    dp('Modules run');
+    if (handleModuleErrors(errMsgs)) return;
+    bootProgress({phase: 'modules-run'});
+    return true;
+  }
+
+  function loadModules() {
+    const errMsgs = [];
+    tw.modules.forEach((pck, index) => {
+      bootProgress({phase: 'eval', name: pck.name, index, total: tw.modules.length});
+      if (pck.res.type === 'code') {
+        dp('Loading code module', pck.name);
+        if (!qs.trace) {
+          // Normally we try/catch modules to provide user-friendly feedback...
+          try {
+            pck.meta = (1, eval)(pck.res.code)(tw);
+          } catch (e) {
+            errMsgs.push({name: pck.name, message: e.message});
+            console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
+            return;
+          }
+        } else {
+          // ...however, developers want to know where exactly the error occurred
+          //   and this is only possible when we let the original event bubble up unhandled!!
+          pck.meta = (1, eval)(pck.res.code)(tw);
+        }
+        if (pck.meta.exports) {
+          let p = pck.meta.name.split('.');
+          eval('tw.core.' + p[1] + '={};');
+          Object.assign(eval('tw.' + pck.meta.name), pck.meta.exports);
+        }
+        dp(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
+      } else if (pck.res.type === 'list') {
+        dp('Loading moduled list ', pck.name); // What is a moduled list? Example?
+        pck.res.tiddlers.forEach(t => {
+          t.doNotSave = true; // Don't save unless edited
+          t.isRawShadow = true; // TODO: What does this mean exactly?
+        });
+        tw.tiddlers.all = tw.tiddlers.all.concat(pck.res.tiddlers);
+        dp(`Loaded ${pck.res.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
+      } else {
+        console.warn(`Skipping unknown module type '${pck.res.type}' in module '${pck.name}'!`);
+      }
+    });
+    tw.shadowTiddlers = Array.from(tw.tiddlers.all);
+    Object.freeze(tw.shadowTiddlers);
+    if (handleModuleErrors(errMsgs)) return;
+    bootProgress({phase: 'modules-loaded'});
+    return true;
+  }
+
+  function initLogging(qs) {
+    window.dp = () => {};
+    if (qs.logfilter)
+      // Output filtered loggsOverwridden console.log has advantage of filtering logs
+      window.dp = function () {
+        if (!tw.logging.logFilter.test(JSON.stringify(Array.from(arguments)))) return;
+        console.log.apply(console, arguments);
+      };
+
+    return {
+      logFilter: new RegExp(qs.logfilter || '.', 'i'),
+      debugMode: qs.debug,
+      trace: qs.trace,
+      breakPoint: qs.breakpoint,
+      break(name) {
+        // eslint-disable-next-line no-debugger
+        if (tw.logging.breakPoint && name.match(new RegExp(tw.logging.breakPoint))) debugger;
+      },
+    };
+  }
+  function initStorage() {
+    return {
+      get(key) {
+        let res = read(key);
+        if (res?.match(/^[\[\{]/)) return JSON.parse(res);
+        return res;
+      },
+      set(key, value) {
+        if (typeof value === 'object') return write(key, JSON.stringify(value));
+        return write(key, value);
+      },
+    };
+  }
+
   // Renders the boot-halt page when one or more modules failed to eval or run.
   // Returns `true` when it took the error path so the caller's `if (handleModuleErrors(errMsgs)) return;`
   // actually halts further work in start() — otherwise downstream code would try to use
@@ -388,21 +392,11 @@
     document.head.appendChild(s);
   }
 
-  async function onPageLoad() {
-    tw.events.send('ui.loading');
-    tw.core.ui.wireEvents();
-    await loadCorePackages();
-    if (!qs.safemode) await loadExtensionPackages();
-    // TODO: Load registered scripts/css here like our highlighter core, css and languages
-    reload();
-    if (location.hash) tw.core.ui.handleHashLink(location.hash);
-    bootProgress({phase: 'ready'});
-  }
-
   /* Boot lifecycle */
   function rebootHard() {
     window.location.reload();
   }
+
   function reload() {
     // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tw.util.tiddlerExists(title));
@@ -431,18 +425,22 @@
     else tw.events.send('ui.reloaded', tw.tmp.rebootCount);
     tw.core.render.renderAllTiddlers();
   }
+
   async function loadCorePackages() {
     let packages = tw.run.getTiddlerList('$CorePackages');
     await loadPackages(packages);
   }
+
   async function loadExtensionPackages() {
     let packages = tw.run.getTiddlerList('$ExtensionPackages');
     await loadPackages(packages);
   }
+
   async function loadPackages(packages) {
     for (let p of packages) {
       let params = p.split(' ');
       let url = params[0];
+      if (!url.match(/^https?:/)) url = baseUrl + url;
       let name = url.match(/([^.\/]+)\.json$/)?.[1];
       let overWrite = false; // Overwrite after prompt
       let noOverWrite = false;
@@ -483,6 +481,7 @@
       .filter(t => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled'))
       .map(t => loadOnePlugin(t, seenNames));
   }
+
   function loadOnePlugin(t, seenNames) {
     const entry = {
       meta: {},
@@ -628,12 +627,13 @@
       throw e;
     }
   }
+
   function executeText(text, title, context) {
     if (qs.trace) return (1, eval)(text);
     try {
       return (1, eval)(text);
     } catch (e) {
-      let msg = `executeText "${title}" ${context ? " in tiddler '" + context + "'" : ''}`;
+      let msg = `executeText "${title}" ${context ? ` in tiddler '${context}'` : ''}`;
       console.error(`${msg}: ${e.message}`, e.stack);
       throw e; // new Error(`${msg}: ${e.message}`);
     }

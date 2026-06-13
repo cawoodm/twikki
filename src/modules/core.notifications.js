@@ -6,8 +6,7 @@
  * plain console logging before the UI exists. Debug ('D') messages respect
  * `?debug`, and all messages respect the `?logfilter` regex.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.notifications';
   const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
@@ -34,9 +33,12 @@
 
   function notify(msg, type = 'I', stack) {
     if (type === 'D' && !tw.logging.debugMode) return;
-    if (!tw.logging.logFilter.test(msg)) return;
+    if (type === 'D' && !tw.logging.logFilter.test(msg)) return;
     if (!tw.core.dom.$('notify')) return silentNotify(msg, type, stack);
-    if (window.getComputedStyle(tw.core.dom.$('new-dialog'), null).getPropertyValue('display') === 'block') {
+    if (
+      window.getComputedStyle(tw.core.dom.$('new-dialog'), null).getPropertyValue('display') ===
+      'block'
+    ) {
       // If modal is displayed, notify div is hidden => use alert()
       delete tw.tmp.notifyId; // Prevent stacking in the alert
       return alert(msg.replaceAll('<br>', '\n'));
@@ -46,13 +48,21 @@
       clearTimeout(tw.tmp.notifyId);
       preserveMsg = notifyDiv.innerHTML ? notifyDiv.innerHTML + '\n' : '';
     }
-    const types = {S: '📗 Success', E: '<b title="Error">📕</b>', W: '<b title="Warning">📙</b>', D: '<b title="Debug">📓</b>', I: '<b title="Info">📘</b>'};
-    if (type === 'E')
-      console.error(preserveMsg + types[type] + ': ' + msg, stack || '');
-    notifyDiv.innerHTML = (preserveMsg + types[type] + ' ' + escapeHtml(msg)).replace(/\n/g, '<br>');
+    const types = {
+      S: '📗 Success',
+      E: '<b title="Error">📕</b>',
+      W: '<b title="Warning">📙</b>',
+      D: '<b title="Debug">📓</b>',
+      I: '<b title="Info">📘</b>',
+    };
+    if (type === 'E') console.error(preserveMsg + types[type] + ': ' + msg, stack || '');
+    notifyDiv.innerHTML = (preserveMsg + types[type] + ' ' + escapeHtml(msg)).replace(
+      /\n/g,
+      '<br>',
+    );
     // TODO: Keep array of tw.tmp.notifyMsgs = [{msg, expires}]
     notifyShow();
-  };
+  }
   function notifyShow() {
     notifyDiv.className = notifyDiv.className.replace('notifyHidden', 'notifyShow');
     tw.tmp.notifyId = setTimeout(notifyHide, 4000);
@@ -72,7 +82,7 @@
   function notifyClick() {
     notifyHide();
     tw.tmp.notifyMouseOverPause = true;
-    window.setTimeout(() => (delete tw.tmp.notifyMouseOverPause), 500);
+    window.setTimeout(() => delete tw.tmp.notifyMouseOverPause, 500);
   }
   function silentNotify(msg, type, stack) {
     if (type === 'E') console.error(msg);
@@ -82,6 +92,11 @@
     if (stack) console.error(stack);
   }
   function escapeHtml(unsafe) {
-    return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll('\'', '&#039;');
+    return unsafe
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 });

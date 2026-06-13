@@ -8,8 +8,7 @@
  * (`tiddler-include`, `macro`). Consumes core.templater and core.params;
  * resolves tiddler text through core.tiddlers.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.render';
   const version = '0.1.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
@@ -19,10 +18,7 @@
   // not a valid title char, so the delimiter can never be confused with a title.
   const reTiddlerTitle =
     /[a-z0-9_\-\.\(\)\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
-  const reTiddlerRef = new RegExp(
-    `${reTiddlerTitle.source}(?:::${reTiddlerTitle.source})?`,
-    'gi',
-  );
+  const reTiddlerRef = new RegExp(`${reTiddlerTitle.source}(?:::${reTiddlerTitle.source})?`, 'gi');
   const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
   const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerRef)\|?([^\}]+)?}}/gi, {reTiddlerRef});
   const reLinks = RegExp.compose(/\[\[(reTiddlerRef)]]/gi, {reTiddlerRef});
@@ -204,7 +200,7 @@
   function renderAllTiddlers() {
     tw.core.dom.divVisibleTiddlers.innerHTML = '';
     tw.tiddlers.visible.forEach(t => tw.run.showTiddler(t));
-    tw.events.send('story.rendered', tw.tiddlers.visible);
+    tw.events.send('ui.ready', tw.tiddlers.visible);
   }
   function rerenderTiddler(title) {
     let el = tw.core.tiddlers.getTiddlerElement(title);

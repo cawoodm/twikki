@@ -7,13 +7,12 @@
  * `tw.store` prefixes every key with the current workspace (`/ws/<name>/`,
  * reading `tw.workspace`, which core.workspaces manages) and adds raw helpers —
  * `keys`/`exportRaw`/`importRaw`/`delete` — so even whole-workspace dump/restore
- * goes through this API. `tw.store.global` reaches the few unscoped keys (e.g.
- * `/settings.json`). Also owns persisting the tiddler store itself: save/saveAll/
+ * goes through this API. `tw.store.global` reaches the few unscoped keys.
+ * Also owns persisting the tiddler store itself: save/saveAll/
  * saveVisible/loadStore and the `doNotSave` policy.
  * Modules and plugins use `tw.store` only — never `tw.storage`/`localStorage`.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.store';
   const version = '0.1.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
@@ -21,21 +20,36 @@
   const autoSave = true;
 
   tw.store = {
-    get(key) {return tw.storage.get(fullKey(key));},
-    set(key, value) {return tw.storage.set(fullKey(key), value);},
-    delete(key) {return localStorage.removeItem(fullKey(key));},
+    get(key) {
+      return tw.storage.get(fullKey(key));
+    },
+    set(key, value) {
+      return tw.storage.set(fullKey(key), value);
+    },
+    delete(key) {
+      return localStorage.removeItem(fullKey(key));
+    },
     // All keys of the current workspace, prefix-stripped (=> portable).
     keys() {
       const p = prefix();
-      return Object.keys(localStorage).filter(k => k.startsWith(p)).map(k => k.slice(p.length));
+      return Object.keys(localStorage)
+        .filter(k => k.startsWith(p))
+        .map(k => k.slice(p.length));
     },
     // Raw string in/out (no JSON coercion) — for portable dump/restore.
-    exportRaw(key) {return localStorage.getItem(fullKey(key));},
-    importRaw(key, raw) {return localStorage.setItem(fullKey(key), raw);},
-    // The unscoped keys shared by all workspaces (e.g. /settings.json).
+    exportRaw(key) {
+      return localStorage.getItem(fullKey(key));
+    },
+    importRaw(key, raw) {
+      return localStorage.setItem(fullKey(key), raw);
+    },
     global: {
-      get(key) {return tw.storage.get(key);},
-      set(key, value) {return tw.storage.set(key, value);},
+      get(key) {
+        return tw.storage.get(key);
+      },
+      set(key, value) {
+        return tw.storage.set(key, value);
+      },
     },
   };
 
@@ -95,7 +109,9 @@
   function loadStore(store) {
     if (!store) store = tw.store;
     tw.tiddlers.all = storeLoadTiddlers('tiddlers');
-    tw.shadowTiddlers.filter(t => !tw.util.tiddlerExists(t.title)).forEach(t => tw.run.addTiddlerHard(t));
+    tw.shadowTiddlers
+      .filter(t => !tw.util.tiddlerExists(t.title))
+      .forEach(t => tw.run.addTiddlerHard(t));
     if (!tw.tiddlers.all.length) {
       tw.tiddlers.all = [];
       store.set('tiddlers', []);

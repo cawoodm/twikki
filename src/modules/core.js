@@ -20,7 +20,7 @@
         initialized = true;
       },
       send(event, params) {
-        dp('events.send', event, params);
+        dp('events.send', event);
         let result = [];
         handlers
           .filter(h => h.event === event)
