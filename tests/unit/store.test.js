@@ -21,6 +21,9 @@ function freshStore(workspace = 'default') {
   })) Object.defineProperty(backing, m, {value: fn, enumerable: false});
   global.localStorage = backing;
 
+  // Mirror initStorage() in src/platform/twikki.platform.js: tw.store now
+  // delegates remove/keys/exportRaw/importRaw through these methods (the
+  // previous version reached straight into localStorage).
   const tw = {
     workspace,
     storage: {
@@ -34,6 +37,21 @@ function freshStore(workspace = 'default') {
         if (key[0] !== '/') key = '/' + key;
         if (typeof value === 'object') return localStorage.setItem(key, JSON.stringify(value));
         return localStorage.setItem(key, value);
+      },
+      remove(key) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.removeItem(key);
+      },
+      keys(prefix) {
+        return Object.keys(localStorage).filter(k => k.startsWith(prefix));
+      },
+      getRaw(key) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.getItem(key);
+      },
+      setRaw(key, raw) {
+        if (key[0] !== '/') key = '/' + key;
+        return localStorage.setItem(key, raw);
       },
     },
     tiddlers: {all: [], visible: [], trashed: []},
