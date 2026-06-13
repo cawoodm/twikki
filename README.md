@@ -1,4 +1,8 @@
 # TWikki
+
+[![Unit Tests](https://github.com/cawoodm/twikki/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/cawoodm/twikki/actions/workflows/unit-tests.yml?query=branch%3Amain)
+[![E2E Tests](https://github.com/cawoodm/twikki/actions/workflows/e2e-tests.yml/badge.svg?branch=main)](https://github.com/cawoodm/twikki/actions/workflows/e2e-tests.yml?query=branch%3Amain)
+
 TWikki is an extensible wiki and information platform inspired by TiddlyWiki.  
 
 Demo: https://cawoodm.github.io/twikki/

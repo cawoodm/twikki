@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "test": "node --test --watch ./tests/unit/*.test.js",
+    "test:unit": "node --test ./tests/unit/*.test.js",
     "test:e2e": "npm run compile && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "compile": "node vite-plugin-tiddler-compile.js",
