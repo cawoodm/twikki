@@ -1,3 +1,5 @@
+# Roadmap
+
 ## Macros
 
 - Create a <<macros>> widget
@@ -12,12 +14,65 @@ We need a Tag picker widget for editing tiddlers
 - Plugin to auto link CamelCase tiddlers if they exist
 - Browser history (back)
 
-## Tabs:
+## Tabs
 
-- Favories view of favorite tiddlers
+- Favorites view of favorite tiddlers
 - History view of recently viewed tiddlers
 - Recent view of recently edited tiddlers
 
-# Toolbars
+## Toolbars
 
 - favorites.toggle macro should Add to Favorites and toggle visibility of icon ⭐
+
+# Source TODOs
+
+Inline `// TODO` comments from across the codebase, grouped by file. The comments stay in source for code-reader context; this section is the index.
+
+## Platform — `src/platform/`
+
+- `twikki.platform.js:100` — Load registered scripts/css here like our highlighter core, css and languages
+- `twikki.platform.js:266` — `isRawShadow = true` — what does this mean exactly?
+- `twikki.platform.js:416` — Clear `events.clearAll()`
+- `twikki.platform.js:464` — `<<packages.import url:... force:true save:true>>`
+- `twikki.platform.js:473` — Split URL and check `update`/`force`/`save` options
+- `twikki.compat-dialog.js:157` — Possible bug: does it read the URL the user entered?
+
+## Core modules — `src/modules/`
+
+- `core.js:38` — Should have subscribe to listen and override to handle
+- `core.workspaces.js:81` — Save if dirty prompt
+- `core.params.js:74` — Support unquoted eval with spaces: `{1 + 'a'}`
+- `core.params.js:75` — Support quotes inside eval: `{fcn('a')}`
+- `core.params.js:76` — Support quoted booleans/numbers `'"true" "1"'` → `["true", "1"]`
+- `core.notifications.js:63` — Keep array of `tw.tmp.notifyMsgs = [{msg, expires}]`
+- `core.search.js:77` — Apply `tw.templates.TiddlerSearchResult`
+- `core.store.js:91` — Better local backups/versioning
+- `core.packaging.js:28` — Replace `notify` with `throw new Error()`
+- `core.packaging.js:63` — Not good as it generates events during boot
+- `core.tiddlers.js:202` — Case-sensitive and allows duplicates like `AAA` + `aaa`
+- `core.tiddlers.js:236` — If it's a code tiddler run it (if `!Disabled`) and show error in red
+- `core.tiddlers.js:479` — Rename `$CodeDisabled` → `$Disabled` — the tag now gates more than code
+- `core.ui.js:352` — **BUG**: Doesn't display tiddler after creation
+- `core.ui.js:421` — Try / catch / return error `<span class="error">`
+- `core.ui.js:475` — Return an element here we could bind a real event and payload to
+- `core.render.js:77` — Label this tiddler to update when one of these macros change
+- `core.render.js:117` — Inclusions (pass `{{DataTiddler}}` as string/array/object) would be cool
+- `core.render.js:140` — Support async macros
+- `core.render.js:161` — Support raw/wikified `{{=}}` inclusions
+- `core.render.js:192` — Auto-link CamelCase words? except `~CamelCasedTilde`?
+- `core.render.js:215` — If `$TiddlerDisplay` breaks TW is unusable!
+
+## Base plugins — `src/packages/base/`
+
+- `$SynchDataPlugin.js:35` — Pull force, clearing local
+- `$SynchDataPlugin.js:36` — Selective Synch: Include/Exclude Tags/Packages
+- `$SynchDataPlugin.js:105` — **BUG**: Deleted local shadow tiddler is pulled in from remote
+- `$SynchDataPlugin.js:356` — Delete all local and pull (restore)
+
+## Demo / marc / tests
+
+- `demo/$FavoritesPlugin.js:38` — How to find the current tiddler/element?
+- `demo/$FavoritesPlugin.js:65` — How to add `button:yellow svg {fill: yellow;}` to theme?
+- `marc/CloseOthersPlugin.js:59` — Should be pub/sub: `event: 'tiddlers.closeAllButActive'`
+- `tests/$TestFrameworkPlugin.js:82` — `expect.all(id => target.find...)`
+- `tests/$TestFrameworkPlugin.js:100` — Save `currentTiddler` and `visibleTiddlers`
