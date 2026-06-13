@@ -26,13 +26,21 @@ test('boot progress: DOM events fire live, in order, from init through ready', a
   expect(phases.filter(p => p === 'fetch')).toHaveLength(total);
   expect(phases.filter(p => p === 'eval')).toHaveLength(total);
   expect(phases).toContain('compat');
-  expect(phases).toContain('modules-ready');
+  // loadModules() emits 'modules-loaded' after every module is eval'd;
+  // runModules() emits 'modules-run' after every module's run() callback fires.
+  expect(phases).toContain('modules-loaded');
+  expect(phases).toContain('modules-run');
   expect(phases).toContain('package');
   expect(events.filter(e => e.phase === 'plugins').map(e => e.step)).toEqual(['load', 'init', 'start']);
   expect(phases[phases.length - 1]).toBe('ready');
 
-  // Ordering: all fetches before compat, compat before any eval, evals before modules-ready.
-  expect(Math.max(...phases.flatMap((p, i) => p === 'fetch' ? [i] : []))).toBeLessThan(phases.indexOf('compat'));
+  // Ordering: fetches before compat, compat before any eval, evals before
+  // modules-loaded, modules-loaded before modules-run, modules-run before any package.
+  const lastFetch = Math.max(...phases.flatMap((p, i) => (p === 'fetch' ? [i] : [])));
+  const lastEval = Math.max(...phases.flatMap((p, i) => (p === 'eval' ? [i] : [])));
+  expect(lastFetch).toBeLessThan(phases.indexOf('compat'));
   expect(phases.indexOf('compat')).toBeLessThan(phases.indexOf('eval'));
-  expect(Math.max(...phases.flatMap((p, i) => p === 'eval' ? [i] : []))).toBeLessThan(phases.indexOf('modules-ready'));
+  expect(lastEval).toBeLessThan(phases.indexOf('modules-loaded'));
+  expect(phases.indexOf('modules-loaded')).toBeLessThan(phases.indexOf('modules-run'));
+  expect(phases.indexOf('modules-run')).toBeLessThan(phases.indexOf('package'));
 });

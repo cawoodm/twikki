@@ -1,5 +1,46 @@
 # CHANGELOG
 
+## 13 Jun 2026 (v0.25.0)
+
+### Platform decomposition
+* **`core.store`** — new module owning `tw.store`, the workspace-scoped persistence API (`get`/`set`/`delete`/`keys`, raw `exportRaw`/`importRaw`, `global` for unscoped keys like `/settings.json`). Lint bans `localStorage` outside `platform` and `core.store`.
+* **`core.tiddlers`** — extracted from the platform: CRUD, show/hide, `Title::Section` references, validation, code-block selection.
+* **`core.render`** — extracted from the platform: render pipeline, template loading, markdown dispatch.
+* **`core.ui`** — grew to own event wiring (bus + DOM), navigation, command registry, and the basic edit round-trip; the no-plugin invariant means a tiddler can be created/edited/saved with ZERO plugins.
+* **Platform shrinks to a kernel** — module load + plugin lifecycle orchestration.
+
+### New plugins (extracted from the platform)
+* **`$DropZonePlugin`** — file drag-and-drop handlers.
+* **`$EditorToolsPlugin`** — Ctrl+Enter save hotkey, preview pane.
+* **`$TiddlerMetaInfoPlugin`** — the package / `doNotSave` / `isRawShadow` meta-line.
+
+### Boot order refactor
+* `init()` runs `fetchModules` (the compat gate); `start()` runs `loadModules` → `legacyAliases` → store load → `runModules` → packages → `reload()`. The previous `onPageLoad` wrapper is gone — the sequence reads top-to-bottom in one function.
+* `loadCoreModules` → **`loadCorePackages`** (it loads packages, not core modules).
+* Post-render event renamed `story.rendered` → **`ui.ready`**; visible-set shrinks fire **`story.changed`**.
+* New **[BOOT.md](docs/BOOT.md)** documents the full sequence: timeline, invariants, lifecycle events, query params, failure modes.
+
+### Plugin contract
+* **`meta.dependencies`** — soft check. `checkPluginDependencies` warns when a declared dep is missing but the plugin still initialises.
+* **`<<pluginMeta NAME>>`** macro — reads live `meta` from `tw.plugins[]` so a plugin's `# Meta` section can never drift from the code.
+* **`{meta, init?, start?}`** is the only plugin contract — `tw.extensions.registerPlugin` is gone.
+
+### Compiler
+* **Composite plugin directories** — a `$Plugin` source can live in `<DirName>/<DirName>.md` + sibling `.js`/`.css`/`.json` files, stitched at compile time via `[include](./file)` so VS Code lints the embedded code natively. All 6 base interaction plugins migrated.
+* Compiler skips hidden subdirs (`.git`, `.DS_Store`, …) and isolates per-composite errors so a single bad dir no longer takes down the whole package compile.
+
+### Boot progress
+* Drop the `tw.tmp` buffer + `core.js` bus replay; the `window` `twikki.boot.progress` CustomEvent is now the sole live channel into a splash UI.
+* `handleModuleErrors` returns `true` so callers correctly bail; the failure H1 names the failing module(s).
+
+### Editor
+* **Ctrl+Enter** save hotkey moved from the deprecated `keypress` event to **`keydown`** + `preventDefault()`. Real keyboards are unchanged; automation tools (Playwright, chrome-devtools MCP) can now drive the hotkey.
+* New `tests/e2e/editor-hotkeys.spec.js` (5 cases) covers the hotkey.
+
+### Fixes
+* **`$ExtensionPackages` URLs** — `./packages/…` → `/packages/…` (the `./` resolved to `localhost:3003./packages/…` and broke boot package loads).
+* **`--search-hit-bg`** default declared in `$BaseVariables`.
+
 ## 9 Jun 2026 (v0.24.0)
 
 * **Module Versioning** — Modules report version and platform compatability; Dialog so user can update or keep current versions.

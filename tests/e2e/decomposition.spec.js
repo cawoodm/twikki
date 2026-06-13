@@ -23,20 +23,33 @@ test('metaInfo lives in TiddlerMetaInfo plugin: normal boot shows pck: pill', as
   });
   expect(title).toBeTruthy();
   // The metaInfo plugin renders a pck: pill button into the .meta region of the card.
-  await expect(page.locator(`.tiddler[data-tiddler-title="${title}"] .meta .pck-pill`))
-    .toContainText('pck:');
+  await expect(
+    page.locator(`.tiddler[data-tiddler-title="${title}"] .meta .pck-pill`),
+  ).toContainText('pck:');
 });
 
-test('meta.dependencies: missing dep yields missingDependencies + console warn; plugin still runs', async ({page}) => {
+test('meta.dependencies: missing dep yields missingDependencies + console warn; plugin still runs', async ({
+  page,
+}) => {
   const warnings = [];
-  page.on('console', msg => { if (msg.type() === 'warning') warnings.push(msg.text()); });
+  page.on('console', msg => {
+    if (msg.type() === 'warning') warnings.push(msg.text());
+  });
   await page.addInitScript(() => {
-    // Inject a $Plugin tiddler that declares an impossible dep.
+    // Inject a $Plugin tiddler that declares an impossible dep. We wait for
+    // 'modules-run', which fires AFTER core.store.loadStore() (loadStore
+    // unconditionally rebuilds tw.tiddlers.all from the persisted store and
+    // the frozen tw.shadowTiddlers — anything injected earlier would be
+    // wiped). 'modules-run' still fires before reload() runs loadPlugins(),
+    // so the injection lands in time.
     window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase === 'modules-ready') {
+      if (e.detail.phase === 'modules-run') {
         tw.tiddlers.all.push({
-          title: '$DepProbe', type: 'script/js', tags: ['$Plugin'],
-          created: new Date(), updated: new Date(),
+          title: '$DepProbe',
+          type: 'script/js',
+          tags: ['$Plugin'],
+          created: new Date(),
+          updated: new Date(),
           package: 'test',
           text: `(function () {
             window.__depProbeInitRan = true;
@@ -49,7 +62,9 @@ test('meta.dependencies: missing dep yields missingDependencies + console warn; 
   await bootApp(page);
   const entry = await page.evaluate(() => {
     const p = tw.plugin('DepProbe');
-    return p ? {missing: p.missingDependencies, ran: !!window.__depProbeInitRan, error: p.error} : null;
+    return p
+      ? {missing: p.missingDependencies, ran: !!window.__depProbeInitRan, error: p.error}
+      : null;
   });
   expect(entry).toBeTruthy();
   expect(entry.error).toBeNull();
@@ -61,7 +76,8 @@ test('meta.dependencies: missing dep yields missingDependencies + console warn; 
 test('all shipped plugins load, init and start without errors', async ({page}) => {
   await bootApp(page);
   const plugins = await page.evaluate(() =>
-    tw.plugins.map(p => ({name: p.meta?.name || p.source, error: p.error})));
+    tw.plugins.map(p => ({name: p.meta?.name || p.source, error: p.error})),
+  );
   expect(plugins.length).toBeGreaterThan(5);
   const broken = plugins.filter(p => p.error);
   expect(broken, JSON.stringify(broken)).toHaveLength(0);
@@ -100,11 +116,16 @@ test('module eval failure: one error page, names the failing module(s)', async (
   await expect(page.locator('p.error').first()).toContainText('core.dom.js');
 });
 
-test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({page}) => {
+test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({
+  page,
+}) => {
   // Serve core.common.js claiming a different MAJOR platform → a hard 'block'.
   await page.route('**/modules/core.common.js', async route => {
     const response = await route.fetch();
-    const body = (await response.text()).replace(/const platform = '[^']+'/, "const platform = '9.9.9'");
+    const body = (await response.text()).replace(
+      /const platform = '[^']+'/,
+      "const platform = '9.9.9'",
+    );
     await route.fulfill({response, body});
   });
   await page.goto('/?reload'); // force network so the tampered module is fetched
@@ -119,9 +140,16 @@ test.describe('?safemode (the no-plugin invariant)', () => {
   test('boots with zero plugins and the full edit round-trip works', async ({page}) => {
     await page.goto('/?safemode&trace');
     await page.waitForFunction(
-      () => !!(window.tw && tw.tiddlers?.all?.length && tw.run &&
-               tw.templates?.TiddlerDisplay && document.querySelector('#visible-tiddlers')),
-      null, {timeout: 30000},
+      () =>
+        !!(
+          window.tw &&
+          tw.tiddlers?.all?.length &&
+          tw.run &&
+          tw.templates?.TiddlerDisplay &&
+          document.querySelector('#visible-tiddlers')
+        ),
+      null,
+      {timeout: 30000},
     );
     expect(await page.evaluate(() => tw.plugins.length)).toBe(0);
 
@@ -135,9 +163,12 @@ test.describe('?safemode (the no-plugin invariant)', () => {
     await expect(page.locator('#new-dialog')).toBeHidden();
     await expect(card(page, 'SafemodeNote')).toBeVisible();
     // markdown falls back to escaped plain text (no $BaseMarkdownPlugin) but MUST render
-    await expect(card(page, 'SafemodeNote').locator('.text')).toContainText('created with no plugins');
+    await expect(card(page, 'SafemodeNote').locator('.text')).toContainText(
+      'created with no plugins',
+    );
     const stored = await page.evaluate(() =>
-      (tw.store.get('tiddlers') || []).some(t => t.title === 'SafemodeNote'));
+      (tw.store.get('tiddlers') || []).some(t => t.title === 'SafemodeNote'),
+    );
     expect(stored).toBe(true);
 
     // navigate (hash link) still works
@@ -146,7 +177,8 @@ test.describe('?safemode (the no-plugin invariant)', () => {
 
     // search still works
     const found = await page.evaluate(() =>
-      tw.core.search.search('SafemodeNote', tw.tiddlers.all).map(t => t.title));
+      tw.core.search.search('SafemodeNote', tw.tiddlers.all).map(t => t.title),
+    );
     expect(found).toContain('SafemodeNote');
   });
 });
