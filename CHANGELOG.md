@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 13 Jun 2026 (v0.25.0)
+
+* **Platform decomposition** — `core.store` / `core.tiddlers` / `core.render` extracted out of the platform; `core.ui` grew to own wiring, nav, command registry and the basic edit round-trip. Platform shrinks to a kernel.
+* **New plugins** extracted from the platform: `$DropZonePlugin`, `$EditorToolsPlugin`, `$TiddlerMetaInfoPlugin`.
+* **Boot order refactor** — `init()` runs `fetchModules` (compat gate); `start()` runs `loadModules` → store load → `runModules` → packages → `reload()`. `onPageLoad` wrapper is gone. `loadCoreModules` → `loadCorePackages`. Post-render event `story.rendered` → `ui.ready`; new `story.changed`. Documented in new [BOOT.md](docs/BOOT.md).
+* **Plugin `meta.dependencies`** — soft check warns on missing deps but the plugin still initialises.
+* **`<<pluginMeta NAME>>`** macro — renders a plugin's live `meta` from `tw.plugins[]` so `# Meta` sections can never drift from code.
+* **Composite plugin directories** — `<DirName>/<DirName>.md` + sibling `.js`/`.css`/`.json` stitched at compile time via `[include](./file)` so VS Code lints embedded code natively; all 6 base plugins migrated.
+* **Compiler hardening** — skip hidden subdirs (`.git`, `.DS_Store`); per-composite ENOENT isolation.
+* **Boot progress** — `window.twikki.boot.progress` CustomEvent is the sole live channel; `tw.tmp` buffer + bus replay dropped.
+* **Ctrl+Enter save hotkey** — moved from deprecated `keypress` to `keydown`; now driveable from automation. New e2e suite covers it.
+* **Storage layering** — lint bans `localStorage` outside `platform` and `core.store`; `DumpWorkspace` and `SettingsDialog` go through `tw.store`.
+* **Fixes** — `$ExtensionPackages` URLs (`./packages/…` → `/packages/…`); `--search-hit-bg` default declared in `$BaseVariables`; `handleModuleErrors` returns `true` so callers bail.
+
 ## 9 Jun 2026 (v0.24.0)
 
 * **Module Versioning** — Modules report version and platform compatability; Dialog so user can update or keep current versions.

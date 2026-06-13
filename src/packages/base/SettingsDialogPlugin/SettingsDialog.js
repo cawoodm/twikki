@@ -1,7 +1,7 @@
 (function () {
   const meta = {
     name: 'SettingsDialog',
-    version: '1.0.0',
+    version: '1.0.1',
     platform: '0.24.0',
     description: 'Settings JSON viewer/editor surfaced via the command palette.',
   };
@@ -22,7 +22,7 @@
       if (!textDiv.querySelector('.settings-error'))
         textDiv.insertAdjacentHTML(
           'afterbegin',
-          '<div class="settings-error">Settings form unavailable: invalid JSON. Use Edit to fix.</div>',
+          `<div class="settings-error">Settings form unavailable: invalid JSON: ${e.message}</div>`,
         );
       return;
     }
@@ -197,7 +197,8 @@
       case 'json':
         try {
           value = JSON.parse(el.value);
-        } catch (err) {
+        } catch (e) {
+          console.error('SettingsDialog.onChange', e.message);
           return tw.ui.notify(`Invalid JSON for '${path}'`, 'E');
         }
         break;
@@ -224,13 +225,15 @@
     try {
       parsed = JSON.parse(t.text || '{}');
     } catch (e) {
+      console.error('SettingsDialog.writeSetting()', e.message);
       return tw.ui.notify('Settings JSON is invalid; use Edit to fix it', 'E');
     }
     setByPath(parsed, path, value);
     t.text = JSON.stringify(parsed, null, 2);
     delete t.doNotSave;
     tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
-    localStorage.setItem('/settings.json', t.text);
+    // This url is global (read by the platform before any workspace exists)
+    if (path === 'urls.moduleUrl') tw.store.global.set('/moduleUrl', parsed.urls?.moduleUrl);
     tw.events.send('save.silent');
   }
 

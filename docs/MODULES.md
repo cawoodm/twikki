@@ -13,26 +13,28 @@ The Twikki Platform loads code via HTTP:
 The platform lives in [src/platform/twikki.platform.js](../src/platform/twikki.platform.js) which is the only script referenced in index.html. It will load modules from `window.MODULE_URL/modules` which you can override.
 
 ## Modules
-* `core.js`: Basic API
-  * `events`: Basic event bus (pub/sub)
-  * `run`:
-    * `getTiddler` helper function for accessing tiddlers.
-  * `extensions`: Interface for extensions/plugins
-    * `registerMacro`: Register a new macro/widget
-    * `registerCommand` / `registerCommandProvider`: Register command palette command(s); a provider is a function re-evaluated at palette render for runtime-varying lists
-* `core.common`: Common functionality shared in the codebase (hashing, sorting, html escaping)
-* `core.sections`: Functionality for ContentSections
-* `core.workspaces`: Functionality for Workspaces
-* `core.default.json`: Essential tiddlers/content we need to run. These "shadow" tiddlers can be overridden by users. Some examples are:
+
+In load order (`modulesToLoad`, ordered by logical dependency — most cross-module
+references are runtime `tw.run.*`/`tw.events` calls, resolved after every module
+has been eval'd):
+
+* `core.common`: Pure, DOM-free utilities (hashing, sorting, html escaping, `notEmpty`, base64 encoder/decoder) — loads **first**, no dependencies
+* `core.js`: `tw.events` — the pub/sub event bus; replays buffered boot-progress events onto the bus
+* `core.sections`: Section-reference grammar + text slicing — strictly `(text, sectionName)`; anything taking a *title* lives in `core.tiddlers`
+* `core.params`: Parameter parsing for widgets and macros
+* `core.templater`: Tiny mustache-style template engine (pure library)
+* `core.dom`: Functionality for dealing with the DOM
+* `core.store`: Owns `tw.store` — the public, **workspace-scoped** persistence API (`get`/`set`/`delete`/`keys`, raw `exportRaw`/`importRaw` for dump/restore, `global` for unscoped keys like `/settings.json`) — plus persisting the tiddler store itself (`save`/`saveAll`/`saveVisible`/`loadStore`, the `doNotSave` policy). Layering: `localStorage ← tw.storage (platform, raw) ← tw.store (core.store, scoped) ← consumers`. **Only the platform and core.store touch localStorage** (lint-enforced).
+* `core.tiddlers`: Listing, getting, changing tiddlers — CRUD, show/hide, `Title::Section` reference resolution, text/data accessors, predicates, validation, code-block selection. Merges the tiddler action API into `tw.run` and the legacy predicates into `tw.util`.
+* `core.render`: The TWikki render pipeline — `renderTWikki` (macros/inclusions/links), element creation from templates, markdown dispatch via the overridable `markdown.render` event (escaped-plain-text fallback under `?safemode`), DOM inclusion attributes
+* `core.defaults.json`: Essential tiddlers/content we need to run. These "shadow" tiddlers can be overridden by users. Some examples are:
   * Icons: Some basic (ugly) icons. Users will typically load their own "icons" package.
   * Themes: 2 basic themes (CoreThemeLight & CoreThemeDark)
   * Layout: Templates for the main site's HTML ($MainLayout) or parts thereof ($TiddlerDisplay)
-* `core.packaging`: Functionality for loading and handling packages
-* `core.parameters`: Functionality for handling Parameters in widgets and macros
-* `core.dom`: Functionality for dealing with the DOM
-* `core.ui`: Functionality for generating the UI (buttons, dialogs, sections)
 * `core.notifications`: Functionality for showing alerts and messages
-* `core.templater`: Tiny mustache-style template engine
+* `core.ui`: UI builders (buttons, dialogs, sections), layout rendering, event wiring (bus + DOM), navigation/`sendCommand`, and the **basic edit round-trip** (create/edit/validate/save works with zero plugins — the no-plugin invariant). Also installs `tw.commands` and `tw.extensions` (`registerMacro`, `registerCommand`/`registerCommandProvider`).
+* `core.workspaces`: Manages the **active** workspace (`tw.workspace`); `core.store` reads it to scope `tw.store`
+* `core.packaging`: HTTP import/merge of `{tiddlers: []}` package bundles
 * `core.search`: Search functions
 
 
@@ -66,7 +68,7 @@ and returns both in its meta object: `return {name, version, platform, exports, 
 
 **The compatibility gate.** During `init()`, before any module is `eval`'d, the platform **statically parses** each module's `const platform = '...'` from its source string (it can't run the module first — `eval` triggers the module's side effects) and classifies it against the running `VERSION`. The boot halts and opens the dialog when there is **any block**, or **any freshly-fetched warn** (a warning the user hasn't decided on yet — a warn module already in the cache booted before, so it boots again silently with a console warning). The list module (`core.defaults.json`) carries no code/version and is **exempt** (ok).
 
-**The dialog (`showCompatDialog`)** is self-contained — plain DOM + inline styles on a native `<dialog>`, since it runs before `tw.ui`/theme stylesheets exist. It lists every module's version / built-for / status (✗ block rows red, ⚠ warn rows amber) and offers:
+**The dialog** lives in [src/platform/twikki.compat-dialog.js](../src/platform/twikki.compat-dialog.js) and is **loaded on demand** (script injection) only when the boot halts — if its script cannot load, the platform falls back to a plain halt message with the `?reload`/`?update` recovery links. It is self-contained — plain DOM + inline styles on a native `<dialog>`, since it runs before `tw.ui`/theme stylesheets exist. It lists every module's version / built-for / status (✗ block rows red, ⚠ warn rows amber) and offers:
 
 - **Update & reload** — store the shown modules and reload. Enabled unless something is a **block**, so a same-major ⚠ warning can be force-installed but a ✗ major mismatch cannot.
 - **Keep current versions** — discard the update and reload using the already-installed (cached) modules. Offered only when a usable, non-blocking cached set exists.

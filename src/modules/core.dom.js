@@ -6,8 +6,7 @@
  * `data-stylesheet` and enable/disableStyleSheet toggle via `media="not all"`
  * so the cascade is honoured regardless of CDN load timing.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.dom';
   const version = '0.24.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
@@ -76,12 +75,14 @@
     const template = document.createElement('template');
     template.innerHTML = html.trim();
     const nNodes = template.content.childNodes.length;
-    if (nNodes !== 1) return console.error(`html parameter must represent a single node; got ${nNodes}. `);
+    if (nNodes !== 1)
+      return console.error(`html parameter must represent a single node; got ${nNodes}. `);
     return template.content.firstElementChild;
   }
   function nearestAttribute(el, attribute, selector) {
-    return el.getAttribute(attribute)
-   || el.parentElement?.closest(selector)?.getAttribute(attribute);
+    return (
+      el.getAttribute(attribute) || el.parentElement?.closest(selector)?.getAttribute(attribute)
+    );
   }
   function nearestElementWithAttribute(el, attribute) {
     let selector = `[${attribute}]`;

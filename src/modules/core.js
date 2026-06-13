@@ -1,20 +1,18 @@
 /**
  * Core (twikki.core)
- * First module loaded; bootstraps the `tw` global namespace skeleton:
- *   - `tw.events` — the pub/sub bus (send/subscribe/override) with a
- *     duplicate-handler guard and `---enc:` base64 param decoding.
- *   - a minimal `tw.run` (just getTiddler) so the first paint can resolve
- *     tiddlers before the platform installs the full action API later in boot.
+ * Bootstraps `tw.events` — the pub/sub bus (send/subscribe/override) with a
+ * duplicate-handler guard. Note `send` passes params through verbatim; only
+ * `tw.events.decode` (called by sendCommand) decodes `---enc:` base64 payloads
+ * (via `tw.core.common.decoder`).
+ * Loads after core.common (which must come first in modulesToLoad).
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'twikki.core';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.24.0'; // built for platform ^0.24.0
 
   dp('TWikki Core started');
-  tw.core = {};
-  tw.events = (function() {
+  tw.events = (function () {
     const handlers = [];
     let initialized = false;
     return {
@@ -22,20 +20,19 @@
         initialized = true;
       },
       send(event, params) {
-        // dp('events.send', event, params);
+        dp('events.send', event);
         let result = [];
         handlers
           .filter(h => h.event === event)
           .forEach(h => {
-            if (Array.isArray(params))
-              result.push(h.handler(...params));
-            else
-              result.push(h.handler(params));
+            if (Array.isArray(params)) result.push(h.handler(...params));
+            else result.push(h.handler(params));
           });
         return result;
       },
       decode(params) {
-        if (typeof params === 'string' && params.match(/^---enc:/)) return decoder(params.substring(7));
+        if (typeof params === 'string' && params.match(/^---enc:/))
+          return tw.core.common.decoder(params.substring(7));
         return params;
       },
       // TODO: Should have subscribe to listen and override to handle
@@ -49,7 +46,8 @@
         if (!handlerName) handlerName = handler.name;
         if (!handlerName) {
           console.warn(`No handlerName provided in events.subscribe(${event})!`);
-          if (window.devMode) throw new Error(`No handlerName provided in events.subscribe(${event})!`);
+          if (window.devMode)
+            throw new Error(`No handlerName provided in events.subscribe(${event})!`);
         }
         // Prevent same handler function for same event
         if (handlers.find(h => h.event === event && h.handler.name === handlerName))
@@ -60,21 +58,18 @@
       override(event, handler) {
         if (typeof handler === 'string') handler = eval(handler);
         // Remove existing handlers
-        handlers.filter(h => h.event === event).forEach(h => (delete h.event));
+        handlers.filter(h => h.event === event).forEach(h => delete h.event);
         // Add new handler
         this.subscribe(event, handler);
       },
-      handlers() {return handlers;},
-      clear() {dp('clear'); handlers.length = 0;},
+      handlers() {
+        return handlers;
+      },
+      clear() {
+        dp('clear');
+        handlers.length = 0;
+      },
     };
-    function decoder(encoded) {
-      const binary = atob(encoded);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return String.fromCharCode(...new Uint16Array(bytes.buffer));
-    }
   })();
 
   return {name, version, platform};

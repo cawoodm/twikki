@@ -41,4 +41,17 @@ export default [...compat.extends('strongloop'), {
     'require-await': 'error',
     semi: ['error', 'always'],
   },
+}, {
+  // Storage layering (see plans/platform-rework.md): localStorage is touched
+  // ONLY by the platform (tw.storage) and core.store (tw.store). Everything
+  // else goes through tw.store. Modules are eval'd strings sharing one global,
+  // so this is convention + lint — nothing can structurally prevent it.
+  files: ['src/modules/**/*.js', 'src/packages/**/*.js'],
+  ignores: ['src/modules/core.store.js'],
+  rules: {
+    'no-restricted-globals': ['error', {
+      name: 'localStorage',
+      message: 'Use tw.store (core.store) — only the platform and core.store may touch localStorage directly.',
+    }],
+  },
 }];

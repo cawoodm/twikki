@@ -12,6 +12,10 @@ The term arrives via the `search.result.clicked` event published by
 `core.search`. Only terms whose trimmed length is at least 3 characters are
 highlighted, mirroring typical incremental-search ergonomics.
 
+# Meta
+
+<<pluginMeta SearchHighlight>>
+
 # Code
 
 ```javascript

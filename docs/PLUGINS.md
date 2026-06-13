@@ -133,17 +133,22 @@ A flat array. Each entry:
 
 ```js
 {
-  meta: { name, version, platform?, description?, author?, url?, ... },
+  meta: { name, version, platform?, description?, author?, url?, dependencies?: string[], ... },
   init: fn | undefined,
   start: fn | undefined,
   source: '$MyPlugin.tid',        // source tiddler title
   package: 'base',                // set by core.packaging when the package is loaded
   compat: { compatible, severity, reason?, required? },
+  missingDependencies: undefined | string[],  // set when meta.dependencies aren't all present
   error: null | { phase: 'load'|'init'|'start', message },
 }
 ```
 
 `tw.plugin(name)` looks up an entry by `meta.name` — use this for dependency checks inside `init()`. The array order is loading order (whatever order `tw.tiddlers.all` exposes the `$Plugin`-tagged tiddlers in).
+
+### Dependencies (soft)
+
+A plugin may declare `meta.dependencies: ['Picker', 'Tabs']` — names of other plugins (matched against `meta.name`) it relies on. Between `loadPlugins()` and `initPlugins()` the platform checks each declared dep is present; missing ones land on the entry as `missingDependencies` and produce a console warning. **The plugin still runs** — this is a soft signal for the `<<plugins>>` widget and for users who removed a dependency without removing its dependent. For runtime checks inside `init()` (e.g. branching behaviour), keep using `tw.plugin(name)`.
 
 ## Macros and commands
 

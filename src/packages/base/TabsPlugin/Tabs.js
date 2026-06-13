@@ -40,7 +40,9 @@
       // No tabs: let every open note stack (the .tabbed show/hide rule is off).
       vis.classList.remove('tabbed');
       strip.innerHTML = '';
-      vis.querySelectorAll(':scope > .tiddler.tab-active').forEach((el) => el.classList.remove('tab-active'));
+      vis
+        .querySelectorAll(':scope > .tiddler.tab-active')
+        .forEach(el => el.classList.remove('tab-active'));
       return;
     }
 
@@ -105,7 +107,7 @@
     applyActive(active);
     restoreScroll(active);
     // Forget scroll for notes that are no longer open.
-    Object.keys(scrollPos).forEach((t) => {
+    Object.keys(scrollPos).forEach(t => {
       if (!visible.includes(t)) delete scrollPos[t];
     });
     lastVisible = visible.slice();
@@ -141,7 +143,7 @@
     let shownCount = Math.min(visible.length, capacity(visible.length), MAX_TABS);
     let shown = visible.slice(0, shownCount);
     if (active && shownCount && !shown.includes(active)) shown[shownCount - 1] = active;
-    let overflow = visible.filter((t) => !shown.includes(t));
+    let overflow = visible.filter(t => !shown.includes(t));
     if (tw.tabs) tw.tabs.overflow = overflow; // read by the `taboverflow` picker source
 
     let more = overflow.length
@@ -155,7 +157,7 @@
     strip.innerHTML =
       shown
         .map(
-          (title) => `
+          title => `
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
         <button class="tab-close icon" data-msg="tiddler.close" data-params="${attr(title)}" title="Close">✕</button>
@@ -168,11 +170,11 @@
 
   function applyActive(active) {
     if (!vis) return;
-    vis.querySelectorAll(':scope > .tiddler').forEach((el) => {
+    vis.querySelectorAll(':scope > .tiddler').forEach(el => {
       el.classList.toggle('tab-active', el.getAttribute('data-tiddler-title') === active);
     });
     if (strip)
-      strip.querySelectorAll('.tab').forEach((t) => {
+      strip.querySelectorAll('.tab').forEach(t => {
         t.classList.toggle('active', t.getAttribute('data-tab') === active);
       });
   }
@@ -204,13 +206,13 @@
       // Re-apply when the layout mode changes (raw edit emits tiddler.modified; the
       // settings form saves via updateTiddlerHard + save.silent). Cheap; only re-inits
       // when the mode actually flips.
-      ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach((ev) => wireUp(ev, refreshMode));
+      ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach(ev => wireUp(ev, refreshMode));
 
       wireUp('tiddler.rendered', ({tiddler}) => {
         batch.push(tiddler.title);
         schedule();
       });
-      wireUp('story.rendered', schedule);
+      wireUp('ui.ready', schedule);
       wireUp('story.changed', schedule);
       // Focus a note's tab when it's requested while already open (link/hash/search):
       // showTiddler early-returns in that case and emits `tiddler.refocus` instead of
