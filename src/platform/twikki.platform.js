@@ -195,9 +195,8 @@
             try {
               pck.meta = (1, eval)(pck.res.code)(tw);
             } catch (e) {
-              let errMsg = `Module '${pck.name}' failed: ${e.message}`;
-              errMsgs.push(errMsg);
-              console.error(errMsg, e.stack);
+              errMsgs.push({name: pck.name, message: e.message});
+              console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
               return;
             }
           } else {
@@ -277,9 +276,8 @@
             try {
               pck.meta.run();
             } catch (e) {
-              let errMsg = `Module '${pck.name}' failed: ${e.message}`;
-              errMsgs.push(errMsg);
-              console.error(errMsg, e.stack);
+              errMsgs.push({name: pck.name, message: e.message});
+              console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
               return;
             }
           } else {
@@ -331,11 +329,24 @@
       onPageLoad();
     },
   };
+  // Renders the boot-halt page when one or more modules failed to eval or run.
+  // Returns `true` when it took the error path so the caller's `if (handleModuleErrors(errMsgs)) return;`
+  // actually halts further work in start() — otherwise downstream code would try to use
+  // the missing module exports, push more errors onto the same array, and re-enter this
+  // function, each document.write appending another <h1> (the bug this guards against).
+  // Idempotent via a sticky flag in case a caller forgets the early return.
   function handleModuleErrors(errMsgs) {
-    if (errMsgs.length === 0) return;
-    document.write('<h1>Module Errors Occurred</h1>');
+    if (errMsgs.length === 0) return false;
+    if (handleModuleErrors.handled) return true;
+    handleModuleErrors.handled = true;
+    const names = errMsgs.map(e => e.name.replace(/^\//, '').replace(/\.js$/, ''));
+    const heading = names.length === 1
+      ? `Module '${names[0]}' failed to load`
+      : `${names.length} modules failed to load: ${names.join(', ')}`;
+    document.write(`<h1>${heading}</h1>`);
     errMsgs.forEach(e => {
-      document.write(`<p class="error">${e}`);
+      const name = e.name.replace(/^\//, '');
+      document.write(`<p class="error"><b>${name}</b>: ${e.message}</p>`);
     });
     let traceUrl = document.location.href;
     traceUrl = traceUrl.match(/\?/) ? traceUrl + '&trace' : traceUrl + '?trace';
@@ -347,6 +358,7 @@
     document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
     document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
     document.write('</ul>');
+    return true;
   }
 
   // Reload the page with ?reload/?update stripped, so the next boot reads the (just-stored

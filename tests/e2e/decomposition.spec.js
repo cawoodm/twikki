@@ -31,6 +31,25 @@ test('tw.call resolves functions that moved out of the platform closure', async 
   expect(results.getJSONObject).toBe('object');
 });
 
+test('module eval failure: one error page, names the failing module(s)', async ({page}) => {
+  // Serve core.dom.js with a syntax error → its eval throws, every downstream
+  // module that touches tw.core.dom errors too. This is the exact path that
+  // used to produce <h1>Module Errors Occurred</h1> twice (handleModuleErrors
+  // returned undefined → caller's early return never fired → start() pushed
+  // more errors and re-invoked it).
+  await page.route('**/modules/core.dom.js', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace('(function(tw)', '(function(tw-)');
+    await route.fulfill({response, body});
+  });
+  await page.goto('/?reload');
+  await expect(page.locator('h1')).toHaveCount(1);
+  const heading = await page.locator('h1').textContent();
+  expect(heading).toMatch(/core\.dom/);
+  // The per-module error paragraphs bold each name and include the JS message.
+  await expect(page.locator('p.error').first()).toContainText('core.dom.js');
+});
+
 test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({page}) => {
   // Serve core.common.js claiming a different MAJOR platform → a hard 'block'.
   await page.route('**/modules/core.common.js', async route => {
