@@ -10,6 +10,10 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 
 `<<example.hello "John Smith">>`
 
+# Meta
+
+<<pluginMeta ExamplePlugin>>
+
 # Data
 
 ```json

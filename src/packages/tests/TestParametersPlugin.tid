@@ -11,6 +11,10 @@ tags: $Plugin
 # Tests (which should fail)
 * `<<foo.object {"name":"John Smith", age:22}>>`: <<foo.object {"name":"John Smith", age:22}>>
 
+# Meta
+
+<<pluginMeta TestParameters>>
+
 # Code
 ```javascript
 (function () {
