@@ -425,6 +425,7 @@
       bootProgress({phase: 'plugins', step: 'load'});
       loadPlugins();
       checkPluginDependencies();
+      sortPluginsByDependencies();
       bootProgress({phase: 'plugins', step: 'init'});
       initPlugins();
       bootProgress({phase: 'plugins', step: 'start'});
@@ -580,6 +581,70 @@
         );
       }
     });
+  }
+  // Stable topological sort of tw.plugins[] by meta.dependencies, plus the
+  // implicit "base-package plugins run before any non-base plugin" invariant.
+  // Plugins without constraints keep their original relative order. On a cycle
+  // (or a declared dep crossing the base/non-base boundary the wrong way),
+  // warn and emit the remaining nodes in original order — soft, matching the
+  // rest of the plugin compat stance.
+  function sortPluginsByDependencies() {
+    const plugins = tw.plugins;
+    const byName = new Map();
+    plugins.forEach((p, i) => {
+      if (p.meta?.name) byName.set(p.meta.name, i);
+    });
+    const isBase = i => plugins[i].package === 'base';
+    const indegree = plugins.map(() => 0);
+    const edges = plugins.map(() => []);
+    plugins.forEach((p, i) => {
+      const deps = Array.isArray(p.meta?.dependencies) ? p.meta.dependencies : [];
+      deps.forEach(name => {
+        const j = byName.get(name);
+        if (j === undefined) return;
+        edges[j].push(i);
+        indegree[i]++;
+      });
+    });
+    plugins.forEach((_, i) => {
+      if (!isBase(i)) return;
+      plugins.forEach((_, j) => {
+        if (isBase(j)) return;
+        edges[i].push(j);
+        indegree[j]++;
+      });
+    });
+    const ready = [];
+    indegree.forEach((d, i) => {
+      if (d === 0) ready.push(i);
+    });
+    ready.sort((a, b) => a - b);
+    const sorted = [];
+    while (ready.length) {
+      const i = ready.shift();
+      sorted.push(plugins[i]);
+      edges[i].forEach(j => {
+        indegree[j]--;
+        if (indegree[j] === 0) {
+          const k = ready.findIndex(x => x > j);
+          if (k === -1) ready.push(j);
+          else ready.splice(k, 0, j);
+        }
+      });
+    }
+    if (sorted.length < plugins.length) {
+      const stuck = plugins
+        .map((p, i) => ({p, i}))
+        .filter(({i}) => indegree[i] > 0)
+        .sort((a, b) => a.i - b.i);
+      console.warn(
+        `Plugin dependency cycle detected; emitting in original order: ${stuck
+          .map(({p}) => p.meta?.name || p.source)
+          .join(', ')}`,
+      );
+      stuck.forEach(({p}) => sorted.push(p));
+    }
+    tw.plugins = sorted;
   }
   function initPlugins() {
     tw.plugins.forEach(plugin => {
