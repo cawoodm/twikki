@@ -30,6 +30,42 @@
           });
         return result;
       },
+      // First non-null/undefined result wins; later subscribers don't run. The
+      // single-handler convention behind today's 'markdown.render' generalised
+      // for renderer.override etc. Subscribers that throw are caught and
+      // skipped, matching the soft stance of the rest of the bus.
+      request(event, params) {
+        dp('events.request', event);
+        const matching = handlers.filter(h => h.event === event);
+        for (const h of matching) {
+          let r;
+          try {
+            r = Array.isArray(params) ? h.handler(...params) : h.handler(params);
+          } catch (e) {
+            console.warn(`events.request '${event}' handler threw: ${e.message}`, e.stack);
+            continue;
+          }
+          if (r != null) return r;
+        }
+        return undefined;
+      },
+      // Chain `value` through subscribers; each returns the next value. Throws
+      // are caught — the failing handler is skipped and the previous value is
+      // passed on. Empty subscriber list returns the original value unchanged.
+      filter(event, value, ctx) {
+        dp('events.filter', event);
+        let current = value;
+        handlers
+          .filter(h => h.event === event)
+          .forEach(h => {
+            try {
+              current = h.handler(current, ctx);
+            } catch (e) {
+              console.warn(`events.filter '${event}' handler threw: ${e.message}`, e.stack);
+            }
+          });
+        return current;
+      },
       decode(params) {
         if (typeof params === 'string' && params.match(/^---enc:/))
           return tw.core.common.decoder(params.substring(7));
