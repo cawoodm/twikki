@@ -4,7 +4,7 @@
     meta: {
       name: 'CsvRenderer',
       version: '0.0.1',
-      platform: '0.24.0',
+      platform: '0.26.0',
       author: 'TWikki',
       description: 'Renders type=csv tiddlers as HTML tables.',
     },
