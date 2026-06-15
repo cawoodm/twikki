@@ -120,7 +120,8 @@
   async function fetchModules() {
     let customModuleUrl = tw.storage.get('/moduleUrl');
 
-    baseUrl = customModuleUrl || window.MODULE_URL || document.location.origin;
+    baseUrl =
+      customModuleUrl || window.MODULE_URL || window.location.origin + window.location.pathname;
 
     dp('Looking for local TWikki.Core modules...');
 
