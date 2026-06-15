@@ -40,12 +40,14 @@ highlighted, mirroring typical incremental-search ergonomics.
     pending = (t.length >= MIN) ? {title, term: t} : null;
   }
 
-  function onTiddlerRenderedForHighlight({tiddler, newElement}) {
-    if (!pending || !tiddler || tiddler.title !== pending.title) return;
+  // The clicked note can arrive via either path: a fresh render (`tiddler.rendered`,
+  // payload `{tiddler, newElement}`) when it wasn't on the story, or a refocus
+  // (`tiddler.refocus`, payload `title`) when it was already open. Both must
+  // trigger the highlight or the in-place case silently does nothing.
+  function applyPendingHighlight(title, root) {
+    if (!pending || pending.title !== title || !root) return;
     const term = pending.term;
     pending = null;
-    const root = newElement.querySelector('.text');
-    if (!root) return;
 
     const ranges = findRanges(root, term);
     if (!ranges.length) return;
@@ -56,6 +58,14 @@ highlighted, mirroring typical incremental-search ergonomics.
       CSS.highlights.delete(NAME);
       clearTimer = null;
     }, TTL);
+  }
+
+  function onTiddlerRenderedForHighlight({tiddler, newElement}) {
+    applyPendingHighlight(tiddler?.title, newElement?.querySelector('.text'));
+  }
+
+  function onTiddlerRefocusForHighlight(title) {
+    applyPendingHighlight(title, tw.run.getTiddlerElement(title)?.querySelector('.text'));
   }
 
   function findRanges(root, term) {
@@ -99,6 +109,7 @@ highlighted, mirroring typical incremental-search ergonomics.
       installSheet();
       tw.events.subscribe('search.result.clicked', onSearchResultClicked);
       tw.events.subscribe('tiddler.rendered', onTiddlerRenderedForHighlight);
+      tw.events.subscribe('tiddler.refocus', onTiddlerRefocusForHighlight);
     },
   };
 })();
