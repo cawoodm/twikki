@@ -24,20 +24,21 @@ highlighted, mirroring typical incremental-search ergonomics.
     name: 'SearchHighlight',
     version: '0.1.0',
     platform: '0.26.0',
-    description: 'Paint search-term matches in the opened note for 10s via CSS Custom Highlight API.',
+    description:
+      'Paint search-term matches in the opened note for 10s via CSS Custom Highlight API.',
   };
 
   const NAME = 'search-hit';
   const MIN = 3;
   const TTL = 10_000;
 
-  let pending = null;     // {title, term} captured by search.result.clicked
-  let clearTimer = null;  // setTimeout id for the active highlight
+  let pending = null; // {title, term} captured by search.result.clicked
+  let clearTimer = null; // setTimeout id for the active highlight
 
   function onSearchResultClicked({title, term}) {
     if (!title || typeof term !== 'string') return;
     const t = term.trim();
-    pending = (t.length >= MIN) ? {title, term: t} : null;
+    pending = t.length >= MIN ? {title, term: t} : null;
   }
 
   // The clicked note can arrive via either path: a fresh render (`tiddler.rendered`,
@@ -52,7 +53,10 @@ highlighted, mirroring typical incremental-search ergonomics.
     const ranges = findRanges(root, term);
     if (!ranges.length) return;
 
-    if (clearTimer) {window.clearTimeout(clearTimer); clearTimer = null;}
+    if (clearTimer) {
+      window.clearTimeout(clearTimer);
+      clearTimer = null;
+    }
     CSS.highlights.set(NAME, new Highlight(...ranges));
     clearTimer = window.setTimeout(() => {
       CSS.highlights.delete(NAME);
@@ -72,7 +76,7 @@ highlighted, mirroring typical incremental-search ergonomics.
     const needle = term.toLowerCase();
     const ranges = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    for (let node; (node = walker.nextNode());) {
+    for (let node; (node = walker.nextNode()); ) {
       const hay = node.nodeValue.toLowerCase();
       let i = 0;
       while ((i = hay.indexOf(needle, i)) !== -1) {
@@ -90,7 +94,7 @@ highlighted, mirroring typical incremental-search ergonomics.
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(`
       ::highlight(search-hit) {
-        background-color: var(--search-hit-bg, #fff59d);
+        background-color: var(--search-hit-bg, #bc9b5c);
         color: inherit;
         animation: search-hit-fade 10s linear forwards;
       }
