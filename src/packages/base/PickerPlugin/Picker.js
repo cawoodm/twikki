@@ -43,6 +43,12 @@
         .map((title) => ({value: title, label: title})),
     // Open notes that overflow the tab strip (the split is owned by TabsPlugin).
     taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')})),
+    // Every tag in the store, dispatched as a `search` for `tag:<name>`.
+    alltags: () =>
+      (tw.macros.core?.allTags?.() || [])
+        .filter(Boolean)
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+        .map((tag) => ({value: 'tag:' + tag, label: tag})),
   };
 
   function populate(picker, menu) {

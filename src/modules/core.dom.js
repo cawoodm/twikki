@@ -73,11 +73,12 @@
   }
   function htmlToNode(html) {
     const template = document.createElement('template');
-    template.innerHTML = html.trim();
-    const nNodes = template.content.childNodes.length;
-    if (nNodes !== 1)
-      return console.error(`html parameter must represent a single node; got ${nNodes}. `);
-    return template.content.firstElementChild;
+    template.innerHTML = String(html).trim();
+    const n = template.content.childNodes.length;
+    if (n !== 1) throw new Error(`htmlToNode: expected exactly one root node, got ${n}`);
+    const el = template.content.firstElementChild;
+    if (!el) throw new Error('htmlToNode: root node is not an element');
+    return el;
   }
   function nearestAttribute(el, attribute, selector) {
     return (

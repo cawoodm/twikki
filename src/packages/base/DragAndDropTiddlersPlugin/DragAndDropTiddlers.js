@@ -4,7 +4,7 @@
     version: '1.0.0',
     platform: '0.26.0',
     description:
-      'Drag tiddlers between TWikki windows; also imports *.tiddler.json (and bundle-shaped *.json) files.',
+      'Drag tiddlers between TWikki windows; also imports packages (*.json files with a tiddlers array).',
     dependencies: ['DropZone'],
   };
 
@@ -179,13 +179,6 @@
       // File-drop bridge — DropZonePlugin exposes registerDropHandler at LOAD
       // time (its IIFE body), so this is safe to call from init().
       if (typeof tw.run.registerDropHandler === 'function') {
-        tw.run.registerDropHandler('*.tiddler.json', text => {
-          try {
-            importBundle(JSON.parse(text));
-          } catch (e) {
-            tw.ui.notify('Invalid .tiddler.json file', 'E', e.stack);
-          }
-        });
         tw.run.registerDropHandler('*.json', text => {
           let data;
           try {
@@ -193,8 +186,7 @@
           } catch (e) {
             return tw.ui.notify('Invalid JSON file', 'E', e.stack);
           }
-          if (!Array.isArray(data?.tiddlers))
-            return tw.ui.notify('Not a tiddler bundle', 'W');
+          if (!Array.isArray(data?.tiddlers)) return tw.ui.notify('Not a tiddler bundle', 'W');
           importBundle(data);
         });
       }

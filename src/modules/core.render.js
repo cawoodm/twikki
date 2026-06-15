@@ -199,6 +199,7 @@
   }
   function renderAllTiddlers() {
     tw.core.dom.divVisibleTiddlers.innerHTML = '';
+    // TODO: Catch showTiddler exceptions and render an error span
     tw.tiddlers.visible.forEach(t => tw.run.showTiddler(t));
     tw.events.send('ui.ready', tw.tiddlers.visible);
   }
@@ -212,7 +213,6 @@
     tw.events.send('tiddler.rendered', {tiddler, newElement});
   }
   function createTiddlerElement(t, template) {
-    // TODO: If $TiddlerDisplay breaks TW is unusable!
     template = template || tw.templates.TiddlerDisplay;
     let modified = t.updated
       ? new Date(t.updated).toDateString() + ' ' + new Date(t.updated).toLocaleTimeString()
@@ -228,7 +228,19 @@
       ...tiddlerDetails(t),
       ...t,
     });
-    let newElement = tw.core.dom.htmlToNode(html);
+    let newElement;
+    try {
+      newElement = tw.core.dom.htmlToNode(html);
+    } catch (e) {
+      // A malformed template (multi-root, comment-root) used to crash the page.
+      // Render a per-tiddler error placeholder so the rest of the UI stays
+      // interactive — the user can open and fix the offending template.
+      console.error(`createTiddlerElement '${t.title}':`, e.message);
+      newElement = tw.core.dom.htmlToNode(
+        `<div class="tiddler error"><div class="title">${tw.core.common.escapeHtml(t.title)}</div>` +
+          `<div class="text">Template error: ${tw.core.common.escapeHtml(e.message)}</div></div>`,
+      );
+    }
     newElement.setAttribute('data-tiddler-id', id);
     newElement.setAttribute('data-tiddler-title', t.title);
     tw.events.send('tiddler.element.created', {title: t.title, newElement});
@@ -265,8 +277,17 @@
       store.push(m);
       return token;
     };
-    // Fenced blocks first (they may contain inline backticks), then inline spans.
-    let masked = text.replace(/```[\s\S]*?```/g, stash);
+    // Fenced blocks first — only when ``` is at the start of a line
+    // (optionally indented up to 3 spaces, CommonMark style). A ``` nested
+    // inside an inline code span (e.g. `` ` ```js ` `` used as a literal
+    // example in prose) must NOT start a fence — otherwise it swallows
+    // everything up to the next ``` into a single spurious mask. The leading
+    // newline is captured and re-emitted so we don't eat the boundary.
+    let masked = text.replace(
+      /(^|\n)( {0,3}```[^\n]*\n[\s\S]*?\n {0,3}```)(?=\n|$)/g,
+      (_, pre, fence) => pre + stash(fence),
+    );
+    // Inline spans next — single backticks, no embedded newlines.
     masked = masked.replace(/`[^`\n]*`/g, stash);
     const restore = s => s.replace(/(\d+)/g, (_, i) => store[Number(i)]);
     return {masked, restore};

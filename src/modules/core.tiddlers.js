@@ -69,6 +69,7 @@
     tiddlerIsValid,
     tiddlerValidation,
     validateTiddlerText,
+    registerValidator,
     emptyTiddler,
     nonExistentTiddler,
     tiddlerCodeBlocks,
@@ -110,6 +111,12 @@
     },
   });
   tw.util = {tagMatch, titleMatch, titleIs, tiddlerValidation, tiddlerExists};
+
+  // Stackable tiddler-save validators. validateTiddlerText() iterates this list
+  // and rewraps any throw as `"<name>: <message>"` so the formDone UX can show
+  // which validator complained. Base scripts register via tw.extensions.
+  const validators = [];
+  Object.assign(tw.extensions, {registerValidator});
 
   return {name, version, platform, exports};
 
@@ -232,7 +239,6 @@
     let tiddler = getTiddler(title) || sectionTiddler(title);
     if (!tiddler) tiddler = nonExistentTiddler(title);
     let newElement = tw.core.render.createTiddlerElement(tiddler);
-    // TODO: If it's a code tiddler run it (if !Disabled) and show error message in red
     tw.core.dom.divVisibleTiddlers.insertAdjacentElement('afterbegin', newElement);
     if (tw.tiddlers.visible.indexOf(tiddler.title) === -1) tw.tiddlers.visible.push(tiddler.title);
     tw.events.send('tiddler.rendered', {tiddler, newElement});
@@ -447,11 +453,23 @@
     return msg;
   }
   function validateTiddlerText(t) {
-    if (t.type === 'json') return jsonValidator(t.text);
-    // Plugins have live state (event subscriptions, DOM bindings) bound at boot.
-    // Flag the edit and let/ formDone() prompt for a hard reload after the save completes.
-    if (t.tags?.includes('$Plugin')) tw.tmp.pluginEdited = true;
+    if (t.type === 'json') jsonValidator(t.text);
     tiddlerCodeBlocks(t).forEach(b => tw.run.executeText(b.text, b.title)); // validate by executing (as code tiddlers do)
+    for (const v of validators) {
+      if (!v.match(t)) continue;
+      try {
+        v.validate(t);
+      } catch (e) {
+        throw new Error(`${v.name}: ${e.message}`);
+      }
+    }
+  }
+  function registerValidator({name, match, validate}) {
+    if (!name || typeof match !== 'function' || typeof validate !== 'function')
+      throw new Error('registerValidator: {name, match, validate} required');
+    const i = validators.findIndex(v => v.name === name);
+    if (i >= 0) validators[i] = {name, match, validate}; // idempotent on soft reload
+    else validators.push({name, match, validate});
   }
   function jsonValidator(text) {
     JSON.parse(text);

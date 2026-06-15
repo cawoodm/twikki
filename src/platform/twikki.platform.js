@@ -51,6 +51,7 @@
         .forEach(q => (qs[q] = true)); // Empty params are switches => convert to true
 
       tw.core = {};
+      tw.extensions = {};
       tw.modules = [];
       tw.tmp = {};
       tw.templates = {};
