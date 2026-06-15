@@ -1,0 +1,13 @@
+
+## Packages
+
+A package is just a list of tiddlers in JSON format `{"tiddlers": [...]}` which is usually loaded via URL.
+
+- Packages listed in [[$CorePackages]] are loaded when TW starts
+- Packages listed in [[$ExtensionPackages]] are loaded when TW starts (unless `?safemode` is used)
+- Any package can be imported via the `<<import>>` widget:
+  - <<packages.import name:website url:./packages/website.json filter:\* force:false>>
+- To import a demo package click here:
+  - <<packages.import name:demo url:./packages/demo.json filter:\* force:false>>
+  - You can view what is in that package by clicking this button:
+    - <<button "Demo Package" search $pck:demo>>

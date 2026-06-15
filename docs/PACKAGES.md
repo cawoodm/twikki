@@ -4,40 +4,40 @@ Packages are managed per-workspace and allow for specific tiddlers (e.g. plugins
 
 ## What a package is
 
-A **package** is a bundle of tiddlers shipped as a single JSON file of the shape `{ "tiddlers": [ … ] }`. Everything in TWikki that isn't the platform (and it's core modules) arrives as a package.
+A **package** is a bundle (like a .zip) of tiddlers shipped as a single JSON file of the shape `{ "tiddlers": [ … ] }`. Everything in TWikki that isn't the platform (and it's core modules) arrives as a package.
 
-## Base Packages
+## Base Package
 
-Base packages are loaded first and provide a useful bunch of features which you could (in theory) do without.
+The base package (defined in [[$CorePackages]]) are loaded first and provide a useful bunch of features which you could (in theory) do without.
 
-* $ButtonsFunctions
-* $CommandPalette
-* $CoreThemeManager
-* $DumpWorkspacePlugin
-* $ExplorerPlugin
-* $GeneralWidgets
-* $GistBackupPlugin
-* $GithubSaverExtension
-* $CodeSyntaxHighlightPlugin
-* $IncludeFunctions
-* $ListTiddlersWidgets
-* $ModulesWidget
-* $OpenLinksInNewWindow
-* $PackageWidgets
-* $PickerPlugin
-* $SelectorWidget
-* $SettingsDialogPlugin
-* $ShowTiddlersWidgets
-* $SynchDataPlugin
-* $TabsPlugin
-* $ThemeImporterPlugin
-* $TiddlerSearchResult
-* $TrashedTiddlersFunctions
-* $TrashManager
-* $UnsavedChangesPlugin
-* $WorkspaceWidgets
-* Backup
-* ObsidianThemeDark
+- $ButtonsFunctions
+- $CommandPalette
+- $CoreThemeManager
+- $DumpWorkspacePlugin
+- $ExplorerPlugin
+- $GeneralWidgets
+- $GistBackupPlugin
+- $GithubSaverExtension
+- $CodeSyntaxHighlightPlugin
+- $IncludeFunctions
+- $ListTiddlersWidgets
+- $ModulesWidget
+- $OpenLinksInNewWindow
+- $PackageWidgets
+- $PickerPlugin
+- $SelectorWidget
+- $SettingsDialogPlugin
+- $ShowTiddlersWidgets
+- $SynchDataPlugin
+- $TabsPlugin
+- $ThemeImporterPlugin
+- $TiddlerSearchResult
+- $TrashedTiddlersFunctions
+- $TrashManager
+- $UnsavedChangesPlugin
+- $WorkspaceWidgets
+- Backup
+- ObsidianThemeDark
 
 ## Authoring a package
 
@@ -74,12 +74,12 @@ Both are `type: list` tiddlers; each bullet is `<url> [options]`:
 
 The following options control how a package is loaded and whether it may overwrite existing tiddlers:
 
-| Option | Effect |
-| --- | --- |
-| `force` | overwrite existing tiddlers silently (no prompt) |
-| `nooverwrite` | never overwrite an existing tiddler; skip it silently |
-| `nosave` | mark imported tiddlers `doNotSave` — live for this session only, not persisted to the workspace |
-| _(none)_ | overwrite only after a `confirm()` prompt, and only for user-modified tiddlers |
+| Option        | Effect                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| `force`       | overwrite existing tiddlers silently (no prompt)                                                |
+| `nooverwrite` | never overwrite an existing tiddler; skip it silently                                           |
+| `nosave`      | mark imported tiddlers `doNotSave` — live for this session only, not persisted to the workspace |
+| _(none)_      | overwrite only after a `confirm()` prompt, and only for user-modified tiddlers                  |
 
 ### Dev Mode Local Packages
 
@@ -89,15 +89,15 @@ TODO: We have a hack that, during boot, on a `localhost` or bare `IP:port` host,
 
 `tw.core.packaging.loadPackageFromURL` ([src/modules/core.packaging.js](../src/modules/core.packaging.js)) fetches the JSON and hands its tiddlers to `loadList`, which:
 
-1. **Syncs deletions** — any tiddler currently stamped with this package (`t.package === name`) that is *absent* from the new list is deleted. So removing a file from a package and re-importing removes it from the store.
+1. **Syncs deletions** — any tiddler currently stamped with this package (`t.package === name`) that is _absent_ from the new list is deleted. So removing a file from a package and re-importing removes it from the store.
 2. **Validates** each incoming tiddler (`tiddlerValidation`); invalid ones are reported and skipped.
 3. **Respects guards** before overwriting an existing tiddler:
    - `nooverwrite` option → skip silently.
    - tiddler tagged **`$NoImport`** → never overwritten (skipped; see [[Tags]]).
-   - otherwise, if it would change a *user-modified* tiddler (not a raw shadow) and `force` is **not** set → ask via `confirm()`.
+   - otherwise, if it would change a _user-modified_ tiddler (not a raw shadow) and `force` is **not** set → ask via `confirm()`.
 4. **Stamps & stores** — survivors get `t.package = name` (used by search's `pck:` filter and package listings) and are added/updated in the store. With `nosave`/`doNotSave` they live only for the session.
 
-> **Packages aren't cached like core modules.** Each boot will re-fetch the package JSON (subject only to the browser's HTTP cache); what persists across reloads is the *result* — the imported tiddlers in your workspace store (unless `nosave`).
+> **Packages aren't cached like core modules.** Each boot will re-fetch the package JSON (subject only to the browser's HTTP cache); what persists across reloads is the _result_ — the imported tiddlers in your workspace store (unless `nosave`).
 
 ## Live Package Imports
 
