@@ -118,6 +118,15 @@
     let ok = 0;
     const failed = [];
     rows.forEach(({tiddler}) => {
+      // $NoImport on the target side blocks the write, matching the package
+      // importer's behaviour (see core.packaging.js:60). Skip silently here
+      // and report in the post-import notify rather than per-row, since the
+      // dialog already showed the user the OVERWRITE rows.
+      const existing = tw.run.getTiddler(tiddler.title, false);
+      if (existing?.tags?.includes('$NoImport')) {
+        failed.push(`${tiddler.title}: target is tagged $NoImport`);
+        return;
+      }
       const issues = tw.util.tiddlerValidation(tiddler);
       if (issues.length) {
         failed.push(`${tiddler.title}: ${issues.join('; ')}`);
