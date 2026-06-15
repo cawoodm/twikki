@@ -1,0 +1,7 @@
+/* Wrapper around CodeRenderer output (`<div class="code-rendered">`). The
+   markdown pipeline + active theme already supply typography and the code
+   block treatment; this rule just provides the outer spacing so the
+   rendered prose and fenced code block sit cleanly in the tiddler frame. */
+.code-rendered {
+  margin: 0.5em 0;
+}
