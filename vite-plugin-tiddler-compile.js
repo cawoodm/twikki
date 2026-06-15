@@ -16,6 +16,8 @@ export function getType(ext) {
       return 'css';
     case '.html':
       return 'html';
+    case '.csv':
+      return 'csv';
     default:
       return '';
   }

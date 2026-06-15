@@ -220,6 +220,175 @@ test('declared deps order within the base batch: BaseMarkdown before OpenLinksIn
   expect(result.error).toBeNull();
 });
 
+test('renderer.override: a synthetic plugin claims a custom type', async ({page}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      tw.tiddlers.all.push({
+        title: '$FooRenderer',
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {
+          meta: {name: 'FooRenderer', version: '1.0.0'},
+          start() {
+            tw.events.subscribe('renderer.override', function fooRender({tiddler, text}) {
+              if (tiddler.type !== 'foo') return null;
+              return '<div class="foo">' + text + '</div>';
+            });
+          }
+        }; })()`,
+      });
+    });
+  });
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({title: 'X', type: 'foo', text: 'hi'}),
+  );
+  expect(html).toBe('<div class="foo">hi</div>');
+});
+
+test('renderer.pre and renderer.post chain transforms around the core renderer', async ({page}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      tw.tiddlers.all.push({
+        title: '$PrePostProbe',
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {
+          meta: {name: 'PrePostProbe', version: '1.0.0'},
+          start() {
+            tw.events.subscribe('renderer.pre', function preMark(text) { return '«' + text + '»'; });
+            tw.events.subscribe('renderer.post', function postMark(html) { return '<wrap>' + html + '</wrap>'; });
+          }
+        }; })()`,
+      });
+    });
+  });
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({title: 'X', type: 'unknown-type', text: 'hello'}),
+  );
+  expect(html.startsWith('<wrap>')).toBe(true);
+  expect(html.endsWith('</wrap>')).toBe(true);
+  expect(html).toContain('«hello»');
+});
+
+test('renderer.override returning empty string claims the call (null is the only no-op)', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      tw.tiddlers.all.push({
+        title: '$EmptyClaim',
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {
+          meta: {name: 'EmptyClaim', version: '1.0.0'},
+          start() {
+            tw.events.subscribe('renderer.override', function claimEmpty({tiddler}) {
+              return tiddler.type === 'empty-type' ? '' : null;
+            });
+          }
+        }; })()`,
+      });
+    });
+  });
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({title: 'X', type: 'empty-type', text: 'whatever'}),
+  );
+  expect(html).toBe('');
+});
+
+test('shipped CsvRenderer renders type=csv tiddlers as an HTML table', async ({page}) => {
+  await bootApp(page);
+  const result = await page.evaluate(() => {
+    const t = tw.tiddlers.all.find(x => x.title === 'ExampleCsv');
+    const html = t ? tw.core.render.makeTiddlerText(t) : null;
+    return {found: !!t, type: t?.type, html};
+  });
+  expect(result.found).toBe(true);
+  expect(result.type).toBe('csv');
+  expect(result.html).toContain('<table class="csv">');
+  expect(result.html).toContain('<th>Name</th>');
+  expect(result.html).toContain('<th>Age</th>');
+  // Bare field with embedded space.
+  expect(result.html).toContain('<td>james dean</td>');
+  // Quoted field with embedded space — proves the RFC 4180 parser is active on the shipped demo.
+  expect(result.html).toContain('<td>John Smith</td>');
+});
+
+test('CsvRenderer: RFC 4180 quoted field with embedded comma renders as one cell', async ({
+  page,
+}) => {
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({
+      title: 'X',
+      type: 'csv',
+      text: 'City,Pop\n"New York, NY",8000000\n"He said ""hi""",1',
+    }),
+  );
+  // Embedded comma stays in one cell.
+  expect(html).toContain('<td>New York, NY</td>');
+  // Escaped "" collapses to single ", then HTML-escaped to &quot;.
+  expect(html).toContain('<td>He said &quot;hi&quot;</td>');
+  // No spurious extra cells from naive splitting.
+  expect(html.match(/<td>/g).length).toBe(4); // 2 rows × 2 cells
+});
+
+test('CsvRenderer: empty body renders an empty table, no crash, no <pre> fallback', async ({
+  page,
+}) => {
+  await bootApp(page);
+  const cases = await page.evaluate(() => ({
+    empty: tw.core.render.makeTiddlerText({title: 'X', type: 'csv', text: ''}),
+    nullish: tw.core.render.makeTiddlerText({title: 'X', type: 'csv', text: undefined}),
+  }));
+  expect(cases.empty).toBe('<table class="csv"></table>');
+  expect(cases.nullish).toBe('<table class="csv"></table>');
+});
+
+test('markdown still renders via the core fallback after the pipeline change', async ({page}) => {
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({title: 'X', type: 'markdown', text: '# Hi'}),
+  );
+  expect(html).toContain('<h1>');
+  expect(html).toContain('Hi');
+});
+
+test('CsvRenderer registers "csv" type in the new-tiddler picker datalist', async ({page}) => {
+  await bootApp(page);
+  // Plugin registers via tw.extensions.registerType in start().
+  const registered = await page.evaluate(() => tw.types?.csv);
+  expect(registered).toBe('CSV Data');
+  // The new-tiddler dialog merges $TiddlerTypes shadow with tw.types when opened.
+  await page.evaluate(() => tw.events.send('tiddler.new'));
+  const options = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('#new-types option')).map(o => ({
+      value: o.value,
+      label: o.textContent,
+    })),
+  );
+  const csv = options.find(o => o.value === 'csv');
+  expect(csv).toBeTruthy();
+  expect(csv.label).toBe('CSV Data');
+  // Sanity: a built-in shadow type is also present (merge keeps shadow entries).
+  expect(options.some(o => o.value === 'markdown')).toBe(true);
+});
+
 test('tw.call resolves functions that moved out of the platform closure', async ({page}) => {
   await bootApp(page);
   const results = await page.evaluate(() => ({

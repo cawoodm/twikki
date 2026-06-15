@@ -284,20 +284,34 @@
   }
 
   /* Markup */
-  function makeTiddlerText({title, text, type}) {
-    const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
-    const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
-    if (type === 'x-twikki') {
-      return renderMarkdown(renderTWikki({text, title}));
-    } else if (markdownTypes.includes(type)) {
-      return renderMarkdown(text);
-    } else if (codeTypes.includes(type)) {
-      return `<pre><code>${tw.core.common.escapeHtml(text)}</code></pre>`;
-    } else if (type === 'html') {
-      return text;
-    } else {
-      return `<pre>${tw.core.common.escapeHtml(text)}</pre>`;
+  function makeTiddlerText(tiddler) {
+    const {title, text, type} = tiddler;
+    // Three-stage render pipeline:
+    //   renderer.pre       — filter, transforms text before rendering
+    //   renderer.override  — request, first non-null wins; otherwise core fallback below
+    //   renderer.post      — filter, transforms output after rendering
+    // pre/post fire either way (around an override OR around the core fallback).
+    // Only null/undefined signals "no claim" from an override handler; '' wins.
+    const input = tw.events.filter('renderer.pre', text, {tiddler});
+    // Note: override handlers receive post-`renderer.pre` text (not raw stored
+    // text), so a pre-handler that transforms the input is visible to overrides.
+    let output = tw.events.request('renderer.override', {tiddler, text: input});
+    if (output == null) {
+      const markdownTypes = ['markdown', 'keyval', 'list', 'table'];
+      const codeTypes = ['macro', 'script/js', 'css', 'json', 'html/template'];
+      if (type === 'x-twikki') {
+        output = renderMarkdown(renderTWikki({text: input, title}));
+      } else if (markdownTypes.includes(type)) {
+        output = renderMarkdown(input);
+      } else if (codeTypes.includes(type)) {
+        output = `<pre><code>${tw.core.common.escapeHtml(input)}</code></pre>`;
+      } else if (type === 'html') {
+        output = input;
+      } else {
+        output = `<pre>${tw.core.common.escapeHtml(input)}</pre>`;
+      }
     }
+    return tw.events.filter('renderer.post', output, {tiddler});
   }
   function makeTiddlerTagLinks(tags) {
     return tags.map(tagPickerHtml).join('');

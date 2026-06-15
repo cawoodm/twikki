@@ -1,0 +1,69 @@
+/* CSV tables emitted by the CsvRenderer plugin — `<table class="csv">`.
+   Uses the design tokens from $BaseVariables so the table tracks the
+   active theme (light / dark / palette-swapped). border-collapse:
+   separate keeps the rounded corners crisp at the outer border. */
+.csv {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--col4);
+  border-radius: var(--rad2);
+  overflow: hidden;
+  margin: 0.75em 0;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  background-color: var(--colbg2);
+}
+
+.csv th,
+.csv td {
+  padding: 0.55em 0.95em;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--col4);
+}
+
+/* The outer border already provides the bottom edge for the last row. */
+.csv tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Header: solid accent bar with tracked uppercase labels. */
+.csv thead th {
+  background-color: var(--col3);
+  color: var(--col-on-accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  position: sticky;
+  top: 0;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--col0) 18%, transparent);
+}
+
+/* Zebra striping pinned to the palette so it remains legible under any
+   theme. Even rows pick up a hint of the chrome shade. */
+.csv tbody tr:nth-child(even) {
+  background-color: color-mix(in srgb, var(--colbg3) 60%, var(--colbg2));
+}
+
+.csv tbody tr:nth-child(odd) {
+  background-color: var(--colbg2);
+}
+
+/* Subtle accent on hover; transitions kept short so it feels responsive. */
+.csv tbody tr {
+  transition: background-color 80ms ease-in-out;
+}
+
+.csv tbody tr:hover {
+  background-color: color-mix(in srgb, var(--col6) 14%, var(--colbg2));
+}
+
+/* Numeric-looking cells (caller may add the `num` class for explicit
+   right-alignment with tabular figures). Default cells stay left-aligned. */
+.csv td.num,
+.csv th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
