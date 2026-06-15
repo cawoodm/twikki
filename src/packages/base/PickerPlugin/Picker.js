@@ -2,7 +2,7 @@
   const meta = {
     name: 'Picker',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Generic clickable picker bound via document-level delegation.',
   };
 

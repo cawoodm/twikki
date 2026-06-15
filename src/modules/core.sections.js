@@ -28,7 +28,7 @@
   // Meta
   const name = 'core.sections';
   const version = '0.24.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
 
   // Fence info-string → tiddler type. Unknown info-strings are used verbatim.
   const FENCE_TYPES = {

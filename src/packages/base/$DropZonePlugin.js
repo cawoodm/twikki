@@ -15,7 +15,7 @@
   const meta = {
     name: 'DropZone',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'File drag-and-drop with glob-registered handlers and a drop overlay.',
   };
 

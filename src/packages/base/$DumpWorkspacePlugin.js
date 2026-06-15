@@ -15,7 +15,7 @@
   const meta = {
     name: 'DumpWorkspace',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Dump/restore the current workspace as a single JSON file.',
   };
 
