@@ -17,7 +17,7 @@
   const meta = {
     name: 'CloseOthers',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Command palette action to close every open note except the active one.',
   };
 

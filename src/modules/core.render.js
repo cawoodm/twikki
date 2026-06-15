@@ -11,7 +11,7 @@
 (function (tw) {
   const name = 'core.render';
   const version = '0.1.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
 
   // A reference is a title, optionally followed by ::Section, so links/inclusions
   // can address into a tiddler: [[Title::Section]] / {{Title::Section}}. ':' is

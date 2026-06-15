@@ -83,6 +83,143 @@ test('all shipped plugins load, init and start without errors', async ({page}) =
   expect(broken, JSON.stringify(broken)).toHaveLength(0);
 });
 
+test('meta.dependencies reorders init: dependent listed first still inits after its dep', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      window.__order = [];
+      const mk = (title, name, deps) => ({
+        title,
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {meta: {name: '${name}', version: '1.0.0'${
+          deps ? `, dependencies: ${JSON.stringify(deps)}` : ''
+        }}, init() { window.__order.push('${name}'); }}; })()`,
+      });
+      // B is pushed BEFORE A; B declares it depends on A.
+      tw.tiddlers.all.push(mk('$DepB', 'DepB', ['DepA']));
+      tw.tiddlers.all.push(mk('$DepA', 'DepA', null));
+    });
+  });
+  await bootApp(page);
+  const order = await page.evaluate(() => window.__order);
+  expect(order.indexOf('DepA')).toBeGreaterThanOrEqual(0);
+  expect(order.indexOf('DepA')).toBeLessThan(order.indexOf('DepB'));
+});
+
+test('stable order: two non-base plugins with no deps keep their insertion order', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      window.__order = [];
+      const mk = (title, name) => ({
+        title,
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {meta: {name: '${name}', version: '1.0.0'}, init() { window.__order.push('${name}'); }}; })()`,
+      });
+      tw.tiddlers.all.push(mk('$StableFirst', 'StableFirst'));
+      tw.tiddlers.all.push(mk('$StableSecond', 'StableSecond'));
+    });
+  });
+  await bootApp(page);
+  const order = await page.evaluate(() => window.__order);
+  expect(order.indexOf('StableFirst')).toBeGreaterThanOrEqual(0);
+  expect(order.indexOf('StableFirst')).toBeLessThan(order.indexOf('StableSecond'));
+});
+
+test('dependency cycle: warn, both plugins still run, length unchanged', async ({page}) => {
+  const warnings = [];
+  page.on('console', msg => {
+    if (msg.type() === 'warning') warnings.push(msg.text());
+  });
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      window.__cycleRan = {};
+      const mk = (title, name, deps) => ({
+        title,
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {meta: {name: '${name}', version: '1.0.0', dependencies: ${JSON.stringify(
+          deps,
+        )}}, init() { window.__cycleRan['${name}'] = true; }}; })()`,
+      });
+      tw.tiddlers.all.push(mk('$CycX', 'CycX', ['CycY']));
+      tw.tiddlers.all.push(mk('$CycY', 'CycY', ['CycX']));
+    });
+  });
+  await bootApp(page);
+  const result = await page.evaluate(() => ({
+    ran: window.__cycleRan,
+    hasX: !!tw.plugin('CycX'),
+    hasY: !!tw.plugin('CycY'),
+  }));
+  expect(result.ran).toEqual({CycX: true, CycY: true});
+  expect(result.hasX).toBe(true);
+  expect(result.hasY).toBe(true);
+  expect(warnings.some(w => w.includes('cycle') && w.includes('CycX') && w.includes('CycY'))).toBe(
+    true,
+  );
+});
+
+test('base batch precedes non-base: a test-package plugin with no deps sorts after all base plugins', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.addEventListener('twikki.boot.progress', e => {
+      if (e.detail.phase !== 'modules-run') return;
+      // Insert at the FRONT so original order would put this non-base entry
+      // ahead of every base plugin — only the batch rule can fix that.
+      tw.tiddlers.all.unshift({
+        title: '$AaaaTestPlugin',
+        type: 'script/js',
+        tags: ['$Plugin'],
+        created: new Date(),
+        updated: new Date(),
+        package: 'test',
+        text: `(function () { return {meta: {name: 'AaaaTestPlugin', version: '1.0.0'}, init() {}}; })()`,
+      });
+    });
+  });
+  await bootApp(page);
+  const result = await page.evaluate(() => {
+    const idxTest = tw.plugins.findIndex(p => p.meta?.name === 'AaaaTestPlugin');
+    const baseIdxs = tw.plugins.map((p, i) => (p.package === 'base' ? i : -1)).filter(i => i >= 0);
+    return {idxTest, maxBaseIdx: Math.max(...baseIdxs)};
+  });
+  expect(result.idxTest).toBeGreaterThan(result.maxBaseIdx);
+});
+
+test('declared deps order within the base batch: BaseMarkdown before OpenLinksInNewWindow', async ({
+  page,
+}) => {
+  await bootApp(page);
+  const result = await page.evaluate(() => {
+    const idxMd = tw.plugins.findIndex(p => p.meta?.name === 'BaseMarkdown');
+    const idxOl = tw.plugins.findIndex(p => p.meta?.name === 'OpenLinksInNewWindow');
+    const ol = tw.plugin('OpenLinksInNewWindow');
+    return {idxMd, idxOl, missing: ol?.missingDependencies, error: ol?.error};
+  });
+  expect(result.idxMd).toBeGreaterThanOrEqual(0);
+  expect(result.idxOl).toBeGreaterThan(result.idxMd);
+  expect(result.missing).toBeUndefined();
+  expect(result.error).toBeNull();
+});
+
 test('tw.call resolves functions that moved out of the platform closure', async ({page}) => {
   await bootApp(page);
   const results = await page.evaluate(() => ({

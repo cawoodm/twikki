@@ -8,7 +8,7 @@
   const meta = {
     name: 'TiddlerManager',
     version: '1.1.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Mass tiddler search and delete UI via the manager.form macro.',
   };
 

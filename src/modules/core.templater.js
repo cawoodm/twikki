@@ -9,7 +9,7 @@
 
   const name = 'core.templater';
   const version = '0.24.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
 
   let blockregex = /\{\{(([@!]?)(.+?))\}\}(([\s\S]+?)(\{\{:\1\}\}([\s\S]+?))?)\{\{\/\1\}\}/g;
   let valregex = /\{\{([=%])(.+?)\}\}/g;

@@ -31,7 +31,7 @@ Feel free to look at the [code](#ExamplePlugin::Code).
     meta: {
       name: 'ExamplePlugin',
       version: '1.0.1',
-      platform: '0.24.0',
+      platform: '0.26.0',
       author: 'Marc Cawood',
       description: 'Demo plugin: shows the {meta, init, start} contract by registering a macro.',
       url: 'https://cawoodm.github.io/twikki',

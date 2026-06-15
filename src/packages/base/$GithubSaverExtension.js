@@ -4,7 +4,7 @@
     meta: {
       name: 'GithubSaver',
       version: '0.0.2',
-      platform: '0.24.0',
+      platform: '0.26.0',
       description: 'Save tiddlers to a GitHub repo via the contents API.'
     },
     init() {},

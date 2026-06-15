@@ -14,7 +14,7 @@
   const meta = {
     name: 'TestFramework',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Macros and runner for sequential UI/E2E tests (queue/clear/run/results).',
   };
 

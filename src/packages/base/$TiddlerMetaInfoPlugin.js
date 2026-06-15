@@ -14,7 +14,7 @@
   const meta = {
     name: 'TiddlerMetaInfo',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Per-tiddler details: package pill, doNotSave / isRawShadow flags.',
     // Soft dependency: the pill still renders as a button without Picker, just inert.
     dependencies: ['Picker'],

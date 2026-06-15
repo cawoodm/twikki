@@ -10,7 +10,7 @@
   const meta = {
     name: 'Favorites',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Toggle a Favorite tag on tiddlers and surface a star widget.',
   };
 
