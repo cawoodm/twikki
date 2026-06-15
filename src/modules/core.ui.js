@@ -384,9 +384,6 @@
     tw.core.render.renderAllTiddlers();
     setDirty(true);
     tw.core.store.save();
-    // A $Plugin tiddler was edited — validateTiddlerText skipped the eval because the live
-    // instance still owns its event subscriptions / DOM bindings. Offer a hard reload so the
-    // new plugin code actually takes effect.
     if (tw.tmp.pluginEdited) {
       tw.tmp.pluginEdited = false;
       if (confirm(`Plugin '${t.title}' was edited. Reload now to apply changes?`))

@@ -8,8 +8,7 @@
  * Merges the tiddler action API into `tw.run` and the legacy predicate
  * aliases into `tw.util` at eval time.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.tiddlers';
   const version = '0.1.0';
   const platform = '0.26.0'; // built for platform ^0.26.0
@@ -449,18 +448,10 @@
   }
   function validateTiddlerText(t) {
     if (t.type === 'json') return jsonValidator(t.text);
-    // Plugins have live state (event subscriptions, DOM bindings) bound at boot. Re-evaluating
-    // would leak duplicates and the OLD instance keeps running — so we flag the edit and let
-    // formDone() prompt for a hard reload after the save completes.
-    if (t.tags?.includes('$Plugin')) {
-      tw.tmp.pluginEdited = true;
-      return;
-    }
+    // Plugins have live state (event subscriptions, DOM bindings) bound at boot.
+    // Flag the edit and let/ formDone() prompt for a hard reload after the save completes.
+    if (t.tags?.includes('$Plugin')) tw.tmp.pluginEdited = true;
     tiddlerCodeBlocks(t).forEach(b => tw.run.executeText(b.text, b.title)); // validate by executing (as code tiddlers do)
-    if (isActiveCodeTiddler(t))
-      alert(
-        'This code tiddler is disabled and will not run. Remove the $CodeDisabled tag to activate.',
-      );
   }
   function jsonValidator(text) {
     JSON.parse(text);

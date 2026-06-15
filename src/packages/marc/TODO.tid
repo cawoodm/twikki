@@ -1,8 +1,21 @@
 # Roadmap
 
+## General
+
+- When I search for "tiddlertypes" it's not being highlighted by the SearchHighlightPlugin
+- Plugins should be validated on save: tiddlerUpdated runs the code blocks but doesn't trap errors and prevent saving
+
+## Workspaces
+
+- Run different workspaces in separate tabs (virtual /path?)
+
 ## Macros
 
-- Create a <<macros>> widget
+- Create a `<<macros>>` widget to list macros
+- Create a `<<pill>>` widget to list tiddlers matching a search:
+  - `<<pill "Search Meta" Meta>>`: <<pill "Search Meta" Meta>>
+  - `<<pill "Demo Package" $pck:demo>>`
+  - `<<pill "My Favorites" tag:Favorite>>`
 
 When rendering multi-part tiddlers, the `tags: $StyleSheet` section should display as pills with the `<<Tag>>` macro
 Picker menus are very ugly
