@@ -5,6 +5,8 @@
 - When I search for "tiddlertypes" it's not being highlighted by the SearchHighlightPlugin
 - Plugins should be validated on save: tiddlerUpdated runs the code blocks but doesn't trap errors and prevent saving
 
+* Loading http://localhost:3002/packages/demo.json breaks broadsheet theme because of OnboardingMacro
+
 ## Workspaces
 
 - Run different workspaces in separate tabs (virtual /path?)
