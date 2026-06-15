@@ -366,6 +366,26 @@ test('markdown still renders via the core fallback after the pipeline change', a
   expect(html).toContain('Hi');
 });
 
+test('CsvRenderer registers "csv" type in the new-tiddler picker datalist', async ({page}) => {
+  await bootApp(page);
+  // Plugin registers via tw.extensions.registerType in start().
+  const registered = await page.evaluate(() => tw.types?.csv);
+  expect(registered).toBe('CSV Data');
+  // The new-tiddler dialog merges $TiddlerTypes shadow with tw.types when opened.
+  await page.evaluate(() => tw.events.send('tiddler.new'));
+  const options = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('#new-types option')).map(o => ({
+      value: o.value,
+      label: o.textContent,
+    })),
+  );
+  const csv = options.find(o => o.value === 'csv');
+  expect(csv).toBeTruthy();
+  expect(csv.label).toBe('CSV Data');
+  // Sanity: a built-in shadow type is also present (merge keeps shadow entries).
+  expect(options.some(o => o.value === 'markdown')).toBe(true);
+});
+
 test('tw.call resolves functions that moved out of the platform closure', async ({page}) => {
   await bootApp(page);
   const results = await page.evaluate(() => ({

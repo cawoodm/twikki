@@ -46,6 +46,7 @@
       description: 'Renders type=csv tiddlers as HTML tables (RFC 4180).',
     },
     start() {
+      tw.extensions.registerType('csv', 'CSV Data');
       const esc = s =>
         String(s).replace(
           /[&<>"]/g,

@@ -94,7 +94,20 @@
       if (i >= 0) tw.commands.providers[i] = entry;
       else tw.commands.providers.push(entry);
     },
+    // Register a tiddler type so the new/edit dialog's type picker offers it.
+    // `key` is the type string stored on tiddlers (e.g. 'csv'); `label` is the
+    // human-readable name shown in the picker. Last-write-wins on duplicate
+    // keys. In-memory only — the type vanishes if the registering plugin is
+    // uninstalled/disabled, and it does not persist to localStorage (unlike
+    // an edit to the $TiddlerTypes shadow tiddler).
+    registerType(key, label) {
+      if (!key) return console.warn('registerType: key required');
+      tw.types[key] = label || key;
+    },
   };
+  // `||` guard makes it idempotent across soft reloads (which re-eval modules
+  // and would otherwise wipe plugin registrations that already happened).
+  tw.types = tw.types || {};
   tw.macros = {
     core: {
       showTiddlerList: (...args) => tw.core.tiddlers.showTiddlerList(...args),
@@ -303,12 +316,15 @@
     focusElement.setSelectionRange(0, 0);
     focusElement.scrollTop = 0;
     setDirty(true);
-    tw.core.dom.$('new-types').innerHTML = tw.core.tiddlers
+    // Merge $TiddlerTypes shadow (built-in types) with tw.types
+    // (plugin-registered types via tw.extensions.registerType). Plugin entries
+    // override shadow entries on key collision (last-wins).
+    const shadow = tw.core.tiddlers
       .getKeyValuesArray('$TiddlerTypes')
-      .map(t => {
-        return `<option value="${t.key}">${t.value}</option>`;
-      })
-      .filter(tw.core.common.notEmpty)
+      .reduce((acc, t) => ((acc[t.key] = t.value), acc), {});
+    const merged = {...shadow, ...tw.types};
+    tw.core.dom.$('new-types').innerHTML = Object.entries(merged)
+      .map(([key, label]) => `<option value="${key}">${label}</option>`)
       .join('\n');
   }
 
