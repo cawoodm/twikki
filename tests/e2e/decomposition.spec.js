@@ -314,7 +314,7 @@ test('renderer.override returning empty string claims the call (null is the only
 test('shipped CsvRenderer renders type=csv tiddlers as an HTML table', async ({page}) => {
   await bootApp(page);
   const result = await page.evaluate(() => {
-    const t = tw.tiddlers.all.find(x => x.title === 'SampleCsv');
+    const t = tw.tiddlers.all.find(x => x.title === 'ExampleCsv');
     const html = t ? tw.core.render.makeTiddlerText(t) : null;
     return {found: !!t, type: t?.type, html};
   });
@@ -322,8 +322,11 @@ test('shipped CsvRenderer renders type=csv tiddlers as an HTML table', async ({p
   expect(result.type).toBe('csv');
   expect(result.html).toContain('<table class="csv">');
   expect(result.html).toContain('<th>Name</th>');
-  expect(result.html).toContain('<td>Alice</td>');
-  expect(result.html).toContain('<td>Zurich</td>');
+  expect(result.html).toContain('<th>Age</th>');
+  // Bare field with embedded space.
+  expect(result.html).toContain('<td>james dean</td>');
+  // Quoted field with embedded space — proves the RFC 4180 parser is active on the shipped demo.
+  expect(result.html).toContain('<td>John Smith</td>');
 });
 
 test('CsvRenderer: RFC 4180 quoted field with embedded comma renders as one cell', async ({

@@ -43,7 +43,8 @@
       version: '0.0.2',
       platform: '0.26.0',
       author: 'TWikki',
-      description: 'Renders type=csv tiddlers as HTML tables (RFC 4180).',
+      description:
+        'Renders type=csv tiddlers as HTML tables. RFC 4180 parser handles quoted fields, embedded commas, embedded newlines, and escaped quotes. See [[ExampleCsv]] for a live demo.',
     },
     start() {
       tw.extensions.registerType('csv', 'CSV Data');
