@@ -9,6 +9,7 @@
   const MAX_TABS = 30; // hard upper bound; the rest go in the overflow dropdown
   const MIN_TAB = 96; // px — keeps ≥3 chars + ellipsis legible (matches .tab min-width in CSS)
   const TRAILING = 40; // px reserved for the new-note button / overflow trigger
+  const ACTIVE_KEY = 'tab-active'; // workspace-scoped store key for the last active tab
   let strip; // #tab-strip
   let vis; // #visible-tiddlers
   let app; // #app (carries the mode-tabs / mode-river class)
@@ -17,6 +18,17 @@
   let batch = [];
   let scheduled = false;
   let scrollPos = {}; // remembered scrollTop per note title
+
+  // Single sink for the active tab — keep tw.tabs.active and the persisted
+  // workspace key in sync so a reload restores the last-viewed note.
+  function setActive(title) {
+    if (!tw.tabs) return;
+    if (tw.tabs.active === title) return;
+    tw.tabs.active = title;
+    try {
+      tw.store.set(ACTIVE_KEY, title);
+    } catch {}
+  }
 
   function wireUp(event, handler) {
     tw.events.subscribe(event, handler, 'TabsPlugin');
@@ -29,7 +41,11 @@
     if (!strip || !vis) return;
     mode = layoutMode();
     scrollPos = {};
-    tw.tabs = {active: null, rebuild: () => schedule(), activate};
+    let restored = null;
+    try {
+      restored = tw.store.get(ACTIVE_KEY) || null;
+    } catch {}
+    tw.tabs = {active: restored, rebuild: () => schedule(), activate};
 
     if (app) {
       app.classList.toggle('mode-river', mode !== 'tabs');
@@ -102,7 +118,7 @@
       active = visible[Math.min(idx, visible.length - 1)] || visible[visible.length - 1] || null;
     }
 
-    if (tw.tabs) tw.tabs.active = active;
+    setActive(active);
     rebuildStrip(visible, active);
     applyActive(active);
     restoreScroll(active);
@@ -116,7 +132,7 @@
   function activate(title) {
     if (mode !== 'tabs' || !title) return;
     saveScroll(); // capture the outgoing note's position before it hides
-    if (tw.tabs) tw.tabs.active = title;
+    setActive(title);
     applyActive(title);
     rebuildStrip(tw.tiddlers.visible, title);
     restoreScroll(title);
