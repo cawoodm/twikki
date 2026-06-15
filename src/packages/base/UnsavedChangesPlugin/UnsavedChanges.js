@@ -2,7 +2,7 @@
   const meta = {
     name: 'UnsavedChanges',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Tracks unsaved changes and shows them in a dialog.',
   };
 

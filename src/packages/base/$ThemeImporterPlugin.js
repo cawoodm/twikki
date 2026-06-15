@@ -26,7 +26,7 @@
   const meta = {
     name: 'ThemeImporter',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Import themes from a packaged JSON gist into the local workspace.',
   };
 

@@ -9,7 +9,7 @@
 (function (tw) {
   const name = 'core.notifications';
   const version = '0.25.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
 
   // Exports
   const exports = {notify};

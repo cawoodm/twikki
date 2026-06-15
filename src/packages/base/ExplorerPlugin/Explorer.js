@@ -2,7 +2,7 @@
   const meta = {
     name: 'Explorer',
     version: '1.0.1',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Sidebar tree showing all tiddlers grouped by tag.',
   };
 

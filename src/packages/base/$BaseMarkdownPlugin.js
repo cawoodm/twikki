@@ -17,7 +17,7 @@
     meta: {
       name: 'BaseMarkdown',
       version: '14.2.0',
-      platform: '0.24.0',
+      platform: '0.26.0',
       description: 'Default markdown renderer (bundled markdown-it). Exposes tw.core.markdown.'
     },
     init() {

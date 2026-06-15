@@ -7,7 +7,7 @@
   const meta = {
     name: 'Highlight',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Lazy-loads highlight.js and syntax-highlights code blocks on render.',
   };
 

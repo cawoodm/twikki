@@ -12,7 +12,7 @@
 
   const name = 'core.tiddlers';
   const version = '0.1.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
 
   // The section delimiter: a reference may address into a tiddler's sections as
   // `Title::Section`. ':' is NOT a valid title character, so the '::' in a

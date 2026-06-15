@@ -3,8 +3,8 @@
   return {
     meta: {
       name: 'OpenLinksInNewWindow',
-      version: '0.0.1',
-      platform: '0.24.0',
+      version: '0.0.2',
+      platform: '0.26.0',
       author: 'Marc Cawood',
       description: 'Open http(s):// links in markdown in a new window',
       dependencies: ['BaseMarkdown'],

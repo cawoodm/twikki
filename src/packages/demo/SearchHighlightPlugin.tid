@@ -23,7 +23,7 @@ highlighted, mirroring typical incremental-search ergonomics.
   const meta = {
     name: 'SearchHighlight',
     version: '0.1.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Paint search-term matches in the opened note for 10s via CSS Custom Highlight API.',
   };
 

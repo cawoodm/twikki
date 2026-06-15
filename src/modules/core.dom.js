@@ -9,7 +9,7 @@
 (function (tw) {
   const name = 'core.dom';
   const version = '0.24.0';
-  const platform = '0.24.0'; // built for platform ^0.24.0
+  const platform = '0.26.0'; // built for platform ^0.26.0
   const exports = {};
 
   // Exports

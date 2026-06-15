@@ -4,7 +4,7 @@
   const meta = {
     name: 'BackupReminder',
     version: '1.0.0',
-    platform: '0.24.0',
+    platform: '0.26.0',
     description: 'Periodic notification reminding the user to back up.',
   };
 
