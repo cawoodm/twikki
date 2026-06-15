@@ -81,3 +81,18 @@ test('events.filter: passes ctx through to handlers as the second arg', () => {
   events.filter('f', 'ignored', {tiddler: {title: 'T'}});
   assert.deepEqual(seenCtx, {tiddler: {title: 'T'}});
 });
+
+test('events.filter: subscriber returning undefined is a no-op (passes value through)', () => {
+  const events = freshEvents();
+  events.subscribe('f', function step1(v) { return v + '-a'; });
+  events.subscribe('f', function forgotReturn() { /* no return */ });
+  events.subscribe('f', function step3(v) { return v + '-c'; });
+  assert.equal(events.filter('f', 'x'), 'x-a-c');
+});
+
+test('events.filter: subscriber returning empty string DOES set value (only undefined is no-op)', () => {
+  const events = freshEvents();
+  events.subscribe('f', function clear() { return ''; });
+  events.subscribe('f', function append(v) { return v + '-after'; });
+  assert.equal(events.filter('f', 'before'), '-after');
+});

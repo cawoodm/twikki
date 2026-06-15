@@ -326,6 +326,37 @@ test('shipped CsvRenderer renders type=csv tiddlers as an HTML table', async ({p
   expect(result.html).toContain('<td>Zurich</td>');
 });
 
+test('CsvRenderer: RFC 4180 quoted field with embedded comma renders as one cell', async ({
+  page,
+}) => {
+  await bootApp(page);
+  const html = await page.evaluate(() =>
+    tw.core.render.makeTiddlerText({
+      title: 'X',
+      type: 'csv',
+      text: 'City,Pop\n"New York, NY",8000000\n"He said ""hi""",1',
+    }),
+  );
+  // Embedded comma stays in one cell.
+  expect(html).toContain('<td>New York, NY</td>');
+  // Escaped "" collapses to single ", then HTML-escaped to &quot;.
+  expect(html).toContain('<td>He said &quot;hi&quot;</td>');
+  // No spurious extra cells from naive splitting.
+  expect(html.match(/<td>/g).length).toBe(4); // 2 rows × 2 cells
+});
+
+test('CsvRenderer: empty body renders an empty table, no crash, no <pre> fallback', async ({
+  page,
+}) => {
+  await bootApp(page);
+  const cases = await page.evaluate(() => ({
+    empty: tw.core.render.makeTiddlerText({title: 'X', type: 'csv', text: ''}),
+    nullish: tw.core.render.makeTiddlerText({title: 'X', type: 'csv', text: undefined}),
+  }));
+  expect(cases.empty).toBe('<table class="csv"></table>');
+  expect(cases.nullish).toBe('<table class="csv"></table>');
+});
+
 test('markdown still renders via the core fallback after the pipeline change', async ({page}) => {
   await bootApp(page);
   const html = await page.evaluate(() =>

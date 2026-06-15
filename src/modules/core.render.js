@@ -293,6 +293,8 @@
     // pre/post fire either way (around an override OR around the core fallback).
     // Only null/undefined signals "no claim" from an override handler; '' wins.
     const input = tw.events.filter('renderer.pre', text, {tiddler});
+    // Note: override handlers receive post-`renderer.pre` text (not raw stored
+    // text), so a pre-handler that transforms the input is visible to overrides.
     let output = tw.events.request('renderer.override', {tiddler, text: input});
     if (output == null) {
       const markdownTypes = ['markdown', 'keyval', 'list', 'table'];

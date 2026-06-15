@@ -49,9 +49,13 @@
         }
         return undefined;
       },
-      // Chain `value` through subscribers; each returns the next value. Throws
-      // are caught — the failing handler is skipped and the previous value is
-      // passed on. Empty subscriber list returns the original value unchanged.
+      // Chain `value` through subscribers; each returns the next value. A
+      // subscriber that returns `undefined` is treated as a no-op (value
+      // passes through unchanged) — symmetric with `request()` and prevents
+      // a forgotten `return` from silently poisoning the chain. To explicitly
+      // set the value to empty, return `''`. Throws are caught — the failing
+      // handler is skipped and the previous value is passed on. Empty
+      // subscriber list returns the original value unchanged.
       filter(event, value, ctx) {
         dp('events.filter', event);
         let current = value;
@@ -59,7 +63,8 @@
           .filter(h => h.event === event)
           .forEach(h => {
             try {
-              current = h.handler(current, ctx);
+              const next = h.handler(current, ctx);
+              if (next !== undefined) current = next;
             } catch (e) {
               console.warn(`events.filter '${event}' handler threw: ${e.message}`, e.stack);
             }
