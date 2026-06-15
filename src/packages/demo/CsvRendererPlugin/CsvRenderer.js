@@ -48,20 +48,14 @@
     },
     start() {
       tw.extensions.registerType('csv', 'CSV Data');
-      const esc = s =>
-        String(s).replace(
-          /[&<>"]/g,
-          c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c],
-        );
+      const esc = tw.core.common.escapeHtml;
       tw.events.subscribe('renderer.override', function csvRenderer({tiddler, text}) {
         if (tiddler.type !== 'csv') return null;
         const rows = parseCsv(text);
         if (!rows.length) return '<table class="csv"></table>';
         const [header, ...body] = rows;
         const ths = header.map(c => `<th>${esc(c)}</th>`).join('');
-        const trs = body
-          .map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`)
-          .join('');
+        const trs = body.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('');
         return `<table class="csv"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
       });
     },
