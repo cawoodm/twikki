@@ -27,7 +27,7 @@
 
   function activeNote() {
     let open = tw.tiddlers.visible;
-    let active = (tw.tabs && tw.tabs.active) || tw.tmp.activeNote;
+    let active = tw.tmp.activeNote || (tw.tabs && tw.tabs.active);
     if (active && open.includes(active)) return active;
     return open[open.length - 1] || null; // fallback: most recently opened
   }
