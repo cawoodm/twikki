@@ -15,11 +15,16 @@
   // Init
   if (!tw.store.global.get('workspaces')) tw.store.global.set('workspaces', ['default']);
   if (!tw.store.global.get('workspace')) tw.store.global.set('workspace', 'default');
-  tw.workspace = tw.store.global.get('workspace');
+  bootstrapFromQuery();
+  tw.workspace =
+    sessionStorage.getItem('workspace') ||
+    tw.store.global.get('workspace') ||
+    'default';
   try {
     workspaceSwitch(tw.workspace);
   } catch {
     console.warn(`Unknown 'workspace ${tw.workspace}', switching to default`);
+    sessionStorage.removeItem('workspace');
     workspaceSwitch();
   }
 
@@ -84,6 +89,8 @@
     name = workspaces[index];
     // Repoint the active workspace — tw.store (core.store) scopes by tw.workspace
     tw.store.global.set('workspace', name);
+    // Per-tab anchor — survives `?ws=` strip and in-app hash mutation
+    sessionStorage.setItem('workspace', name);
     tw.workspace = name;
   }
   /**
@@ -113,5 +120,30 @@
       tw.store.set(k, source[k]);
     });
     if (current) workspaceSwitch(current);
+  }
+
+  // `?ws=<name>` is a one-shot bootstrap: when present and known, the name is
+  // written into sessionStorage and the URL is reloaded without the query.
+  // From then on the session anchors this tab's workspace — immune to in-app
+  // hash mutation. Unknown names are left in the URL with a warning so the
+  // user can see what they typed; the fallback chain picks the default.
+  function bootstrapFromQuery() {
+    const params = new URLSearchParams(location.search);
+    const wsFromQuery = params.get('ws');
+    if (!wsFromQuery) return;
+    const known = (tw.store.global.get('workspaces') || []).indexOf(wsFromQuery) >= 0;
+    if (!known) {
+      console.warn(`Unknown 'workspace ${wsFromQuery}' from ?ws=, ignoring`);
+      return;
+    }
+    sessionStorage.setItem('workspace', wsFromQuery);
+    params.delete('ws');
+    const cleanSearch = params.toString();
+    const cleanUrl = location.pathname + (cleanSearch ? '?' + cleanSearch : '') + location.hash;
+    try {
+      location.replace(cleanUrl);
+    } catch {
+      // file:// or strict sandbox — fall through; the session anchor still works
+    }
   }
 });

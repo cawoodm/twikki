@@ -17,6 +17,12 @@
     }
     let item = e.target.closest('.picker-item');
     if (item) {
+      // Anchor item + Ctrl/Cmd-click: let the browser open it in a new tab.
+      // (Middle-click fires `auxclick`, which this handler doesn't listen to.)
+      if ((e.ctrlKey || e.metaKey) && item.tagName === 'A') {
+        closeAll();
+        return;
+      }
       e.preventDefault();
       let picker = item.closest('.picker');
       let event = item.dataset.event || picker?.dataset.event;
@@ -45,7 +51,7 @@
     taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')})),
     // Every tag in the store, dispatched as a `search` for `tag:<name>`.
     alltags: () =>
-      (tw.macros.core?.allTags?.() || [])
+      (tw.run?.allTags?.() || [])
         .filter(Boolean)
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         .map((tag) => ({value: 'tag:' + tag, label: tag})),

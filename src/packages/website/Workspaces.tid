@@ -1,0 +1,73 @@
+tags: Help
+
+A **workspace** is an isolated tiddler store. Every workspace has its own notes, its own [[$Theme]], its own settings — they live side-by-side under separate `/ws/<name>/` keys in `localStorage` and never see each other. You can use one for personal notes, another for a project, another as a sandbox to try plugins or themes without polluting your main store.
+
+The active workspace per browser tab is held in `sessionStorage`, so opening two tabs and switching one does **not** disturb the other. Each tab is independent.
+
+## Switching workspaces
+
+The current workspace's name shows in the workspace picker in the header. Below are every way to change it.
+
+### The picker widget
+
+<<WorkspaceSelect>>
+
+- **Left-click** an entry → switch in this tab (the page reloads in the chosen workspace).
+- **Middle-click** (or Ctrl/⌘-click, right-click → "Open in new tab") → open the chosen workspace in a **new tab**, leaving this one alone. That is how you get workspace A and workspace B running side-by-side.
+
+You can drop `<<WorkspaceSelect>>` into any tiddler — it is the same widget the header uses.
+
+### From the command palette
+
+Press **Ctrl+K** to open the command palette, then type `Switch` — every workspace is listed as `Switch workspace: <name>`. The same palette also has **Create workspace**.
+
+### From a URL
+
+Append `?ws=<name>` to the TWikki URL to open a tab directly in that workspace. The query is consumed on arrival: the name is written into the tab's session anchor and the URL is replaced with the clean one (no `?ws=`). For example:
+
+- [Open the default workspace in a new tab](?ws=default) — `?ws=default`
+
+The same trick is what middle-click in the picker does under the hood. If the name does not exist, the URL is left visible with a console warning and the tab boots into the global default.
+
+### From a `msg:` link inside a tiddler
+
+Anywhere you can write markdown, you can embed a switch link. The event is `workspace.load`:
+
+| Link | Raw syntax |
+|---|---|
+| [Switch to default](#msg:workspace.load:default) | `#msg:workspace.load:default` |
+| [Open the workspace picker](#msg:workspace.load.prompt) | `#msg:workspace.load.prompt` |
+
+See [[Events]] for the general link format. Spaces in workspace names must be percent-encoded (`My%20Notes`).
+
+## Creating a workspace
+
+Three doors to the same prompt:
+
+- The **– new workspace –** entry at the top of the picker above.
+- **Create workspace** in the Ctrl+K command palette.
+- The button macro: <<WorkspaceCreate>>
+
+You will be asked for a name and then offered to **clone** the current workspace (copy its tiddlers, visible list, and trashed list across). Decline to start with an empty store.
+
+## What is shared and what is not
+
+| | Scope |
+|---|---|
+| Tiddlers (notes, tags, drafts, trashed) | **Per workspace** |
+| [[$Theme]] selection and `$StyleSheetUser` | **Per workspace** |
+| Settings tiddlers (`$GeneralSettings`, `$SearchSettings`, …) | **Per workspace** |
+| List of all known workspaces | Global |
+| "Last switched-to" workspace (the default for fresh tabs) | Global |
+| The active workspace **for this tab** | Per tab (sessionStorage) |
+| Module cache (no need to re-download core code per workspace) | Global |
+
+## Limitations
+
+- Switching workspace in the current tab triggers a **full page reload** — necessary because shadow tiddlers are frozen at boot and need a fresh load to swap out.
+- Opening the **same** workspace in two tabs is allowed but **not synchronised**. Edits in one tab become visible in the other only after the other tab reloads — last write wins, by tiddler timestamp.
+- Middle-clicking a regular wikilink (`[[Other Note]]`) opens a new tab in the global default workspace, **not** the workspace of the source tab. To open another workspace in a new tab, use the picker — its links carry an explicit `?ws=` target.
+
+## Behind the scenes
+
+Workspaces are scoped purely by a key prefix in `localStorage`. The `core.store` module reads `tw.workspace` on every key access and prepends `/ws/<name>/`, so every read and write inside a workspace is automatically isolated. The `core.workspaces` module manages which name is active and persists the list of known workspaces. See [the source for `core.workspaces`](https://github.com/cawoodm/twikki/blob/main/src/modules/core.workspaces.js) for the full lifecycle.

@@ -201,21 +201,29 @@
     return tw.run.getTiddlerList(theme);
   }
 
-  tw.extensions.registerMacro('core', 'ThemeSelector', () => {
-    let theme = getCurrentThemeName();
-    let items = getThemeNames()
-      .sort()
-      .map(
-        (n) =>
-          `<div class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</div>`
-      )
-      .join('');
-    // Single-line output so the widget can live inside markdown table cells
-    return `<span class="picker" data-event="theme.switch">
+  tw.extensions.registerMacro(
+    'core',
+    'ThemeSelector',
+    () => {
+      let theme = getCurrentThemeName();
+      // Items as spans (phrasing content) so the parser doesn't hoist them out
+      // of the picker-menu when the macro is embedded in a markdown `<p>`. CSS
+      // (`.picker-item { display: block }`) handles the visual layout.
+      let items = getThemeNames()
+        .sort()
+        .map(n => `<span class="picker-item${n === theme ? ' active' : ''}" data-value="${n}">${n.replace(/(^\$)|(Theme)/g, '')}</span>`)
+        .join('');
+      // Single-line output so the widget can live inside markdown table cells
+      return `<span class="picker" data-event="theme.switch">
       <button class="icon picker-trigger" title="Theme" aria-haspopup="true">{{$IconTheme}}</button>
       <span class="picker-menu" hidden>${items}</span>
       </span>`.replace(/\n/g, '');
-  });
+    },
+    {
+      description: 'Dropdown to switch the active theme instantly.',
+      example: '<<ThemeSelector>>',
+    },
+  );
 
   // Dynamic command palette entries — one "Switch theme: X" per installed theme.
   // A provider (re-evaluated at palette render) so newly added themes appear live.
