@@ -6,8 +6,7 @@
  * `overWrite`/`filter` options, and confirm()s before overwriting a tiddler
  * the user has changed. `reloadPackageFromUrl` additionally reloads the UI.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.packaging';
   const version = '0.24.0';
   const platform = '0.26.0'; // built for platform ^0.26.0
@@ -20,6 +19,10 @@
   return {name, version, platform, exports};
 
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
+    // Resolve relative URLs (e.g. `packages/website.json`) against the platform's
+    // baseUrl rather than the document URL — the latter drops a no-trailing-slash
+    // last segment (`/twikki?reload` → base `/`) and would 404 the fetch.
+    url = tw.core.buildUrl(url);
     dp('Loading tiddler package', name, url);
     try {
       let obj = await httpGetJSON(url, name, {});
@@ -36,10 +39,11 @@
     if (!Array.isArray(list)) return tw.ui.notify(`packages.loadList(${name}): No tiddlers array returned!`, 'E');
     filter = filter && filter !== '*' ? new RegExp(filter, 'i') : null;
     // Delete all tiddlers of this package but not in this new list
-    tw.tiddlers.all.filter(t => t.package === name)
+    tw.tiddlers.all
+      .filter(t => t.package === name)
       .map(t => t.title)
       .filter(title => !list.find(t => t.title === title))
-      .forEach((title) => (tw.run.deleteTiddler(title, true)));
+      .forEach(title => tw.run.deleteTiddler(title, true));
 
     list.forEach(t => {
       t.updated = new Date(t.updated);
@@ -62,8 +66,7 @@
       if (existingTiddler)
         // TODO: Not good as it generates events during boot
         tw.run.updateTiddlerHard(t.title, t);
-      else
-        tw.run.addTiddlerHard(t);
+      else tw.run.addTiddlerHard(t);
       count++;
     });
     return count;
@@ -78,6 +81,7 @@
   async function reloadPackageFromUrl(pck) {
     let count = await loadPackageFromURL(pck);
     tw.events.send('ui.reload');
+    // TODO: This never displays:
     tw.ui.notify(`${count} tiddlers imported from package ${pck.name || pck.url}`, 'D');
   }
   async function httpGetJSON(url, name, headers = {}) {
