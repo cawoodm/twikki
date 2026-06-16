@@ -242,8 +242,7 @@
   /* ---------- Navigation ---------- */
   function navigateTo(link) {
     if (!link) return;
-    tw.core.tiddlers.showTiddler(link);
-    tw.core.tiddlers.scrollToTiddler(link);
+    tw.events.send('tiddler.show', link);
     location.hash = '';
   }
   function sendCommand(cmd, params, currentTiddlerTitle) {
@@ -567,13 +566,7 @@
   // Render on click expander
   function expose({name, content, message, payload, id, attr = ''}) {
     if (!id) id = randstr();
-    return `<details ${attr}><summary data-msg="${encodeMessage(message, payload)}" data-target="${id}" data-default="true">${name}</summary><div id="${id}">${content}</div></details>`;
-  }
-
-  function encodeMessage(message, payload) {
-    let params = typeof payload === 'undefined' ? '' : payload;
-    params = typeof params === 'object' ? JSON.stringify(params) : params;
-    return `${message}:---enc:${tw.core.common.encoder(params)}`;
+    return `<details ${attr}><summary data-msg="${message}" data-params="${payload}" data-target="${id}" data-default="true">${name}</summary><div id="${id}">${content}</div></details>`;
   }
 
   function randstr() {
