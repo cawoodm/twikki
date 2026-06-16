@@ -222,9 +222,7 @@
     // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
     // in the cache booted before (the user installed it), so it boots again silently.
     const blocking = compatReports.filter(r => r.severity === 'block');
-    const freshWarn = tw.modules.filter(
-      (m, i) => m.fetched && compatReports[i].severity === 'warn',
-    );
+    const freshWarn = tw.modules.filter((m, i) => m.fetched && compatReports[i].severity === 'warn');
     bootProgress({phase: 'compat', blocking: blocking.length, warnings: freshWarn.length});
     if (blocking.length || freshWarn.length) {
       console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
@@ -372,10 +370,7 @@
     if (handleModuleErrors.handled) return true;
     handleModuleErrors.handled = true;
     const names = errMsgs.map(e => e.name.replace(/^\//, '').replace(/\.js$/, ''));
-    const heading =
-      names.length === 1
-        ? `Module '${names[0]}' failed to load`
-        : `${names.length} modules failed to load: ${names.join(', ')}`;
+    const heading = names.length === 1 ? `Module '${names[0]}' failed to load` : `${names.length} modules failed to load: ${names.join(', ')}`;
     document.write(`<h1>${heading}</h1>`);
     errMsgs.forEach(e => {
       const name = e.name.replace(/^\//, '');
@@ -385,9 +380,7 @@
     traceUrl = traceUrl.match(/\?/) ? traceUrl + '&trace' : traceUrl + '?trace';
     document.write('<p class="error">Tips:');
     document.write('<ul>');
-    document.write(
-      `<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`,
-    );
+    document.write(`<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`);
     document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
     document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
     document.write('</ul>');
@@ -451,22 +444,20 @@
     // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tw.util.tiddlerExists(title));
     tw.core.tiddlers.runCoreTiddlers();
-    if (!qs.safemode) {
-      // Three-phase plugin lifecycle, parallel to core modules:
-      //   load   — eval each $Plugin tiddler's code; the returned {meta, init?, start?} is the plugin.
-      //   init   — every plugin is loaded before any init() runs, so init() can check deps via tw.plugin().
-      //   start  — every plugin is initialised before any start() runs.
-      // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
-      bootProgress({phase: 'plugins', step: 'load'});
-      loadPlugins();
-      checkPluginDependencies();
-      sortPluginsByDependencies();
-      bootProgress({phase: 'plugins', step: 'init'});
-      initPlugins();
-      bootProgress({phase: 'plugins', step: 'start'});
-      startPlugins();
-      runScripts();
-    }
+    // Three-phase plugin lifecycle, parallel to core modules:
+    //   load   — eval each $Plugin tiddler's code; the returned {meta, init?, start?} is the plugin.
+    //   init   — every plugin is loaded before any init() runs, so init() can check deps via tw.plugin().
+    //   start  — every plugin is initialised before any start() runs.
+    // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
+    bootProgress({phase: 'plugins', step: 'load'});
+    loadPlugins();
+    checkPluginDependencies();
+    sortPluginsByDependencies();
+    bootProgress({phase: 'plugins', step: 'init'});
+    initPlugins();
+    bootProgress({phase: 'plugins', step: 'start'});
+    startPlugins();
+    runScripts();
     tw.core.render.loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tw.core.render.tiddlerSpanInclude);
     tw.core.dom.$$('*[macro]')?.forEach(tw.core.render.macroInclude);
@@ -527,9 +518,7 @@
   // surfaces. This mirrors how core modules return {name, version, exports?, run?} from src/modules/.
   function loadPlugins() {
     const seenNames = new Set();
-    tw.plugins = tw.tiddlers.all
-      .filter(t => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled'))
-      .map(t => loadOnePlugin(t, seenNames));
+    tw.plugins = tw.tiddlers.all.filter(t => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled')).map(t => loadOnePlugin(t, seenNames));
   }
 
   function loadOnePlugin(t, seenNames) {
@@ -559,8 +548,7 @@
           entry.error = {phase: 'load', message: e.message};
           tw.ui.notify(`Plugin '${t.title}' failed to load (see console log)`, 'E', e.stack);
           console.error(`Plugin '${t.title}' failed to load: ${e.message}`, e.stack);
-          if (confirm(`Plugin '${t.title}' failed to load. Would you like to disable it?`))
-            t.tags.push('$CodeDisabled');
+          if (confirm(`Plugin '${t.title}' failed to load. Would you like to disable it?`)) t.tags.push('$CodeDisabled');
           return entry;
         }
     } catch (e) {
@@ -610,9 +598,7 @@
       const missing = deps.filter(d => !tw.plugin(d));
       if (missing.length) {
         p.missingDependencies = missing;
-        console.warn(
-          `Plugin '${p.meta.name}' declares missing dependencies: ${missing.join(', ')}`,
-        );
+        console.warn(`Plugin '${p.meta.name}' declares missing dependencies: ${missing.join(', ')}`);
       }
     });
   }
@@ -671,11 +657,7 @@
         .map((p, i) => ({p, i}))
         .filter(({i}) => indegree[i] > 0)
         .sort((a, b) => a.i - b.i);
-      console.warn(
-        `Plugin dependency cycle detected; emitting in original order: ${stuck
-          .map(({p}) => p.meta?.name || p.source)
-          .join(', ')}`,
-      );
+      console.warn(`Plugin dependency cycle detected; emitting in original order: ${stuck.map(({p}) => p.meta?.name || p.source).join(', ')}`);
       stuck.forEach(({p}) => sorted.push(p));
     }
     tw.plugins = sorted;
@@ -688,11 +670,7 @@
         plugin.init();
       } catch (e) {
         plugin.error = {phase: 'init', message: e.message};
-        tw.ui.notify(
-          `Plugin '${plugin.meta.name}' failed to initialize: ${e.message}`,
-          'E',
-          e.stack,
-        );
+        tw.ui.notify(`Plugin '${plugin.meta.name}' failed to initialize: ${e.message}`, 'E', e.stack);
         console.error(`Plugin '${plugin.meta.name}' init failed: ${e.message}`, e.stack);
       }
     });
@@ -725,8 +703,7 @@
         } catch (e) {
           tw.ui.notify(`Script '${t.title}' failed (see console log)`, 'E', e.stack);
           console.error(`Script '${t.title}' failed: ${e.message}`, e.stack);
-          if (confirm(`Script '${t.title}' failed. Would you like to disable it?`))
-            t.tags.push('$CodeDisabled');
+          if (confirm(`Script '${t.title}' failed. Would you like to disable it?`)) t.tags.push('$CodeDisabled');
         }
       });
   }
@@ -825,8 +802,7 @@
         severity: 'block',
         reason: 'fetch failed: ' + (pck.res.error || 'error'),
       };
-    if (pck.res?.type !== 'code')
-      return {name: pck.name, compatible: true, exempt: true, severity: 'ok'};
+    if (pck.res?.type !== 'code') return {name: pck.name, compatible: true, exempt: true, severity: 'ok'};
     const meta = parseModuleMeta(pck.res.code);
     const required = meta.platform;
     const compatible = !!required && caretSatisfies(required, VERSION);
@@ -890,8 +866,7 @@
   // (storeCoreModule) so an incompatible download never overwrites the installed copy.
   async function fetchCoreModule(moduleName) {
     const cached = readObject('/modules' + moduleName);
-    if (isCachedModuleUsable(cached) && !qs.reload && !qs.update)
-      return {res: cached, fetched: false};
+    if (isCachedModuleUsable(cached) && !qs.reload && !qs.update) return {res: cached, fetched: false};
     return {res: await fetchModule(baseUrl, moduleName), fetched: true};
   }
   // Persist a fetched module into the localStorage cache. Called only after the compat
@@ -918,10 +893,7 @@
     try {
       result = await fetch(moduleUrl);
     } catch {}
-    if (!result.ok)
-      throw new Error(
-        `Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`,
-      );
+    if (!result.ok) throw new Error(`Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`);
     if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
       res.code = await result.text();
       res.type = 'code';

@@ -150,11 +150,11 @@ A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at e
 
 | Param                 | Effect                                                                                                                                       |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `?safemode`           | Skip both `loadExtensionPackages()` and the plugin lifecycle (in `reload()`). Only the core modules + `$CorePackages` load. Useful when a plugin/extension package breaks the boot. |
+| `?safemode`           | Skip `loadExtensionPackages()`. Only the core modules + Base plugins defined `$CorePackages` load. Useful when a plugin/extension package breaks the boot. |
 | `?reload` / `?update` | Force-refetch the core modules from the network instead of using the localStorage cache.                                                     |
-| `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                |
-| `?debug`              | Activates verbose `dp()` logging.                                                                                                            |
-| `?logfilter=<regex>`  | Restrict `dp()` output to messages matching the regex.                                                                                       |
+| `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                 |
+| `?debug`              | Activates debug toast notifications                                                                                                          |
+| `?logfilter=<regex>`  | Restrict `dp()` output to messages matching the regex. "." shows everything                                                                  |
 | `?breakpoint=<regex>` | Break in the debugger on any logging name matching the regex.                                                                                |
 | `?clear`              | Clear `localStorage` before boot (effectively a factory reset for the current workspace).                                                    |
 
