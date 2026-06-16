@@ -2,12 +2,7 @@
 
 ## General
 
-- When I click on a tab and reload it should take me back to the same tab
 - Loading http://localhost:3002/packages/demo.json breaks broadsheet theme because of OnboardingMacro
-
-## Workspaces
-
-- Run different workspaces in separate tabs (virtual /path?)
 
 ## Macros
 

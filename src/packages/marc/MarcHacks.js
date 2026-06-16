@@ -4,10 +4,10 @@ tw.extensions.registerMacro(
   'loadThemeButton',
   (filter, force = true) => {
     if (!filter) filter = 'default';
-    return tw.ui.button(`Load Theme: ${filter}`, 'package.reload.url', {url: './packages/themes.json', name: 'test', filter, force});
+    return tw.ui.button(`Load Theme: ${filter}`, 'package.reload.url', {url: 'packages/themes.json', name: 'test', filter, force});
   },
   {
-    description: 'Reload the themes package from ./packages/themes.json with an optional filter.',
+    description: 'Reload the themes package from packages/themes.json with an optional filter.',
     example: '<<marc.loadThemeButton default>>',
   },
 );

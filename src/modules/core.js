@@ -73,8 +73,7 @@
         return current;
       },
       decode(params) {
-        if (typeof params === 'string' && params.match(/^---enc:/))
-          return tw.core.common.decoder(params.substring(7));
+        if (typeof params === 'string' && params.match(/^---enc:/)) return tw.core.common.decoder(params.substring(7));
         return params;
       },
       // TODO: Should have subscribe to listen and override to handle
@@ -88,13 +87,11 @@
         if (!handlerName) handlerName = handler.name;
         if (!handlerName) {
           console.warn(`No handlerName provided in events.subscribe(${event})!`);
-          if (window.devMode)
-            throw new Error(`No handlerName provided in events.subscribe(${event})!`);
+          if (window.devMode) throw new Error(`No handlerName provided in events.subscribe(${event})!`);
         }
         // Prevent same handler function for same event
-        if (handlers.find(h => h.event === event && h.handler.name === handlerName))
-          return console.warn('Ignoring duplicate event handler', event, handlerName); // debugger;
-        // dp('subscribe', event, handlerName);
+        if (handlers.find(h => h.event === event && h.handler.name === handlerName)) return dp('Ignoring duplicate event handler', event, handlerName);
+        dp('subscribe', event, handlerName);
         handlers.push({event, handler});
       },
       override(event, handler) {

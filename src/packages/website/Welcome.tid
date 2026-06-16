@@ -1,6 +1,7 @@
 # Welcome
 
-TWikki is, like TiddlyWiki, a cool way to manage semi-structured information as notes or "tiddlers".
+TWikki is, like [TiddlyWiki](https://tiddlywiki.com/), a cool way to manage semi-structured information.
+It runs completely in your browser and you can access it from multiple devices.
 
 Create your first note with <<New>> or press Ctrl+K to begin searching content or running commands.
 
@@ -13,7 +14,9 @@ TiddlyWiki is an excellent and mature tool but we decided to improve it in a few
 - Natively support local and cloud [[Saves]]
 - Use standardized [[Markdown]]
 - Simplify things for non-technical users
-- More information in [[USP]]
+- [read on...](#USP)
+
+If you are new to TiddlyWiki checkout [[Concepts]].
 
 Checkout these cool [[Features]]:
 

@@ -16,8 +16,7 @@
   // A reference is a title, optionally followed by ::Section, so links/inclusions
   // can address into a tiddler: [[Title::Section]] / {{Title::Section}}. ':' is
   // not a valid title char, so the delimiter can never be confused with a title.
-  const reTiddlerTitle =
-    /[a-z0-9_\-\.\(\)\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
+  const reTiddlerTitle = /[a-z0-9_\-\.\(\)\s\$\ud83c\ud000-\udfff\ud83d\ud000-\udfff\ud83e\ud000-\udfff]+/gi;
   const reTiddlerRef = new RegExp(`${reTiddlerTitle.source}(?:::${reTiddlerTitle.source})?`, 'gi');
   const reMacros = /(?<!`)<<([a-z_][a-z_0-9\.]+)\s?([^>]+)?>>/gi;
   const reInclusion = RegExp.compose(/(?<!`)\{\{(reTiddlerRef)\|?([^\}]+)?}}/gi, {reTiddlerRef});
@@ -75,7 +74,6 @@
     let result = masked;
     try {
       // TODO: Label this tiddler to update when one of these macros change!
-
       getMacros(result).forEach(m => {
         let macroNameOrig = m[1];
         let macroName = macroNameOrig;
@@ -103,12 +101,7 @@
         if (!macroFunction) {
           let errmsg = `Unknown macro <<${m[1]}>> in tiddler '${title}'!`;
           console.warn(errmsg, err?.message || '', err?.stack);
-          result = replaceFrom(
-            result,
-            indexOfMacro,
-            m[0],
-            `<span class="error">ERROR: Unknown macro &lt;&lt;${m[1]}>></span>`,
-          );
+          result = replaceFrom(result, indexOfMacro, m[0], `<span class="error">ERROR: Unknown macro &lt;&lt;${m[1]}>></span>`);
           if (validation) throw new Error(errmsg);
           return;
         }
@@ -129,31 +122,22 @@
           dp({macroName, macroParams});
         }
         if (tw.logging.trace) {
-          let newText = Array.isArray(macroParams)
-            ? macroFunction(...macroParams)
-            : macroFunction(macroParams);
+          let newText = Array.isArray(macroParams) ? macroFunction(...macroParams) : macroFunction(macroParams);
           result = replaceFrom(result, indexOfMacro, m[0], newText);
           return;
         }
         try {
           /* *** Run Macro *** */
           // TODO: Support async macros
-          let newText = Array.isArray(macroParams)
-            ? macroFunction(...macroParams)
-            : macroFunction(macroParams);
-          if (typeof newText === 'undefined')
-            console.warn('Macro returned undefined!', macroName, 'in', title);
+          let newText = Array.isArray(macroParams) ? macroFunction(...macroParams) : macroFunction(macroParams);
+          if (typeof newText === 'undefined') console.warn('Macro returned undefined!', macroName, 'in', title);
           result = replaceFrom(result, indexOfMacro, m[0], newText);
         } catch (e) {
           let errmsg = `Macro '${macroName}' failed in tiddler '${title}'!`;
-          if (e.message === 'macroFunction is not a function')
-            errmsg += ' The macro is unknown or not registered!';
+          if (e.message === 'macroFunction is not a function') errmsg += ' The macro is unknown or not registered!';
           else errmsg += e.message;
           console.warn(errmsg, e.stack);
-          result = result.replace(
-            macroCommand,
-            `<span class="error">${errmsg} (see console log)</span>`,
-          );
+          result = result.replace(macroCommand, `<span class="error">${errmsg} (see console log)</span>`);
           if (validation) throw e;
           return;
         }
@@ -164,20 +148,15 @@
         try {
           const inclusionSearch = new RegExp(`(?<!\`)${escapeRegExp('{{' + includedTitle)}`);
           const indexOfInclusion = result.search(inclusionSearch);
-          if (indexOfInclusion < 0)
-            throw new Error(`Unable to locate inclusion of '${includedTitle}'!`);
+          if (indexOfInclusion < 0) throw new Error(`Unable to locate inclusion of '${includedTitle}'!`);
           let params = m[2];
           params = tw.core.params.parseParams(params);
           let text = tw.core.tiddlers.getTiddlerTextReplaced(includedTitle, params);
-          if (!text)
-            text = `No tiddler '${includedTitle}' found - let's [create it](#${includedTitle})!`;
+          if (!text) text = `No tiddler '${includedTitle}' found - let's [create it](#${includedTitle})!`;
           result = replaceFrom(result, indexOfInclusion, m[0], text);
         } catch (e) {
           result = `<span class="error">ERROR: Inclusion of "${includedTitle}" Failed: ${e.message}</span>`;
-          console.error(
-            `getInclusions "${includedTitle}" inside "${title}" Failed: ${e.message}`,
-            e.stack,
-          );
+          console.error(`getInclusions "${includedTitle}" inside "${title}" Failed: ${e.message}`, e.stack);
         }
       });
       function escapeRegExp(string) {
@@ -214,9 +193,7 @@
   }
   function createTiddlerElement(t, template) {
     template = template || tw.templates.TiddlerDisplay;
-    let modified = t.updated
-      ? new Date(t.updated).toDateString() + ' ' + new Date(t.updated).toLocaleTimeString()
-      : '';
+    let modified = t.updated ? new Date(t.updated).toDateString() + ' ' + new Date(t.updated).toLocaleTimeString() : '';
     let id = tw.core.common.hash(t.title);
     let html = new tw.core.templater.Templater(template).render({
       id,
@@ -237,8 +214,7 @@
       // interactive — the user can open and fix the offending template.
       console.error(`createTiddlerElement '${t.title}':`, e.message);
       newElement = tw.core.dom.htmlToNode(
-        `<div class="tiddler error"><div class="title">${tw.core.common.escapeHtml(t.title)}</div>` +
-          `<div class="text">Template error: ${tw.core.common.escapeHtml(e.message)}</div></div>`,
+        `<div class="tiddler error"><div class="title">${tw.core.common.escapeHtml(t.title)}</div>` + `<div class="text">Template error: ${tw.core.common.escapeHtml(e.message)}</div></div>`,
       );
     }
     newElement.setAttribute('data-tiddler-id', id);
@@ -283,10 +259,7 @@
     // example in prose) must NOT start a fence — otherwise it swallows
     // everything up to the next ``` into a single spurious mask. The leading
     // newline is captured and re-emitted so we don't eat the boundary.
-    let masked = text.replace(
-      /(^|\n)( {0,3}```[^\n]*\n[\s\S]*?\n {0,3}```)(?=\n|$)/g,
-      (_, pre, fence) => pre + stash(fence),
-    );
+    let masked = text.replace(/(^|\n)( {0,3}```[^\n]*\n[\s\S]*?\n {0,3}```)(?=\n|$)/g, (_, pre, fence) => pre + stash(fence));
     // Inline spans next — single backticks, no embedded newlines.
     masked = masked.replace(/`[^`\n]*`/g, stash);
     const restore = s => s.replace(/(\d+)/g, (_, i) => store[Number(i)]);
@@ -411,9 +384,7 @@
   function renderMarkdown(text) {
     const results = tw.events.send('markdown.render', text);
     if (results?.length > 1 && !renderMarkdown.warned) {
-      console.warn(
-        `${results.length} 'markdown.render' handlers subscribed (first one wins) — replacements should use tw.events.override()!`,
-      );
+      console.warn(`${results.length} 'markdown.render' handlers subscribed (first one wins) — replacements should use tw.events.override()!`);
       renderMarkdown.warned = true;
     }
     return results?.[0] ?? renderPlainText(text);

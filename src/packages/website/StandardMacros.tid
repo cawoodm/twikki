@@ -48,8 +48,8 @@ TWikki ships a set of standard macros (widgets) in the `base` package. Call them
 
 | Widget | Description | Example | Live |
 |---|---|---|---|
-| `packages.import` | Button importing a package from a URL (`name`, `url`, optional `filter`, `overWrite`, `doNotSave`) | `<<packages.import name:website url:./packages/website.json>>` | <<packages.import name:website url:./packages/website.json>> |
-| `packages.importBin` | As above for binary packages | `<<packages.importBin name:icons url:./packages/icons.json>>` | <<packages.importBin name:icons url:./packages/icons.json>> |
+| `packages.import` | Button importing a package from a URL (`name`, `url`, optional `filter`, `overWrite`, `doNotSave`) | `<<packages.import name:website url:packages/website.json>>` | <<packages.import name:website url:packages/website.json>> |
+| `packages.importBin` | As above for binary packages | `<<packages.importBin name:icons url:packages/icons.json>>` | <<packages.importBin name:icons url:packages/icons.json>> |
 
 ## Live Examples (block widgets)
 

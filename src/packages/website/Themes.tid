@@ -2,93 +2,18 @@ tags: Help
 
 # TWikki Themes
 
-TWikki's look is driven entirely by stylesheets which you can change or replace. A theme is a tiddler tagged <<Tag $Theme>> whose body lists the stylesheet tiddlers to apply:
+TWikki's look is driven entirely by stylesheets which you can change or replace.
+
+The current theme is always stored in the special [[Theme]] tiddler.
+
+A basic theme is just one or more stylesheets in list format:
 
 ```
-tags: $Theme
-
 * [[$CoreThemeLayout]]
 * [[$CoreThemeAppearance]]
 * [[AuroraTheme::AuroraPalette]]
 ```
 
-`$CoreThemeManager` composes those into one constructable stylesheet wrapped in three [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer): `@layer base, theme, user`. The `base` layer (always `$BaseReset` + `$BaseVariables`) is hard-coded by the runtime — a theme cannot opt out. The `theme` layer is the bullet list above. The `user` layer is `$StyleSheetUser`, applied last and always wins.
+It should be tagged <<Tag $Theme>> so the theme selector picks it up and the user can select it.
 
-Switching or editing a theme re-paints instantly with no reload. Colours, radii and spacing are exposed as CSS custom properties (`--col*`, `--colbg*`, `--rad*`), and a theme simply overrides the ones it cares about plus any structural rules it wants.
-
-## Example Themes
-
-Import Themes: <<themeImport.button>>
-
-### Aurora
-Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
-accents. A modern dark-dashboard feel.
-
-![Aurora](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/01-aurora.png)
-
-### Manuscript
-Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
-card and hairline borders. Reads like print.
-
-![Manuscript](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/02-manuscript.png)
-
-### Terminal
-Near-black surface, phosphor-green monospace, zero border radius, hard 1px borders,
-uppercase titles and a subtle scanline texture.
-
-![Terminal](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/03-terminal.png)
-
-### Bubblegum
-Pastel pink wash, candy accents, chunky 24px rounded cards and soft glow shadows.
-Toy-like and friendly.
-
-![Bubblegum](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/04-bubblegum.png)
-
-### Broadsheet
-**DM Serif Display** titles over an **Outfit** body. The header flattens to a hairline
-bar with a centred pill search, the toolbar is trimmed to essentials, and content sits
-in a centred 820px reading column. Terracotta accent.
-
-![Broadsheet](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/06-broadsheet.png)
-
-### Nocturne
-**Syne** display titles with a **Sora** body. A floating glass header with a blurred
-backdrop, the toolbar collapsed into a rounded pill of chartreuse icons, and dark
-gradient cards. Lime `#c6f24e` accent.
-
-![Nocturne](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/07-nocturne.png)
-
-### Kontrast
-**Anton** condensed uppercase titles with an **IBM Plex Sans** body. Thick 2px black
-borders, hard 6px offset shadows, a square search box and a segmented row of bordered
-icon boxes. Red `#e5322d` accent.
-
-![Kontrast](https://github.com/cawoodm/twikki/raw/main/docs/screenshots/09-kontrast-fixed.png)
-
-### Obsidian
-Dense dark theme with a violet/purple accent. TWikki's previous built-in default; now
-ships as a selectable theme alongside the others.
-
----
-
-> **Note:** theme and stylesheet tiddlers are hidden from normal search by default —
-> the [$Theme](#msg:search:$tag:$Theme) and [$Theme](#msg:search:$tag:$StyleSheet) tags are in the `excludeTags` list on the **Search**
-> tab of [[$GeneralSettings]]. They still appear in the theme selector and in an explicit
-> `tag:$Theme` / `$`-prefixed search.
-
-# Technical
-Themes are collections of stylesheets composed into three cascade layers.
-
-* A special [[$Theme]] stores the name of the current theme, e.g. [[$CoreThemeLight]] which lists [StyleSheets](#msg:search:$tag:$StyleSheet).
-* The runtime always prepends `$BaseReset` + `$BaseVariables` as the `base` layer — every theme inherits a reset and the design-token contract.
-* The user's own `$StyleSheetUser` is appended as the `user` layer and wins over anything a theme defines.
-* Stylesheets can be in one or more tiddlers, including section sub-tiddlers (`[[ParentName::SectionName]]`).
-* [[$DisplayTemplate]] tiddler determines display of tiddler.
-* [[$TitleBar]] to customize the titlebar.
-
-The shadow [[$Theme]] tiddler contains one word: the name of the tiddler with the current theme (e.g. {{$Theme}}). This theme tiddler should contain a [[DataList]] of stylesheets. To change the theme just edit the [[$Theme]] tiddler and enter the name of any tiddler containing a list of stylesheets.
-
-By convention we tag themes with [$Theme](#msg:search:$tag:$Theme) to make them easier to find. It also lets you instantly switch themes without reloading. Dark themes additionally carry the [$ThemeDark](#msg:search:$tag:$ThemeDark) tag — the runtime uses that tag (not a `Dark` suffix in the name) to switch the syntax highlighter between light and dark sheets.
-
-By convention we tag stylesheets with [$StyleSheet](#msg:search:$tag:$StyleSheet) to make them easier to find. This also enables fast edits to stylesheets without reloading to see the results.
-
+See [Themes Docs](https://github.com/cawoodm/twikki/blob/main/docs/THEMES.md)

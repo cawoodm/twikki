@@ -48,4 +48,4 @@ Inswide Twikki a plugin can be a single `script/js` tiddler or a multi-part `x-t
 
 A plugin (or script) is shared like any other tiddler — inside a package (a JSON list of tiddlers). Packages are loaded from the URLs listed in [[$CorePackages]] and [[$ExtensionPackages]], or imported on demand with the `<<packages.import>>` widget:
 
-- <<packages.import name:demo url:./packages/demo.json filter:\* force:false>>
+- <<packages.import name:demo url:packages/demo.json filter:\* force:false>>
