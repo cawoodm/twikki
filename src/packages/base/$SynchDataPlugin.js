@@ -320,29 +320,26 @@
         {label: 'Synch: pull', event: 'synch.pull'},
       ]);
 
-      tw.macros.synch = {
-        // <<synch.full>>: Push/pull to/from remote
-        full() {
-          return tw.ui.button('{{$IconSynch}}', 'synch.full', null, 'btn-synch', 'title="Synch Data"');
-        },
-        // <<synch.test>>: Simulate push/pull to/from remote
-        test() {
-          return '<button onclick="tw.macros.synch.doTest()">Synch Test</button>';
-        },
-        // <<synch.pull>>: Only import from remote
-        pull() {
-          return tw.ui.button('{{$IconPull}}', 'synch.pull', null, 'btn-synch-pull', 'title="Pull Synched Data"');
-        },
-        // <<synch.push>>: Only write to remote
-        push() {
-          return tw.ui.button('{{$IconPush}}', 'synch.push', null, 'btn-synch-push', 'title="Push Synched Data"');
-        },
-        // <<synch.upload>>: Overwrite remote from local
-        upload() {
-          return tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple');
-        },
-        // TODO: Delete all local and pull (restore)
-      };
+      tw.extensions.registerMacro('synch', 'full', () => tw.ui.button('{{$IconSynch}}', 'synch.full', null, 'btn-synch', 'title="Synch Data"'), {
+        description: 'Button: full synch (pull + push) with the remote.',
+        example: '<<synch.full>>',
+      });
+      tw.extensions.registerMacro('synch', 'test', () => '<button onclick="tw.macros.synch.doTest()">Synch Test</button>', {
+        description: 'Button: simulate push/pull to/from remote (dry-run).',
+        example: '<<synch.test>>',
+      });
+      tw.extensions.registerMacro('synch', 'pull', () => tw.ui.button('{{$IconPull}}', 'synch.pull', null, 'btn-synch-pull', 'title="Pull Synched Data"'), {
+        description: 'Button: pull data from remote into the local workspace.',
+        example: '<<synch.pull>>',
+      });
+      tw.extensions.registerMacro('synch', 'push', () => tw.ui.button('{{$IconPush}}', 'synch.push', null, 'btn-synch-push', 'title="Push Synched Data"'), {
+        description: 'Button: push local changes to the remote.',
+        example: '<<synch.push>>',
+      });
+      tw.extensions.registerMacro('synch', 'upload', () => tw.ui.button('{{$IconPush}}', 'synch.upload', null, 'btn-synch-upload', 'title="Upload Data"', 'purple'), {
+        description: 'Button: overwrite the remote with the local workspace (destructive).',
+        example: '<<synch.upload>>',
+      });
     },
   };
 })();

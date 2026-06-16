@@ -210,8 +210,17 @@
       description: 'Back up tiddlers to a private GitHub Gist.',
     },
     init() {
-      // Expose macros for restore/backup buttons.
-      tw.macros.backup = backup;
+      // Expose the two button macros. `backup.save` / `backup.restore` are not
+      // macros (they return promises, not HTML) — they are wired via
+      // tw.events.override below.
+      tw.extensions.registerMacro('backup', 'restoreButton', backup.restoreButton, {
+        description: 'Button: restore the workspace from the configured GitHub Gist.',
+        example: '<<backup.restoreButton>>',
+      });
+      tw.extensions.registerMacro('backup', 'backupButton', backup.backupButton, {
+        description: 'Button: back up the workspace to the configured GitHub Gist.',
+        example: '<<backup.backupButton>>',
+      });
     },
     start() {
       // Override any previously installed backup provider — this plugin wins.

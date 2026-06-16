@@ -1,0 +1,18 @@
+tags: Help
+
+Macros are short, parameterised functions you call from any tiddler with `<<name args>>`. Register one from a `$Plugin`'s `init()` or a `$Script` tiddler:
+
+```js
+tw.extensions.registerMacro('greet', 'hello', name => `Hello ${name}!`, {
+  description: 'Greet someone by name.',
+  example: '<<greet.hello Marc>>',
+});
+```
+
+The 4th argument is a `meta` object: `{description, example?, version?}`. The table below is built from that meta — describe every macro you register and it shows up here for free.
+
+The `core` namespace gets short names automatically: `<<list>>` ≡ `<<core.list>>` (see [[StandardMacros]] for live-rendered examples and [[Parameters]] for the parameter syntax).
+
+See also [[MacroExamples]]
+
+<<macros>>

@@ -47,12 +47,14 @@
         },
       };
 
-      tw.macros.manager = {
-        form() {
-          const titles = tw.macros.core.allProperty('title');
-          const types = tw.macros.core.allProperty('type');
-          const tags = tw.macros.core.allTags();
-          const packages = tw.macros.core.allProperty('package');
+      tw.extensions.registerMacro(
+        'manager',
+        'form',
+        () => {
+          const titles = tw.run.allProperty('title');
+          const types = tw.run.allProperty('type');
+          const tags = tw.run.allTags();
+          const packages = tw.run.allProperty('package');
           return `<form>
           <input name=title placeholder=title list="manager-all-titles">
             <datalist id="manager-all-titles">${titles.map(t => `<option value="${t}">${t}</option>`).join('\n')}</datalist>
@@ -66,7 +68,11 @@
           ${tw.ui.button('Delete', null, null, 'btnmanagerDelete', 'onclick="tw.tmp.manager.delete(event, this.form)"')}
           </form><div id="manager-search-list">No tiddlers to show</div>`;
         },
-      };
+        {
+          description: 'Bulk tiddler search/delete form (autocompleting title/type/tag/package inputs).',
+          example: '<<manager.form>>',
+        },
+      );
       tw.events.subscribe('tiddlers.delete.manager', managerDelete);
     },
   };

@@ -1,10 +1,16 @@
 // tags: $Script
-tw.macros.marc = {
-  loadThemeButton(filter, force = true) {
+tw.extensions.registerMacro(
+  'marc',
+  'loadThemeButton',
+  (filter, force = true) => {
     if (!filter) filter = 'default';
     return tw.ui.button(`Load Theme: ${filter}`, 'package.reload.url', {url: './packages/themes.json', name: 'test', filter, force});
   },
-};
+  {
+    description: 'Reload the themes package from ./packages/themes.json with an optional filter.',
+    example: '<<marc.loadThemeButton default>>',
+  },
+);
 tw.events.subscribe('script.loaded', (name) => {
   if (name !== 'highlight-core') return;
   tw.core.dom.addScript('highlight-lang-powershell', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/powershell.min.js');

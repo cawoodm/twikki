@@ -155,10 +155,13 @@ A plugin may declare `meta.dependencies: ['Picker', 'Tabs']` — names of other 
 A macro is a `<<...>>` block in markdown that runs and produces dynamic content. Register one with a namespace to avoid collisions (call from inside `init()` for plugins, top-level for `$Script`):
 
 ```js
-tw.extensions.registerMacro('greet', 'hello', (name) => `Hello ${name}!`, {version: '1.0.0'});
+tw.extensions.registerMacro('greet', 'hello', (name) => `Hello ${name}!`, {
+  description: 'Greet someone by name.',
+  example: '<<greet.hello Marc>>',
+});
 ```
 
-Use as `<<greet.hello "Marc">>`.
+Use as `<<greet.hello "Marc">>`. The 4th argument is a `meta` object — `{description, example?, version?}` — that the [`<<macros>>`](#) widget reads to build its reference table. Describe every macro you register.
 
 Commands appear in the command palette (Ctrl/Cmd+K). A command is `{label, event?, payload?, run?}`:
 

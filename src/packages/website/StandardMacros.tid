@@ -1,6 +1,6 @@
 tags: Help
 
-TWikki ships a set of standard macros (widgets) in the `base` package. Call them anywhere in tiddler content as `<<name params>>` — short names resolve to the `core.` namespace automatically (`<<list>>` ≡ `<<core.list>>`); `button` and `packages.*` live in their own namespaces. See [[Parameters]] for the parameter syntax.
+TWikki ships a set of standard macros (widgets) in the `base` package. Call them anywhere in tiddler content as `<<name params>>` — short names resolve to the `core.` namespace automatically (`<<list>>` ≡ `<<core.list>>`); `button` and `packages.*` live in their own namespaces. See [[Parameters]] for the parameter syntax, and [[Macros]] for the complete auto-generated reference of every registered macro.
 
 ## Buttons
 
@@ -50,15 +50,6 @@ TWikki ships a set of standard macros (widgets) in the `base` package. Call them
 |---|---|---|---|
 | `packages.import` | Button importing a package from a URL (`name`, `url`, optional `filter`, `overWrite`, `doNotSave`) | `<<packages.import name:website url:./packages/website.json>>` | <<packages.import name:website url:./packages/website.json>> |
 | `packages.importBin` | As above for binary packages | `<<packages.importBin name:icons url:./packages/icons.json>>` | <<packages.importBin name:icons url:./packages/icons.json>> |
-
-## Helpers
-
-These return data (not HTML) and are mainly for use by other macros/plugins via `tw.macros.core.*`:
-
-| Helper | Returns | Example | Live |
-|---|---|---|---|
-| `allTags()` | Array of all unique tags | `<<allTags>>` | <<allTags>> |
-| `allProperty(property)` | Array of unique values of any tiddler property | `<<allProperty type>>` | <<allProperty type>> |
 
 ## Live Examples (block widgets)
 

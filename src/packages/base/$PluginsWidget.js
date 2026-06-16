@@ -15,32 +15,42 @@
   }
   // Live meta of one plugin as a bullet list — used in plugin tiddlers' # Meta
   // sections so displayed metadata can never drift from the code's meta object.
-  tw.macros.core.pluginMeta = (name) => {
-    const p = (tw.plugins || []).find(p => p.meta?.name === name || p.source === name);
-    if (!p) return `<span class="error">Plugin '${name}' not found in registry</span>`;
-    const lines = Object.entries(p.meta).map(([k, v]) => `- **${k}**: ${v}`);
-    lines.push(`- **package**: ${p.package || '–'}`);
-    lines.push(`- **status**: ${pluginStatus(p)}`);
-    return lines.join('\n');
-  };
-  tw.macros.core.plugins = () => {
-    const platform = window.twikki?.version || '–';
-    const rows = (tw.plugins || [])
-      .slice()
-      .sort((a, b) => (a.meta?.name || a.source).localeCompare(b.meta?.name || b.source))
-      .map((p) => {
-        const status = pluginStatus(p);
-        const name = p.meta?.name || `(${p.source})`;
-        const builtFor = p.meta?.platform || p.compat?.required || '–';
-        return `| [${name}](#${p.source}) | ${p.source} | ${p.meta?.version || '–'} | ${p.package || '–'} | ${builtFor} | ${status} |`;
-      });
-    return [
-      `Running platform: **v${platform}**`,
-      '',
-      '| Plugin | Source | Version | Package | Built for | Status |',
-      '|---|---|---|---|---|---|',
-      ...rows
-    ].join('\n');
-  };
+  tw.extensions.registerMacro(
+    'core',
+    'pluginMeta',
+    name => {
+      const p = (tw.plugins || []).find(p => p.meta?.name === name || p.source === name);
+      if (!p) return `<span class="error">Plugin '${name}' not found in registry</span>`;
+      const lines = Object.entries(p.meta).map(([k, v]) => `- **${k}**: ${v}`);
+      lines.push(`- **package**: ${p.package || '–'}`);
+      lines.push(`- **status**: ${pluginStatus(p)}`);
+      return lines.join('\n');
+    },
+    {
+      description: 'Live meta of one plugin as a bullet list (drift-proof inside the plugin\'s own # Meta section).',
+      example: '<<pluginMeta ExamplePlugin>>',
+    },
+  );
+  tw.extensions.registerMacro(
+    'core',
+    'plugins',
+    () => {
+      const platform = window.twikki?.version || '–';
+      const rows = (tw.plugins || [])
+        .slice()
+        .sort((a, b) => (a.meta?.name || a.source).localeCompare(b.meta?.name || b.source))
+        .map(p => {
+          const status = pluginStatus(p);
+          const name = p.meta?.name || `(${p.source})`;
+          const builtFor = p.meta?.platform || p.compat?.required || '–';
+          return `| [${name}](#${p.source}) | ${p.source} | ${p.meta?.version || '–'} | ${p.package || '–'} | ${builtFor} | ${status} |`;
+        });
+      return [`Running platform: **v${platform}**`, '', '| Plugin | Source | Version | Package | Built for | Status |', '|---|---|---|---|---|---|', ...rows].join('\n');
+    },
+    {
+      description: 'Markdown table of installed plugins with versions, source package, and compatibility status.',
+      example: '<<plugins>>',
+    },
+  );
 })();
 

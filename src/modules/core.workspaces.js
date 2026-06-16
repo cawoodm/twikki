@@ -16,10 +16,7 @@
   if (!tw.store.global.get('workspaces')) tw.store.global.set('workspaces', ['default']);
   if (!tw.store.global.get('workspace')) tw.store.global.set('workspace', 'default');
   bootstrapFromQuery();
-  tw.workspace =
-    sessionStorage.getItem('workspace') ||
-    tw.store.global.get('workspace') ||
-    'default';
+  tw.workspace = sessionStorage.getItem('workspace') || tw.store.global.get('workspace') || 'default';
   try {
     workspaceSwitch(tw.workspace);
   } catch {
@@ -30,12 +27,12 @@
 
   // Run
   const run = () => {
-    tw.events.subscribe('workspace.switch', workspaceSwitch);
-    tw.events.subscribe('workspace.load', workspaceLoad);
-    tw.events.subscribe('workspace.create', workspaceCreate);
-    tw.events.subscribe('workspace.delete', workspaceDelete);
-    tw.events.subscribe('workspace.delete.ui', workspaceDeleteUI);
-    tw.events.subscribe('workspace.clone', workspaceCloneUI);
+    tw.events.subscribe('workspace.switch', workspaceSwitch, name);
+    tw.events.subscribe('workspace.load', workspaceLoad, name);
+    tw.events.subscribe('workspace.create', workspaceCreate, name);
+    tw.events.subscribe('workspace.delete', workspaceDelete, name);
+    tw.events.subscribe('workspace.delete.ui', workspaceDeleteUI, name);
+    tw.events.subscribe('workspace.clone', workspaceCloneUI, name);
   };
 
   // Exports

@@ -1,6 +1,6 @@
 tags: $Plugin
 
-This plugin provides some examples of widgets and extensible functions.
+This plugin provides some examples of a macro with custom styling.
 
 Feel free to look at the [code](#ExamplePlugin::Code).
 
@@ -8,7 +8,7 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 
 ## Greet John Smith
 
-`<<example.hello "John Smith">>`
+`<<example.hello "John Smith">>`: <<example.hello "John Smith">>
 
 # Meta
 
@@ -38,9 +38,18 @@ Feel free to look at the [code](#ExamplePlugin::Code).
     },
     init() {
       // Register a macro at init time, after all plugins are loaded.
-      tw.extensions.registerMacro('example', 'hello', name => `Hello ${name}`, {
-        version: '1.0.0',
-      });
+      tw.extensions.registerMacro(
+        'example',
+        'hello',
+        name => {
+          return `<span class=example>Hello ${name}</span>`;
+        },
+        {
+          description: 'Demo macro: greets the named person.',
+          example: '<<example.hello "John Smith">>',
+          version: '1.0.0',
+        },
+      );
     },
     start() {
       // Optional. Empty for this demo — the macro is the only side effect.
@@ -52,16 +61,10 @@ Feel free to look at the [code](#ExamplePlugin::Code).
 # StyleSheet
 
 ```css
-div.example {
+span.example {
   color: red;
 }
 ```
-
-# Theme
-
-- [[$CoreThemeLayout]]
-- [[$CoreThemeAppearance]]
-- [[$ExampleTheme]]
 
 # Tests
 

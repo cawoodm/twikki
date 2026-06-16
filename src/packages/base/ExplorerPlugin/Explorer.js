@@ -52,7 +52,7 @@
   }
 
   function tagsHtml() {
-    let tags = tw.macros.core
+    let tags = tw.run
       .allTags()
       .filter(t => !/^\$/.test(t)) // hide system tags
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));

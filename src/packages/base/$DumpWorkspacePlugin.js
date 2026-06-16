@@ -50,11 +50,15 @@
   return {
     meta,
     init() {
-      tw.macros.dump = {
-        dumpButton() {
-          return tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"');
+      tw.extensions.registerMacro(
+        'dump',
+        'dumpButton',
+        () => tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"'),
+        {
+          description: 'Button to dump the entire workspace to a downloadable file.',
+          example: '<<dump.dumpButton>>',
         },
-      };
+      );
 
       tw.events.subscribe('workspace.dump', dumpWorkspace, 'dumpworkspaceplugin');
       tw.run.registerDropHandler('*.workspace.json', restoreWorkspace);

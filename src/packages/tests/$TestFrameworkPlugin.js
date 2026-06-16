@@ -95,40 +95,71 @@
       tw.tmp.tests = {queue, results};
       Object.freeze(tw.tmp.tests);
 
-      tw.extensions.registerMacro('tests', 'queue', (options) => {
-        if (isRunning) return '';
-        // TODO: Save currentTiddler and visibleTiddlers
-        let id = randstr();
-        let name = options.name;
-        if (options.expect) options.expect = options.expect.split(/,\s?/);
-        if (options.expectSome) options.expectSome = options.expectSome.split(/,\s?/);
-        if (options.click) queueTest(name, () => clickTest({id, ...options}));
-        else if (options.msg) queueTest(name, () => messageTest({id, ...options}));
-        else if (options.type) queueTest(name, () => typingTest({id, ...options}));
-        else if (options.comment) queueTest(name, () => '');
-        else throw new Error('Unknown test type');
-        if (!name) return `<i>// ${options.comment}</i>`; // Comment
-        return `<div id="${id}">Preparing test '${name}'...</div>`;
-      });
+      tw.extensions.registerMacro(
+        'tests',
+        'queue',
+        options => {
+          if (isRunning) return '';
+          // TODO: Save currentTiddler and visibleTiddlers
+          let id = randstr();
+          let name = options.name;
+          if (options.expect) options.expect = options.expect.split(/,\s?/);
+          if (options.expectSome) options.expectSome = options.expectSome.split(/,\s?/);
+          if (options.click) queueTest(name, () => clickTest({id, ...options}));
+          else if (options.msg) queueTest(name, () => messageTest({id, ...options}));
+          else if (options.type) queueTest(name, () => typingTest({id, ...options}));
+          else if (options.comment) queueTest(name, () => '');
+          else throw new Error('Unknown test type');
+          if (!name) return `<i>// ${options.comment}</i>`; // Comment
+          return `<div id="${id}">Preparing test '${name}'...</div>`;
+        },
+        {
+          description: 'Queue a test case (click/msg/type/comment) for the test suite.',
+          example: '<<tests.queue name:my-test msg:tiddler.show payload:Help>>',
+        },
+      );
 
-      tw.extensions.registerMacro('tests', 'clear', () => {
-        if (isRunning) return '';
-        queue.length = 0;
-        return 'Tests Cleared';
-      });
-      tw.extensions.registerMacro('tests', 'run', ({suite}) => {
-        let id = randstr();
-        return `<div id="${id}">${tw.ui.button(`Run ${suite}`, 'tests.run', {suite, id})}</div>`;
-      });
-      tw.extensions.registerMacro('tests', 'results', () => {
-        let tests = results.filter((t) => !!t.name);
-        let success = tests.filter((t) => t.success).length;
-        let error = tests.filter((t) => t.error).length;
-        let res = `## ${success} passed, ${error} failed:
-* ${tests.map((t) => `${t.success ? '✅' : '❌'} ${t.name} ${t.success || t.error}`).join('\n* ')}
+      tw.extensions.registerMacro(
+        'tests',
+        'clear',
+        () => {
+          if (isRunning) return '';
+          queue.length = 0;
+          return 'Tests Cleared';
+        },
+        {
+          description: 'Clear the pending test queue.',
+          example: '<<tests.clear>>',
+        },
+      );
+      tw.extensions.registerMacro(
+        'tests',
+        'run',
+        ({suite}) => {
+          let id = randstr();
+          return `<div id="${id}">${tw.ui.button(`Run ${suite}`, 'tests.run', {suite, id})}</div>`;
+        },
+        {
+          description: 'Render a Run button for the named test suite.',
+          example: '<<tests.run suite:my-suite>>',
+        },
+      );
+      tw.extensions.registerMacro(
+        'tests',
+        'results',
+        () => {
+          let tests = results.filter(t => !!t.name);
+          let success = tests.filter(t => t.success).length;
+          let error = tests.filter(t => t.error).length;
+          return `## ${success} passed, ${error} failed:
+* ${tests.map(t => `${t.success ? '✅' : '❌'} ${t.name} ${t.success || t.error}`).join('\n* ')}
     `;
-        return res;
-      });
+        },
+        {
+          description: 'Render the last test run\'s pass/fail summary.',
+          example: '<<tests.results>>',
+        },
+      );
 
       tw.events.subscribe(
         'tests.run',

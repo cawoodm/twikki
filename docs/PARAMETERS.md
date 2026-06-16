@@ -82,13 +82,15 @@ When in doubt, quote every key.
 // Positional: one argument per token
 tw.extensions.registerMacro('foo', 'hello', (firstName, lastName) => {
   return `Hello ${firstName + ' ' + lastName}`;
-}, {version: '1.0.0'});
+}, {description: 'Greet two names.', example: '<<foo.hello John Smith>>'});
 
 // Named or JSON object: a single destructurable object
 tw.extensions.registerMacro('foo', 'object', ({name, age}) => {
   return `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`;
-}, {version: '1.0.0'});
+}, {description: 'Demo of named/object parameters.', example: '<<foo.object name:Marc age:22>>'});
 ```
+
+The 4th argument is a `meta` object: `{description, example?, version?}`. The `<<macros>>` widget reads it to build its reference table — describe every macro you register.
 
 ## Inclusion parameters
 

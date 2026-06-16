@@ -53,10 +53,20 @@
   function buildUrl(path, base) {
     if (/^https?:\/\//.test(path)) return path;
     if (!base) {
-      base =
-        tw.storage.get('/moduleUrl') ||
-        window.MODULE_URL ||
-        new URL('./', window.location.href).toString();
+      base = tw.storage.get('/moduleUrl') || window.MODULE_URL;
+      if (!base) {
+        // Derive the base from window.location.href. The URL spec treats the
+        // last path segment as a FILE unless the URL ends with '/', so when
+        // the app is served at e.g. http://host/twikki (server rewrites to
+        // /twikki/index.html, no trailing slash in the bar), new URL('./',…)
+        // would resolve to the parent and modules would load from /modules
+        // instead of /twikki/modules. Normalize: if the last segment has no
+        // extension AND no trailing slash, treat it as a directory.
+        let href = window.location.href.split(/[?#]/)[0];
+        const lastSeg = href.substring(href.lastIndexOf('/') + 1);
+        if (lastSeg && !lastSeg.includes('.')) href += '/';
+        base = new URL('./', href).toString();
+      }
     }
     if (!base.endsWith('/')) base += '/';
     return new URL(path, base).toString();

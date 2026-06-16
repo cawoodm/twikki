@@ -9,11 +9,16 @@ inside an inline `<span class="picker-menu">` inside a `<p>`, and the HTML
 parser hoists the divs out as siblings of the paragraph (the items then
 show unconditionally and the popup opens empty).
  */
-tw.extensions.registerMacro('core', 'tags', () => {
-  return (
+tw.extensions.registerMacro(
+  'core',
+  'tags',
+  () =>
     '<span class="picker tags-picker" data-event="search" data-source="alltags">' +
     '<button class="picker-trigger pck-pill">Tags</button>' +
     '<span class="picker-menu" hidden></span>' +
-    '</span>'
-  );
-});
+    '</span>',
+  {
+    description: 'Picker of every tag in the store; picking one searches for `tag:<name>`.',
+    example: '<<tags>>',
+  },
+);

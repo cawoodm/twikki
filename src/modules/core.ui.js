@@ -72,10 +72,13 @@
     },
   };
   Object.assign(tw.extensions, {
-    registerMacro(namespace, name, fcn, options) {
+    // Register a macro callable from tiddler text as <<ns.name args>>. `meta`
+    // attaches docs that <<macros>> reads to build its reference table:
+    //   {description, example?, version?}
+    registerMacro(namespace, name, fcn, meta) {
       if (!tw.macros[namespace]) tw.macros[namespace] = {};
       tw.macros[namespace][name] = fcn;
-      if (options) Object.assign(tw.macros[namespace][name], options);
+      if (meta) Object.assign(tw.macros[namespace][name], meta);
     },
     // Register a command (or array of commands) for the command palette.
     // Shape: {label, event?, payload?, run?}. Deduped by label (last-wins) so
@@ -108,20 +111,19 @@
   // `||` guard makes it idempotent across soft reloads (which re-eval modules
   // and would otherwise wipe plugin registrations that already happened).
   tw.types = tw.types || {};
-  tw.macros = {
-    core: {
-      showTiddlerList: (...args) => tw.core.tiddlers.showTiddlerList(...args),
-      // <<Tag Foo>> — render tag "Foo" as a picker listing all tiddlers tagged Foo.
-      Tag: tag => tw.core.render.tagPickerHtml(String(tag ?? '')),
-      // Plain tags input for the edit form. The base package's TagInput
-      // ($GeneralWidgets) overrides this with an autocomplete version; this
-      // fallback keeps the edit form usable with ZERO plugins/scripts loaded
-      // (?safemode — the no-plugin invariant requires tags to stay editable,
-      // e.g. to add $CodeDisabled to a broken plugin).
-      TagInput: ({id}) => `<input id="${id}" placeholder="Tags"/>`,
-      disabled: (...rest) => 'This macro is disabled!' + JSON.stringify(rest),
-    },
-  };
+  tw.macros = tw.macros || {};
+  tw.extensions.registerMacro('core', 'Tag', tag => tw.core.render.tagPickerHtml(String(tag ?? '')), {
+    description: 'Render a tag as a picker listing every tiddler with that tag.',
+    example: '<<Tag $Plugin>>',
+  });
+  // Plain tags input for the edit form. The base package's TagInput ($GeneralWidgets)
+  // overrides this with an autocomplete version; this fallback keeps the edit form
+  // usable with ZERO plugins/scripts loaded (?safemode — the no-plugin invariant
+  // requires tags to stay editable, e.g. to add $CodeDisabled to a broken plugin).
+  tw.extensions.registerMacro('core', 'TagInput', ({id}) => `<input id="${id}" placeholder="Tags"/>`, {
+    description: 'Tags input for the edit form (no-plugin fallback; overridden with autocomplete by the base package).',
+    example: '<<TagInput id:my-tags>>',
+  });
 
   // Run
   const run = () => {

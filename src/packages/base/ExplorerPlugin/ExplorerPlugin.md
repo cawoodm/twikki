@@ -8,7 +8,7 @@ notes open + activate their tab; tags open all matching notes.
 
 Renders into `#explorer-notes` / `#explorer-tags` (provided by the layout)
 and rebuilds live on note create/update/delete and on story changes (to keep
-the "open" highlight current). Reuses `tw.macros.core.allTags()` and
+the "open" highlight current). Reuses `tw.run.allTags()` and
 `tw.util.titleMatch`.
 
 # Meta

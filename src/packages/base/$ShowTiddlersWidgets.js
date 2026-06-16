@@ -11,13 +11,24 @@
   * -  Show all tiddlers with title beginning with A
   *   <<ShowAllTiddlersButton tag:*, title:^A>>
   */
-tw.macros.core.ShowAllTiddlersButton = ({tag = '', title = ''} = {}) => {
-  return tw.ui.button('{{$IconOpenAll}}', 'ui.open.all', {tag, title}, 'open-all', 'title="Open All Tiddlers"');
-};
-// Show all tiddlers with text (but really all)
-tw.macros.core.CloseAllTiddlersButton = ({tag = '*', title = '*'} = {}) => {
-  return tw.ui.button('{{$IconCloseAll}}', 'ui.close.all', {tag, title}, 'close-all', 'title="Close All Tiddlers"');
-};
+tw.extensions.registerMacro(
+  'core',
+  'ShowAllTiddlersButton',
+  ({tag = '', title = ''} = {}) => tw.ui.button('{{$IconOpenAll}}', 'ui.open.all', {tag, title}, 'open-all', 'title="Open All Tiddlers"'),
+  {
+    description: 'Open all tiddlers matching `tag`/`title` (regex; `!` negates, `*` = all).',
+    example: '<<ShowAllTiddlersButton tag:Help>>',
+  },
+);
+tw.extensions.registerMacro(
+  'core',
+  'CloseAllTiddlersButton',
+  ({tag = '*', title = '*'} = {}) => tw.ui.button('{{$IconCloseAll}}', 'ui.close.all', {tag, title}, 'close-all', 'title="Close All Tiddlers"'),
+  {
+    description: 'Close all tiddlers matching `tag`/`title`.',
+    example: '<<CloseAllTiddlersButton>>',
+  },
+);
 
 tw.extensions.registerCommand([
   {label: 'Open all notes', event: 'ui.open.all', payload: {tag: '', title: ''}},

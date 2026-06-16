@@ -28,17 +28,26 @@ tags: $Plugin
   return {
     meta,
     init() {
-      tw.extensions.registerMacro('foo', 'hello', (firstName, lastName) => {
-        return `Hello ${firstName + ' ' + lastName}`;
-      }, {version: '1.0.0'});
+      tw.extensions.registerMacro(
+        'foo',
+        'hello',
+        (firstName, lastName) => `Hello ${firstName + ' ' + lastName}`,
+        {description: 'Test fixture for positional string parameters.', example: '<<foo.hello John Smith>>', version: '1.0.0'},
+      );
 
-      tw.extensions.registerMacro('foo', 'test', (age, boolean, string) => {
-        return `Age: ${age} (${typeof age}), Boolean: ${boolean} (${typeof boolean}), String: ${string} (${typeof string})`;
-      }, {version: '1.0.0'});
+      tw.extensions.registerMacro(
+        'foo',
+        'test',
+        (age, boolean, string) => `Age: ${age} (${typeof age}), Boolean: ${boolean} (${typeof boolean}), String: ${string} (${typeof string})`,
+        {description: 'Test fixture for mixed-type positional parameters.', example: '<<foo.test 1 true "Car Wash">>', version: '1.0.0'},
+      );
 
-      tw.extensions.registerMacro('foo', 'object', ({name, age}) => {
-        return `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`;
-      }, {version: '1.0.0'});
+      tw.extensions.registerMacro(
+        'foo',
+        'object',
+        ({name, age}) => `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`,
+        {description: 'Test fixture for named/object parameters.', example: '<<foo.object name:"John Smith" age:22>>', version: '1.0.0'},
+      );
     },
   };
 })();

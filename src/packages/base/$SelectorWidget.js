@@ -22,10 +22,18 @@
   *         This would be great in the $Theme tiddler to directly select a theme
   *         <<selector {tw.theme.getThemeNames()}>>
   */
-tw.macros.core.selector = (values) => {
-  if (typeof values === 'string') values = values.split(/,\s?/);
-  if (typeof values === 'object' && !Array.isArray(values)) values = Object.keys(values).map(key => ({key, value: values[key]}));
-  if (!Array.isArray(values)) throw new Error('No array passed!');
-  // Single-line output so the widget can live inside markdown table cells
-  return `<select>${values.map(v => '<option value="' + (v?.key || v) + '">' + (v?.value || v) + '</option>').join('')}</select>`;
-};
+tw.extensions.registerMacro(
+  'core',
+  'selector',
+  values => {
+    if (typeof values === 'string') values = values.split(/,\s?/);
+    if (typeof values === 'object' && !Array.isArray(values)) values = Object.keys(values).map(key => ({key, value: values[key]}));
+    if (!Array.isArray(values)) throw new Error('No array passed!');
+    // Single-line output so the widget can live inside markdown table cells
+    return `<select>${values.map(v => '<option value="' + (v?.key || v) + '">' + (v?.value || v) + '</option>').join('')}</select>`;
+  },
+  {
+    description: 'HTML <select> built from a csv string or key:value pairs.',
+    example: '<<selector red,green,blue>>',
+  },
+);

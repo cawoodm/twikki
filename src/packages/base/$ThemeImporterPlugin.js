@@ -226,11 +226,15 @@
   return {
     meta,
     init() {
-      tw.macros.themeImport = {
-        button() {
-          return tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"');
+      tw.extensions.registerMacro(
+        'themeImport',
+        'button',
+        () => tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"'),
+        {
+          description: 'Button to open the theme-import dialog.',
+          example: '<<themeImport.button>>',
         },
-      };
+      );
 
       tw.events.subscribe('theme.import', open, 'ThemeImporter');
     },

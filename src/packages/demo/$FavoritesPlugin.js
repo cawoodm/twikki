@@ -33,13 +33,19 @@
   return {
     meta,
     init() {
-      tw.macros.favorites = {
-        toggle() {
+      tw.extensions.registerMacro(
+        'favorites',
+        'toggle',
+        () => {
           // TODO: How to find the current tiddler/element?
           // let el = tw.core.dom.nearestAttribute
           return tw.ui.button('{{$IconFavorite}}', 'favorites.toggle', '$currentTiddler', 'favoriteAdd');
         },
-      };
+        {
+          description: 'Toggle the current tiddler\'s "Favorite" tag.',
+          example: '<<favorites.toggle>>',
+        },
+      );
       tw.events.subscribe('favorites.toggle', favoriteToggle);
 
       // Add {{=favoriteClass}} to your $TiddlerDisplay

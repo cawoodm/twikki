@@ -100,3 +100,15 @@ test('fallback uses current document directory when nothing else is set', () => 
     'http://localhost:3004/twikki/packages/base.json',
   );
 });
+
+test('fallback treats extension-less last segment without trailing slash as a directory', () => {
+  // Server serves the app at /twikki (no trailing slash, e.g. via /twikki →
+  // /twikki/index.html rewriting). new URL('./', 'http://host/twikki')
+  // would otherwise treat 'twikki' as a file and resolve './' to the parent,
+  // making modules load from /modules instead of /twikki/modules.
+  const fn = loadBuildUrl({locationHref: 'http://localhost:3005/twikki'});
+  assert.equal(
+    fn('modules/core.tiddlers.js'),
+    'http://localhost:3005/twikki/modules/core.tiddlers.js',
+  );
+});

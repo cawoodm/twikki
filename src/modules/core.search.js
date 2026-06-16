@@ -7,8 +7,7 @@
  * exported, so the sidebar Notes list hides the same tiddlers). Also wires
  * the search box UI and renders the clickable results dropdown.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.search';
   const version = '0.24.0';
   const platform = '0.26.0'; // built for platform ^0.26.0
@@ -28,9 +27,9 @@
 
   // Run
   const run = () => {
-    tw.events.subscribe('ui.loading', wireUIEvents);
-    tw.events.subscribe('search', searchQuery); // From #msg:search:foo events
-    tw.events.subscribe('search.advanced', searchQueryAdvanced); // From #msg:search.advanced:pck:icons title:add
+    tw.events.subscribe('ui.loading', wireUIEvents, name);
+    tw.events.subscribe('search', searchQuery, name); // From #msg:search:foo events
+    tw.events.subscribe('search.advanced', searchQueryAdvanced, name); // From #msg:search.advanced:pck:icons title:add
   };
 
   return {name, version, platform, exports, run};
@@ -74,7 +73,7 @@
     });
   }
   function displayTiddlerLink({title, type}, target) {
-  // TODO: Apply tw.templates.TiddlerSearchResult
+    // TODO: Apply tw.templates.TiddlerSearchResult
     let newElement = document.createElement('div');
     newElement.className = 'tiddler-list'; // + (type ? ' line-clamp' : '');
     if (type) {
@@ -105,11 +104,7 @@
    */
   function search(q, list, options = {}) {
     tw.logging.break('search');
-    let results = list
-      .sort(alphabetically)
-      .map(simpleSearch(q, options))
-      .filter(notEmpty)
-      .sort(ranking);
+    let results = list.sort(alphabetically).map(simpleSearch(q, options)).filter(notEmpty).sort(ranking);
     let title = 'No results!';
     if (!q.match(/^\$/) && !options.all) title += ` Type '\$${q}' to search hidden tiddlers!`;
     return results.length ? results.map(t => t.tiddler) : [{title}];
@@ -138,7 +133,7 @@
     const tagVisible = tagFilter();
     const applyTagFilter = !searchAll && !searchTag;
 
-    return (t) => {
+    return t => {
       if (!searchAll && t.title[0] === '$') return;
       if (applyTagFilter && !tagVisible(t)) return;
       let titleText = t.title.toLowerCase();
@@ -152,7 +147,7 @@
       if (searchType && searchType !== t.type) rank = 0;
       if (rank === 0) return;
       if (q) {
-        rank = titleText.indexOf(q) >= 0 ? rank + TITLE_MATCH : (fullText.indexOf(q) >= 0 ? rank + TEXT_MATCH : 0);
+        rank = titleText.indexOf(q) >= 0 ? rank + TITLE_MATCH : fullText.indexOf(q) >= 0 ? rank + TEXT_MATCH : 0;
         if (titleText === q || titleText === Q) rank += EXACT_TITLE_MATCH;
       } else if (Q === '') {
         rank = 1; // Return everything when no search is specified
@@ -168,17 +163,23 @@
   function alphabetically(a, b) {
     let A = a.title.toLowerCase();
     let B = b.title.toLowerCase();
-    if (A < B) return -1; else return 1;
+    if (A < B) return -1;
+    else return 1;
   }
 
   function ranking(a, b) {
     return a.rank > b.rank ? -1 : 1;
   }
 
-  function notEmpty(v){return !!v;}
+  function notEmpty(v) {
+    return !!v;
+  }
 
   function parseTagList(v) {
-    return String(v || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    return String(v || '')
+      .split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
   }
 
   /**
@@ -192,7 +193,7 @@
     const includeTags = parseTagList(cfg.includeTags);
     const excludeTags = parseTagList(cfg.excludeTags);
     if (!includeTags.length && !excludeTags.length) return () => true;
-    return (t) => {
+    return t => {
       const tags = (t.tags || []).map(x => x.toLowerCase());
       if (includeTags.length && !includeTags.some(tag => tags.includes(tag))) return false;
       if (excludeTags.some(tag => tags.includes(tag))) return false;
@@ -224,10 +225,12 @@
     const row = e.target.closest('[data-msg="tiddler.show"][data-params]');
     if (!row) return;
     let title;
-    try {title = JSON.parse(row.getAttribute('data-params'));}
-    catch {return;}
+    try {
+      title = JSON.parse(row.getAttribute('data-params'));
+    } catch {
+      return;
+    }
     const term = tw.core.dom.$('search').value || '';
     tw.events.send('search.result.clicked', {title, term});
   }
-
 });
