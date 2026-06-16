@@ -21,6 +21,7 @@
       },
       send(event, params) {
         dp('events.send', event);
+        tw.logging.break(event);
         let result = [];
         handlers
           .filter(h => h.event === event)

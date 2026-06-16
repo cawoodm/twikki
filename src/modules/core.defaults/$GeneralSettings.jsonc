@@ -2,9 +2,9 @@
 {
   "backup": {
     "Gist": {
-      "accessToken": "***",
+      "accessToken": "",
       "accessToken~": "GitHub Personal Access Token (classic) with the gist scope (secret, max:100)",
-      "gistId": "***",
+      "gistId": "",
       "gistId~": "Id of the gist to back up to"
     },
     "backupInSeconds": 600,
@@ -12,9 +12,9 @@
   },
   "synch": {
     "Gist": {
-      "accessToken": "***",
+      "accessToken": "",
       "accessToken~": "GitHub Personal Access Token (classic) with the gist scope (secret, max:100)",
-      "gistId": "***",
+      "gistId": "",
       "gistId~": "Id of the gist to synch up to"
     },
     "synchInSeconds": 60,

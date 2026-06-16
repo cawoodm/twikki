@@ -1,11 +1,11 @@
-import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
+import {defineConfig} from 'vite';
 import tiddlerCompile from './vite-plugin-tiddler-compile.js';
 
 export default defineConfig({
   root: 'src',
   publicDir: '../public',
-  base: '/',
+  base: '/twikki',
   build: {
     outDir: '../dist',
     minify: false,

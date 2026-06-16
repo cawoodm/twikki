@@ -1,6 +1,6 @@
 type: list
 
-- /packages/twikki/icons.json force
-- /packages/twikki/demo.json force
-- /packages/twikki/website.json force
-- /packages/twikki/themes.json force
+- packages/icons.json force
+- packages/demo.json force
+- packages/website.json force
+- packages/themes.json force

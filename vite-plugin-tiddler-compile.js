@@ -12,6 +12,8 @@ export function getType(ext) {
       return 'script/js';
     case '.json':
       return 'json';
+    case '.jsonc':
+      return 'json';
     case '.css':
       return 'css';
     case '.html':
@@ -211,9 +213,7 @@ export function compilePackage(packageName, sourceDir, outputDir) {
   const tiddlers = [...fromFiles, ...fromDirs].filter(Boolean);
   const outPath = join(outputDir, `${packageName}.json`);
   writeFileSync(outPath, JSON.stringify({tiddlers}, null, 2));
-  console.log(
-    `[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`,
-  );
+  console.log(`[tiddler-compile] Compiled ${packageName} → ${outPath} (${tiddlers.length} tiddlers)`);
   return tiddlers.length;
 }
 
@@ -257,9 +257,7 @@ export default function tiddlerCompile(sourceSets) {
         try {
           compilePackage(info.packageName, info.sourceDir, info.outputDir);
         } catch (err) {
-          console.warn(
-            `[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`,
-          );
+          console.warn(`[tiddler-compile] Recompile of ${info.packageName} skipped: ${err.message}`);
         }
       };
       server.watcher.on('change', handler);

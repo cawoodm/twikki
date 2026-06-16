@@ -28,7 +28,7 @@
       if (path.substring(path.length - 1) !== '/') path = path + '/';
 
       // List Files
-      const listUrl = endpoint + '/repos/' + repo + '/contents' + path;
+      const listUrl = tw.core.buildUrl('repos/' + repo + '/contents' + path, endpoint);
       let res = await fetch(listUrl, {
         method: 'GET',
         headers: headers,
@@ -50,7 +50,7 @@
       };
 
       // Perform a PUT request to save the file
-      let putUrl = listUrl + filename;
+      let putUrl = tw.core.buildUrl(filename, listUrl);
       res = await fetch(putUrl, {
         method: 'PUT',
         headers: headers,

@@ -1,24 +1,27 @@
 # Welcome
 
-TWikki is, like TiddlyWiki, a cool way to manage semi-structured information as notes or "tiddlers". 
+TWikki is, like TiddlyWiki, a cool way to manage semi-structured information as notes or "tiddlers".
+
+Create your first note with <<New>> or press Ctrl+K to begin searching content or running commands.
+
+> Tip: type `$` in the search box to see hidden content
 
 ## Motivation
+
 TiddlyWiki is an excellent and mature tool but we decided to improve it in a few key areas:
-* Natively support local and cloud saves
-* Use standardized markdown
-* Simplify things for non-technical users
-* More information in [[USP]]
 
-## Introduction
-With TWikki everything is in the database including code meaning that the information platform is also the development environment.
-
-When you create a new "entry" it can be data (like a note) or code which actually runs - so installing a plugin means, in practice, adding a new entry.
+- Natively support local and cloud [[Saves]]
+- Use standardized [[Markdown]]
+- Simplify things for non-technical users
+- More information in [[USP]]
 
 Checkout these cool [[Features]]:
-* [[Themes]]
-* [Packages](#$CorePackagesHelp)
-* [[Plugins]]
-* [[Help]]
+
+- [[Themes]]
+- [[Packages]]
+- [[Plugins]]
+- [[Help]]
 
 ---
+
 NOTE: This 'Welcome' tiddler is part of the [package](#$CorePackagesHelp) [website](#msg:search:$pck:website).

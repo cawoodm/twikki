@@ -7,30 +7,12 @@
  * Each tiddler is stored as a separate file so changes appear as per-tiddler
  * diffs in the gist's history. A sidecar `_twikki.meta.json` holds the visible
  * list. On first push (when no gistId is configured) a new private gist is
- * created and its id is written back to `$GeneralSettings`.
+ * created and its id is written back to [[$GeneralSettings]].
  *
- * Tiddlers tagged `$NoBackup` (or the legacy `$NoSynch`) are never pushed.
+ * Tiddlers tagged `$NoSynch` are never pushed.
  *
- * Required `$GeneralSettings` shape:
- * ```json
- * {
- *   "synch": {
- *     "Gist": {
- *       "accessToken": "ghp_xxx",
- *       "gistId": "",
- *       "description": "TWikki sync"
- *     }
- *   }
- * }
- * ```
  * The PAT must have the `gist` scope.
  *
- * ### Release Notes
- * * v2.0.0
- *   * Migrated from to GitHub Gist (per-tiddler history, 10 MB per file)
- *   * Honour `$NoBackup` tag in addition to `$NoSynch`
- * * v1.0.9
- *   * Don't synch trashed tiddlers
  */
 // TODO: Pull force, clearing local
 // TODO: Selective Synch: Include/Exclude Tags/Packages
@@ -61,7 +43,6 @@
     return await synch({pull: false, push: true, fetchRemote: false});
   }
   async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
-
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
 
     let settings = tw.call('getJSONObject', '$GeneralSettings');
@@ -76,7 +57,7 @@
     let remoteTiddlers = [];
     let remoteTrashedTiddlers = [];
     if (fetchRemote && cfg.gistId) {
-      let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
+      let res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('SynchData fetch', await readError(res));
         return tw.ui.notify(`Fetch remote failed '${res.status}' (see console log)`, 'E');
@@ -92,8 +73,7 @@
     let remote = {create: [], update: [], delete: []};
     let local = {create: [], update: [], delete: []};
 
-    let localTiddlers = tw.tiddlers.all
-      .filter(t => !t.isRawShadow); // Don't synch raw shadows - See BUG below
+    let localTiddlers = tw.tiddlers.all.filter(t => !t.isRawShadow); // Don't synch raw shadows - See BUG below
 
     remoteTiddlers.forEach(remoteTiddler => {
       remoteTiddler.created = new Date(remoteTiddler.created);
@@ -155,9 +135,7 @@
       // Updated locally/remotely handled above ☝️
     });
 
-    if (remote.create.length + remote.update.length + remote.delete.length +
-      local.create.length + local.update.length + local.delete.length === 0
-    ) return tw.ui.notify('No changes to synch', 'S');
+    if (remote.create.length + remote.update.length + remote.delete.length + local.create.length + local.update.length + local.delete.length === 0) return tw.ui.notify('No changes to synch', 'S');
 
     if (push) {
       // Perform remote updates
@@ -181,9 +159,7 @@
 
     if (push && !dryRun) {
       // Build a Gist files patch: create/update → {content}, delete → null.
-      const byTitle = Object.fromEntries(
-        localTiddlers.filter(t => !isNoPush(t)).map(t => [t.title, t]),
-      );
+      const byTitle = Object.fromEntries(localTiddlers.filter(t => !isNoPush(t)).map(t => [t.title, t]));
       const files = {};
       [...remote.create, ...remote.update].forEach(title => {
         const t = byTitle[title];
@@ -192,20 +168,27 @@
       remote.delete.forEach(title => {
         files[tiddlerFilename(title)] = null;
       });
-      files[META_FILENAME] = {content: JSON.stringify({
-        format: FORMAT,
-        visible: tw.tiddlers.visible,
-      }, null, 2)};
+      files[META_FILENAME] = {
+        content: JSON.stringify(
+          {
+            format: FORMAT,
+            visible: tw.tiddlers.visible,
+          },
+          null,
+          2,
+        ),
+      };
 
       let res;
       if (cfg.gistId) {
-        res = await fetch('https://api.github.com/gists/' + cfg.gistId, {
+        res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {
           method: 'PATCH',
           headers: mutationHeaders(cfg.accessToken),
           body: JSON.stringify({files, description: cfg.description}),
         });
       } else {
-        res = await fetch('https://api.github.com/gists', {
+        if (!confirm('No Gist Id found, do you want to create a new one?')) return;
+        res = await fetch(tw.core.buildUrl('gists', 'https://api.github.com/'), {
           method: 'POST',
           headers: mutationHeaders(cfg.accessToken),
           body: JSON.stringify({public: false, description: cfg.description, files}),
@@ -287,8 +270,8 @@
 
   function authHeaders(token) {
     return {
-      'Authorization': 'Bearer ' + token,
-      'Accept': 'application/vnd.github+json',
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
     };
   }
@@ -299,20 +282,25 @@
 
   async function readError(res) {
     let body = '';
-    try {body = await res.text();} catch {}
+    try {
+      body = await res.text();
+    } catch {}
     return `${res.status} ${res.statusText}${body ? ': ' + body.slice(0, 200) : ''}`;
   }
 
   function persistGistId(newId) {
     let tiddler = tw.run.getTiddler('$GeneralSettings');
     let parsed = {};
-    try {parsed = JSON.parse(tiddler.text || '{}');} catch {}
+    try {
+      parsed = JSON.parse(tiddler.text || '{}');
+    } catch {}
     if (!parsed.synch) parsed.synch = {};
     if (!parsed.synch.Gist) parsed.synch.Gist = {};
     parsed.synch.Gist.gistId = newId;
     tiddler.text = JSON.stringify(parsed, null, 2);
     delete tiddler.doNotSave;
     tw.run.updateTiddlerHard('$GeneralSettings', tiddler);
+    // TODO: Re-render $GeneralSettings
     tw.events.send('save.silent');
   }
 

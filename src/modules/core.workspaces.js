@@ -7,8 +7,7 @@
  * repoints `tw.workspace`; `workspace.load` hard-reboots so the UI reloads
  * from the new store. Falls back to 'default' if the saved name is unknown.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.workspaces';
   const version = '0.25.0';
   const platform = '0.26.0'; // built for platform ^0.26.0
@@ -56,7 +55,7 @@
   }
 
   function workspaceCreate(name, clone) {
-  // Remember current workspace (if any)
+    // Remember current workspace (if any)
     let currentWorkspace = tw.store.global.get('workspace');
     // Check it doesn't already exist
     let workspaces = tw.store.global.get('workspaces');
@@ -66,7 +65,7 @@
     workspaces.push(name);
     tw.store.global.set('workspaces', workspaces);
     if (clone) {
-    // Copy all data across
+      // Copy all data across
       workspaceMigrate(currentWorkspace, name, {
         tiddlers: tw.store.get('tiddlers'),
         'tiddlers-visible': tw.store.get('tiddlers-visible'),
@@ -78,7 +77,7 @@
    * Switch Workspace without reloading UI
    */
   function workspaceSwitch(name) {
-  // TODO: Save if dirty prompt
+    // TODO: Save if dirty prompt
     let workspaces = tw.store.global.get('workspaces');
     let index = name ? workspaces.indexOf(name) : 0;
     if (index < 0) throw new Error(`workspaceSwitch Failed: Workspace '${name}' not found!`);

@@ -19,11 +19,7 @@
     try {
       settings = JSON.parse(tw.run.getTiddlerTextRaw(TIDDLER));
     } catch (e) {
-      if (!textDiv.querySelector('.settings-error'))
-        textDiv.insertAdjacentHTML(
-          'afterbegin',
-          `<div class="settings-error">Settings form unavailable: invalid JSON: ${e.message}</div>`,
-        );
+      if (!textDiv.querySelector('.settings-error')) textDiv.insertAdjacentHTML('afterbegin', `<div class="settings-error">Settings form unavailable: invalid JSON: ${e.message}</div>`);
       return;
     }
     if (!isPlainObject(settings)) return;
@@ -48,28 +44,16 @@
         label: 'General',
         body: renderSection(null, settings, settings, '', scalarRoot),
       });
-    objectRoot.forEach(k =>
-      tabs.push({id: k, label: humanize(k), body: renderTabBody(settings[k], k)}),
-    );
+    objectRoot.forEach(k => tabs.push({id: k, label: humanize(k), body: renderTabBody(settings[k], k)}));
 
     if (!tabs.length) return '';
 
     const strip =
       '<div class="settings-tabs">' +
-      tabs
-        .map(
-          (t, i) =>
-            `<button type="button" class="settings-tab${i === 0 ? ' settings-tab-active' : ''}" data-tab="${esc(t.id)}">${esc(t.label)}</button>`,
-        )
-        .join('') +
+      tabs.map((t, i) => `<button type="button" class="settings-tab${i === 0 ? ' settings-tab-active' : ''}" data-tab="${esc(t.id)}">${esc(t.label)}</button>`).join('') +
       '</div>';
 
-    const panels = tabs
-      .map(
-        (t, i) =>
-          `<div class="settings-tab-panel${i === 0 ? '' : ' is-hidden'}" data-tab="${esc(t.id)}">${t.body}</div>`,
-      )
-      .join('');
+    const panels = tabs.map((t, i) => `<div class="settings-tab-panel${i === 0 ? '' : ' is-hidden'}" data-tab="${esc(t.id)}">${t.body}</div>`).join('');
 
     return `<div class="settings-form">${strip}${panels}</div>`;
   }
@@ -80,10 +64,7 @@
     const fieldKeys = keys.filter(k => !sectionKeys.includes(k));
     let html = '';
     if (fieldKeys.length) html += renderSection(null, node, node, prefix, fieldKeys);
-    sectionKeys.forEach(
-      k =>
-        (html += renderSection(humanize(k), node[k], node[k], `${prefix}.${k}`, ownKeys(node[k]))),
-    );
+    sectionKeys.forEach(k => (html += renderSection(humanize(k), node[k], node[k], `${prefix}.${k}`, ownKeys(node[k]))));
     return html;
   }
 
@@ -101,9 +82,7 @@
   function renderField(key, value, descriptor, path) {
     const meta = parseDescriptor(descriptor);
     const type = meta.type || inferType(value);
-    const help = meta.description
-      ? `<div class="settings-field-help">${esc(meta.description)}</div>`
-      : '';
+    const help = meta.description ? `<div class="settings-field-help">${esc(meta.description)}</div>` : '';
     return `<div class="settings-field">
       <label class="settings-field-label">${esc(humanize(key))}${help}</label>
       <div class="settings-field-control">${renderControl(type, value, meta, path)}</div>
@@ -120,17 +99,14 @@
       case 'date':
         return `<input type="date" class="settings-field-input" data-path="${p}" data-type="date" value="${esc(value ?? '')}">`;
       case 'secret':
-        return `<input type="password" class="settings-field-input" data-path="${p}" data-type="string" value="${esc(value ?? '')}"${meta.max ? ` maxlength="${esc(meta.max)}"` : ''} autocomplete="off">`;
+        return `<input type="text" class="settings-field-input" data-path="${p}" data-type="string" value="${esc(value ?? '')}"${meta.max ? ` maxlength="${esc(meta.max)}"` : ''} autocomplete="off">`;
       case 'text':
         return `<textarea class="settings-field-input settings-text" data-path="${p}" data-type="text"${meta.max ? ` maxlength="${esc(meta.max)}"` : ''}>${esc(value ?? '')}</textarea>`;
       case 'option':
         return (
           '<div class="settings-options">' +
           (meta.options || [])
-            .map(
-              o =>
-                `<label class="settings-option"><input type="radio" name="${p}" data-path="${p}" data-type="option" value="${esc(o)}"${value === o ? ' checked' : ''}> ${esc(o)}</label>`,
-            )
+            .map(o => `<label class="settings-option"><input type="radio" name="${p}" data-path="${p}" data-type="option" value="${esc(o)}"${value === o ? ' checked' : ''}> ${esc(o)}</label>`)
             .join('') +
           '</div>'
         );
@@ -139,10 +115,7 @@
         return (
           '<div class="settings-options">' +
           (meta.options || [])
-            .map(
-              o =>
-                `<label class="settings-option"><input type="checkbox" data-path="${p}" data-type="selection" value="${esc(o)}"${arr.includes(o) ? ' checked' : ''}> ${esc(o)}</label>`,
-            )
+            .map(o => `<label class="settings-option"><input type="checkbox" data-path="${p}" data-type="selection" value="${esc(o)}"${arr.includes(o) ? ' checked' : ''}> ${esc(o)}</label>`)
             .join('') +
           '</div>'
         );
@@ -169,12 +142,8 @@
     const tab = e.target.closest('.settings-tab');
     if (!tab || !formRoot.contains(tab)) return;
     const name = tab.dataset.tab;
-    formRoot
-      .querySelectorAll('.settings-tab')
-      .forEach(t => t.classList.toggle('settings-tab-active', t === tab));
-    formRoot
-      .querySelectorAll('.settings-tab-panel')
-      .forEach(p => p.classList.toggle('is-hidden', p.dataset.tab !== name));
+    formRoot.querySelectorAll('.settings-tab').forEach(t => t.classList.toggle('settings-tab-active', t === tab));
+    formRoot.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.toggle('is-hidden', p.dataset.tab !== name));
   }
 
   function onChange(e, formRoot) {
@@ -206,11 +175,7 @@
         value = el.value;
         break;
       case 'selection':
-        value = [
-          ...formRoot.querySelectorAll(`input[type="checkbox"][data-path="${cssEsc(path)}"]`),
-        ]
-          .filter(b => b.checked)
-          .map(b => b.value);
+        value = [...formRoot.querySelectorAll(`input[type="checkbox"][data-path="${cssEsc(path)}"]`)].filter(b => b.checked).map(b => b.value);
         break;
       default:
         value = el.value;
@@ -289,8 +254,7 @@
   function mergeParts(raw) {
     const out = [];
     raw.forEach(p => {
-      if (!/:/.test(p) && out.length && /:/.test(out[out.length - 1]))
-        out[out.length - 1] += ',' + p;
+      if (!/:/.test(p) && out.length && /:/.test(out[out.length - 1])) out[out.length - 1] += ',' + p;
       else out.push(p);
     });
     return out;

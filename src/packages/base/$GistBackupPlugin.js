@@ -4,12 +4,10 @@
  * Each tiddler is stored as a separate file so changes appear as diffs in
  * the gist's history. A sidecar `_twikki.meta.json` holds the visible/trashed
  * lists. On first save (when no gistId is configured) a new private gist is
- * created and its id is written back to `$GeneralSettings`.
+ * created and its id is written back to [[$GeneralSettings]].
  *
  * Loading this plugin overrides any previously installed backup provider.
  *
- * Required `$GeneralSettings` shape:
- *   { "backup": { "Gist": { "accessToken": "ghp_xxx", "gistId": "", "description": "TWikki backup" } } }
  * The PAT must have the `gist` scope. GitHub enforces a 10 MB per-file limit;
  * oversized tiddlers will be rejected by the API.
  */
@@ -19,7 +17,7 @@
   const DEFAULT_DESCRIPTION = 'TWikki backup';
 
   // Tiddlers tagged $NoBackup are never pushed and are preserved across restore.
-  const isNoBackup = (t) => t.tags?.includes('$NoBackup');
+  const isNoBackup = t => t.tags?.includes('$NoBackup');
 
   const backup = {
     restoreButton() {
@@ -32,7 +30,7 @@
       let cfg = readConfig();
       if (!cfg) return;
       if (!cfg.gistId) return tw.ui.notify('No Gist gistId found in $GeneralSettings.backup.Gist!', 'W');
-      let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
+      let res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('GistBackup restore', await readError(res));
         return tw.ui.notify(`Restore failed '${res.status}' (see console log)`, 'E');
@@ -44,10 +42,10 @@
       // so the gist has no authoritative copy. Local wins on title collision.
       const localKeep = tw.tiddlers.all.filter(isNoBackup);
       const localKeepTrashed = tw.tiddlers.trashed.filter(isNoBackup);
-      const rebuiltTitles = new Set(rebuilt.all.map((t) => t.title));
-      const rebuiltTrashedTitles = new Set(rebuilt.trashed.map((t) => t.title));
-      rebuilt.all.push(...localKeep.filter((t) => !rebuiltTitles.has(t.title)));
-      rebuilt.trashed.push(...localKeepTrashed.filter((t) => !rebuiltTrashedTitles.has(t.title)));
+      const rebuiltTitles = new Set(rebuilt.all.map(t => t.title));
+      const rebuiltTrashedTitles = new Set(rebuilt.trashed.map(t => t.title));
+      rebuilt.all.push(...localKeep.filter(t => !rebuiltTitles.has(t.title)));
+      rebuilt.trashed.push(...localKeepTrashed.filter(t => !rebuiltTrashedTitles.has(t.title)));
 
       Object.assign(tw.tiddlers, rebuilt);
       tw.run.save();
@@ -59,8 +57,8 @@
       if (!cfg) return;
       let files = {};
       tw.tiddlers.all
-        .filter((t) => !isNoBackup(t))
-        .forEach((t) => {
+        .filter(t => !isNoBackup(t))
+        .forEach(t => {
           files[tiddlerFilename(t.title)] = {content: JSON.stringify(t, null, 2)};
         });
       files[META_FILENAME] = {
@@ -68,31 +66,32 @@
           {
             format: FORMAT,
             visible: tw.tiddlers.visible,
-            trashed: tw.tiddlers.trashed.filter((t) => !isNoBackup(t))
+            trashed: tw.tiddlers.trashed.filter(t => !isNoBackup(t)),
           },
           null,
-          2
-        )
+          2,
+        ),
       };
       let body, res;
       if (cfg.gistId) {
         let remote = await fetchRemoteFiles(cfg);
         if (!remote) return;
-        Object.keys(remote).forEach((name) => {
+        Object.keys(remote).forEach(name => {
           if (!files[name]) files[name] = null; // Delete files no longer present locally
         });
         body = JSON.stringify({files, description: cfg.description});
-        res = await fetch('https://api.github.com/gists/' + cfg.gistId, {
+        res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {
           method: 'PATCH',
           headers: mutationHeaders(cfg.accessToken),
-          body
+          body,
         });
       } else {
+        if (!confirm('No Gist Id found, do you want to create a new one?')) return;
         body = JSON.stringify({public: false, description: cfg.description, files});
-        res = await fetch('https://api.github.com/gists', {
+        res = await fetch(tw.core.buildUrl('gists', 'https://api.github.com/'), {
           method: 'POST',
           headers: mutationHeaders(cfg.accessToken),
-          body
+          body,
         });
       }
       if (!res.ok) {
@@ -104,9 +103,9 @@
         persistGistId(created.id);
         tw.ui.notify(`New gist created (${created.id}) and saved to $GeneralSettings`, 'I');
       }
-      let fileCount = Object.values(files).filter((f) => f !== null).length;
+      let fileCount = Object.values(files).filter(f => f !== null).length;
       tw.ui.notify(`Backup complete! (${fileCount} files, ${(body.length / 1000).toFixed(1)} KB)`, 'S');
-    }
+    },
   };
 
   function readConfig() {
@@ -118,12 +117,12 @@
     return {
       accessToken: settings.backup.Gist.accessToken,
       gistId: settings.backup.Gist.gistId || '',
-      description: settings.backup.Gist.description || DEFAULT_DESCRIPTION
+      description: settings.backup.Gist.description || DEFAULT_DESCRIPTION,
     };
   }
 
   async function fetchRemoteFiles(cfg) {
-    let res = await fetch('https://api.github.com/gists/' + cfg.gistId, {headers: authHeaders(cfg.accessToken)});
+    let res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {headers: authHeaders(cfg.accessToken)});
     if (!res.ok) {
       console.error('GistBackup fetch-before-patch', await readError(res));
       tw.ui.notify(`Backup failed '${res.status}' (see console log)`, 'E');
@@ -187,7 +186,7 @@
     return {
       Authorization: 'Bearer ' + token,
       Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28'
+      'X-GitHub-Api-Version': '2022-11-28',
     };
   }
 
@@ -208,7 +207,7 @@
       name: 'GistBackup',
       version: '1.0.0',
       platform: '0.26.0',
-      description: 'Back up tiddlers to a private GitHub Gist.'
+      description: 'Back up tiddlers to a private GitHub Gist.',
     },
     init() {
       // Expose macros for restore/backup buttons.
@@ -218,6 +217,6 @@
       // Override any previously installed backup provider — this plugin wins.
       tw.events.override('backup.save', backup.save);
       tw.events.override('backup.restore', backup.restore);
-    }
+    },
   };
 })();
