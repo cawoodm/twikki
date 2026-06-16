@@ -12,6 +12,8 @@
   const DIALOG_ID = 'dnd-import-dialog';
   const HANDLER_KEY = 'DragAndDropTiddlers';
 
+  let originatedHere = false;
+
   // -- Source side -----------------------------------------------------------
 
   // Resolve the dragged tiddler's title from either a main-tiddler .title bar
@@ -34,9 +36,14 @@
       ev.dataTransfer.setData(MIME, JSON.stringify(payload));
       ev.dataTransfer.setData('text/plain', title);
       ev.dataTransfer.effectAllowed = 'copy';
+      originatedHere = true;
     } catch (e) {
       dp('DragAndDropTiddlers.onDragStart failed', e);
     }
+  }
+
+  function onDragEnd() {
+    originatedHere = false;
   }
 
   // Decorate the title bar of a freshly rendered main tiddler so the browser
@@ -71,6 +78,7 @@
     const raw = ev.dataTransfer?.getData(MIME);
     if (!raw) return; // file drops fall through to $DropZonePlugin
     ev.preventDefault();
+    if (originatedHere) return;
     let bundle;
     try {
       bundle = JSON.parse(raw);
@@ -200,6 +208,7 @@
       if (tw.tmp.dndTiddlersBound) return;
       tw.tmp.dndTiddlersBound = true;
       document.addEventListener('dragstart', onDragStart);
+      document.addEventListener('dragend', onDragEnd);
       document.addEventListener('dragover', onDragOver);
       document.addEventListener('drop', onDrop);
     },
