@@ -197,8 +197,6 @@
       let src = tw.core.dom.nearestElementWithAttribute(el, 'data-msg');
       if (!src) return;
       let msg = src.getAttribute('data-msg');
-      if (src.hasAttribute('data-param'))
-        console.warn('data-param is no longer supported, use data-params', src);
       let params = src.getAttribute('data-params');
       if (!msg && isCommand(link)) msg = isCommand(link);
       if (!msg) return;
@@ -225,9 +223,7 @@
     });
     document.addEventListener('dblclick', event => {
       let el = event.target;
-      let t =
-        tw.core.dom.nearestAttribute(el, 'data-tiddler-title', '.tiddler') ||
-        tw.core.dom.nearestAttribute(el, 'tiddler-include', '[tiddler-include]');
+      let t = tw.core.dom.nearestAttribute(el, 'data-tiddler-title', '.tiddler') || tw.core.dom.nearestAttribute(el, 'tiddler-include', '[tiddler-include]');
       if (!t) return;
       formEditTiddler(t);
     });
@@ -268,6 +264,7 @@
     location.hash = '';
     return result;
   }
+  // Commands sent via #anchor
   function handleHashLink(hash) {
     if (!hash) return;
     let link = decodeURI(hash?.replace(/^#/, ''));
@@ -438,15 +435,12 @@
   }
 
   function tiddlerDeleted(t) {
-    if (tw.core.tiddlers.isRunnableTiddler(t))
-      if (confirm('Code tiddler deleted - would you like to reload?'))
-        tw.events.send('reboot.hard');
+    if (tw.core.tiddlers.isRunnableTiddler(t)) if (confirm('Code tiddler deleted - would you like to reload?')) tw.events.send('reboot.hard');
   }
 
   function tiddlerUpdated(title) {
     let t = tw.core.tiddlers.getTiddler(title);
-    if (['$SiteTitle', '$SiteSubTitle', '$TitleBar'].includes(title))
-      tw.core.dom.$$('*[tiddler-include]')?.forEach(tw.core.render.tiddlerSpanInclude);
+    if (['$SiteTitle', '$SiteSubTitle', '$TitleBar'].includes(title)) tw.core.dom.$$('*[tiddler-include]')?.forEach(tw.core.render.tiddlerSpanInclude);
     else if (tw.core.tiddlers.isPackageList(t)) {
       if (confirm('Would you like to reload?')) {
         tw.core.store.save();
@@ -454,12 +448,10 @@
       }
     } else if (tw.core.tiddlers.isRunnableTiddler(t)) {
       tw.core.store.save();
-      if (confirm(`Code '${t.title}' was edited. Reload now to apply changes?`))
-        tw.events.send('reboot.hard');
+      if (confirm(`Code '${t.title}' was edited. Reload now to apply changes?`)) tw.events.send('reboot.hard');
     } else if (tw.core.tiddlers.tiddlerIsATemplate(t)) {
       tw.core.store.save();
-      if (confirm(`Template '${t.title}' was edited. Reload now to apply changes?`))
-        tw.events.send('reboot.hard');
+      if (confirm(`Template '${t.title}' was edited. Reload now to apply changes?`)) tw.events.send('reboot.hard');
     }
   }
 
@@ -483,9 +475,7 @@
 
   // `$Layout` holds `[[LayoutTiddler]]`; strip the link brackets to get the title.
   function currentLayoutTitle() {
-    return (
-      (tw.run.getTiddler('$Layout')?.text || '').replace(/[\[\]]/g, '').trim() || '$MainLayout'
-    );
+    return (tw.run.getTiddler('$Layout')?.text || '').replace(/[\[\]]/g, '').trim() || '$MainLayout';
   }
 
   // Which layout a theme wants: its `# MainLayout` section names a shared layout
@@ -544,10 +534,7 @@
     let api = {el, content, toolbar, close, setContent: h => (content.innerHTML = h)};
 
     buttons.forEach(b => {
-      toolbar.insertAdjacentHTML(
-        'beforeend',
-        button(b.text, b.msg || '', b.payload, b.id || '', b.attr || '', b.className || ''),
-      );
+      toolbar.insertAdjacentHTML('beforeend', button(b.text, b.msg || '', b.payload, b.id || '', b.attr || '', b.className || ''));
       let btnEl = toolbar.lastElementChild;
       btnEl.addEventListener('click', ev => {
         // msg dispatch (if any) is handled by the document-level data-msg listener
