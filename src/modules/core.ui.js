@@ -364,7 +364,6 @@
       if (confirm(e.message + '\nDo you want to force save?')) {
         // Ignore error and proceed
         forceSave = true;
-        // TODO: BUG: Doesn't display tiddler after creation
       } else {
         return;
         // Message already displayed in renderTWikki/executeText
@@ -433,6 +432,7 @@
   /* ---------- Tiddler lifecycle reactions ---------- */
   function renderNewTiddler(title) {
     tw.core.tiddlers.showTiddler(title);
+    if (tw.tabs) tw.tabs.activate(title); // tabs mode: focus the new note (river mode no-ops)
   }
 
   function tiddlerDeleted(t) {
