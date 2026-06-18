@@ -16,7 +16,7 @@
     meta: {
       name: 'CodeRenderer',
       version: '0.0.1',
-      platform: '0.26.0',
+      platform: '0.27.0',
       author: 'TWikki',
       description:
         'Renders type=script/js tiddlers by lifting the leading /** ... */ JSDoc block as markdown and wrapping the rest in a ```javascript fence, then routing both halves back through markdown.render. See [[ExampleScript]] for a live demo.',

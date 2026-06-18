@@ -1,0 +1,24 @@
+tags: Help
+
+# Boot Script
+
+A **boot script** is a single piece of JavaScript that TWikki runs **before anything else** — even before `tw.storage` exists. It is the earliest customization hook in the boot process.
+
+The platform looks for the source under the `localStorage` key `/twikki.boot.js`. If it finds it, it `eval`s the source (which must evaluate to a function), calls that function with `tw`, and awaits it if it returns a promise — all before the default storage backing is set up.
+
+```js
+// /twikki.boot.js — source must evaluate to a function
+(function (tw) {
+  // runs before tw.storage is initialised; mutate tw here
+});
+```
+
+Because it runs so early, the most common use is to **replace the storage backend** — for example to route `tw.store` through IndexedDB instead of `localStorage`.
+
+**Failure-safe.** If the script fails to parse, throws, or rejects, the platform alerts once and continues with the default `localStorage` backing. A broken boot script can never brick the app.
+
+**Scope.** The boot script lives in `localStorage` and is global per origin — installing one affects **every** workspace on the device, not just the current one.
+
+The base [[IndexedDBStorage]] plugin is a real, installable example: it writes a boot script that swaps `tw.storage` for an IndexedDB-backed wrapper.
+
+See [Boot Script Docs](https://github.com/cawoodm/twikki/blob/main/docs/BootScript.md) for the full contract and a worked IndexedDB example, and [[Concepts]] / the [Boot order docs](https://github.com/cawoodm/twikki/blob/main/docs/BOOT.md) for where it fits in the wider boot sequence.

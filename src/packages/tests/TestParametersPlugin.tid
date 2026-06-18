@@ -1,53 +1,53 @@
 tags: $Plugin
 
 # Tests (positive)
-* `<<foo.hello John Smith>>`: <<foo.hello John Smith>>
-* `<<foo.test 1 true "Car Wash">>`: <<foo.test 1 true "Car Wash">>
-* `<<foo.object name:"John Smith" age:22>>`: <<foo.object name:"John Smith" age:22>>
-* `<<foo.object {"name":"John Smith", "age":"22"}>>`: <<foo.object {"name":"John Smith", "age":"22"}>>
-* `<<foo.test ${1+1} true "1+1=2">>`: <<foo.test ${1+1} true "1 + 1 = 2">>
-* `<<foo.test "${1 + 1}" true "1 + 1 = 2">>`: <<foo.test "${1 + 1}" true "1 + 1 = 2">>
+
+- `<<foo.hello John Smith>>`: <<foo.hello John Smith>>
+- `<<foo.test 1 true "Car Wash">>`: <<foo.test 1 true "Car Wash">>
+- `<<foo.object name:"John Smith" age:22>>`: <<foo.object name:"John Smith" age:22>>
+- `<<foo.object {"name":"John Smith", "age":"22"}>>`: <<foo.object {"name":"John Smith", "age":"22"}>>
+- `<<foo.test ${1+1} true "1+1=2">>`: <<foo.test ${1+1} true "1 + 1 = 2">>
+- `<<foo.test "${1 + 1}" true "1 + 1 = 2">>`: <<foo.test "${1 + 1}" true "1 + 1 = 2">>
 
 # Tests (which should fail)
-* `<<foo.object {"name":"John Smith", age:22}>>`: <<foo.object {"name":"John Smith", age:22}>>
+
+- `<<foo.object {"name":"John Smith", age:22}>>`: <<foo.object {"name":"John Smith", age:22}>>
 
 # Meta
 
 <<pluginMeta TestParameters>>
 
 # Code
+
 ```javascript
 (function () {
   const meta = {
     name: 'TestParameters',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Registers <<foo.*>> demo macros that exercise the macro-parameter parser.',
   };
 
   return {
     meta,
     init() {
-      tw.extensions.registerMacro(
-        'foo',
-        'hello',
-        (firstName, lastName) => `Hello ${firstName + ' ' + lastName}`,
-        {description: 'Test fixture for positional string parameters.', example: '<<foo.hello John Smith>>', version: '1.0.0'},
-      );
+      tw.extensions.registerMacro('foo', 'hello', (firstName, lastName) => `Hello ${firstName + ' ' + lastName}`, {
+        description: 'Test fixture for positional string parameters.',
+        example: '<<foo.hello John Smith>>',
+        version: '1.0.0',
+      });
 
-      tw.extensions.registerMacro(
-        'foo',
-        'test',
-        (age, boolean, string) => `Age: ${age} (${typeof age}), Boolean: ${boolean} (${typeof boolean}), String: ${string} (${typeof string})`,
-        {description: 'Test fixture for mixed-type positional parameters.', example: '<<foo.test 1 true "Car Wash">>', version: '1.0.0'},
-      );
+      tw.extensions.registerMacro('foo', 'test', (age, boolean, string) => `Age: ${age} (${typeof age}), Boolean: ${boolean} (${typeof boolean}), String: ${string} (${typeof string})`, {
+        description: 'Test fixture for mixed-type positional parameters.',
+        example: '<<foo.test 1 true "Car Wash">>',
+        version: '1.0.0',
+      });
 
-      tw.extensions.registerMacro(
-        'foo',
-        'object',
-        ({name, age}) => `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`,
-        {description: 'Test fixture for named/object parameters.', example: '<<foo.object name:"John Smith" age:22>>', version: '1.0.0'},
-      );
+      tw.extensions.registerMacro('foo', 'object', ({name, age}) => `Age: ${age + 1} (${typeof age}), Name: ${name} (${typeof name})`, {
+        description: 'Test fixture for named/object parameters.',
+        example: '<<foo.object name:"John Smith" age:22>>',
+        version: '1.0.0',
+      });
     },
   };
 })();

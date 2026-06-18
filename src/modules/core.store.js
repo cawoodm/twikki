@@ -15,7 +15,7 @@
 (function (tw) {
   const name = 'core.store';
   const version = '0.1.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   const autoSave = true;
 
@@ -107,16 +107,12 @@
   function loadStore(store) {
     if (!store) store = tw.store;
     tw.tiddlers.all = storeLoadTiddlers('tiddlers');
-    tw.shadowTiddlers
-      .filter(t => !tw.util.tiddlerExists(t.title))
-      .forEach(t => tw.run.addTiddlerHard(t));
+    tw.shadowTiddlers.filter(t => !tw.util.tiddlerExists(t.title)).forEach(t => tw.run.addTiddlerHard(t));
     if (!tw.tiddlers.all.length) {
       tw.tiddlers.all = [];
       store.set('tiddlers', []);
     }
-    tw.tiddlers.visible = store.get('tiddlers-visible')?.length
-      ? store.get('tiddlers-visible')
-      : [];
+    tw.tiddlers.visible = store.get('tiddlers-visible')?.length ? store.get('tiddlers-visible') : [];
 
     tw.tiddlers.trashed = storeLoadTiddlers('tiddlers-trashed', false);
 

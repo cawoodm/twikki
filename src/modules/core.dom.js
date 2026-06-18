@@ -8,8 +8,8 @@
  */
 (function (tw) {
   const name = 'core.dom';
-  const version = '0.24.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const version = '0.27.0';
+  const platform = '0.27.0'; // built for platform ^0.27.0
   const exports = {};
 
   // Exports
@@ -23,8 +23,34 @@
   exports.nearestAttribute = nearestAttribute;
   exports.nearestElementWithAttribute = nearestElementWithAttribute;
   exports.nearestElement = nearestElement;
+  exports.on = on;
+  exports.offOwner = offOwner;
+
+  const tracked = [];
 
   return {name, version, platform, exports};
+
+  // Tracked DOM listener registry. Mirrors tw.events.subscribe(..., owner) —
+  // plugins call tw.core.dom.on(target, evt, handler, 'PluginName') and the
+  // platform's unloadPlugins() phase calls offOwner('PluginName') to tear
+  // them all down before re-evaluating the plugin code. Untracked
+  // addEventListener calls (the pre-migration pattern) leak as before.
+  function on(target, event, handler, owner, options) {
+    target.addEventListener(event, handler, options);
+    tracked.push({target, event, handler, owner, options});
+  }
+  function offOwner(owner) {
+    if (!owner) return 0;
+    let removed = 0;
+    for (let i = tracked.length - 1; i >= 0; i--) {
+      const l = tracked[i];
+      if (l.owner !== owner) continue;
+      l.target.removeEventListener(l.event, l.handler, l.options);
+      tracked.splice(i, 1);
+      removed++;
+    }
+    return removed;
+  }
 
   function addStyleSheet(title, url) {
     var link = document.createElement('link');
@@ -81,9 +107,7 @@
     return el;
   }
   function nearestAttribute(el, attribute, selector) {
-    return (
-      el.getAttribute(attribute) || el.parentElement?.closest(selector)?.getAttribute(attribute)
-    );
+    return el.getAttribute(attribute) || el.parentElement?.closest(selector)?.getAttribute(attribute);
   }
   function nearestElementWithAttribute(el, attribute) {
     let selector = `[${attribute}]`;

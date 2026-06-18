@@ -15,7 +15,7 @@
   const meta = {
     name: 'DumpWorkspace',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Dump/restore the current workspace as a single JSON file.',
   };
 
@@ -39,9 +39,12 @@
   function restoreWorkspace(text, file) {
     if (!confirm(`This will DELETE and completely overwrite your entire workspace ('${tw.workspace}') with the contents of ${file.name}. Continue?`)) return;
     let data;
-    try {data = JSON.parse(text);} catch {return tw.ui.notify('Invalid JSON', 'E');}
-    if (data.format !== FORMAT || typeof data.keys !== 'object' || !data.keys)
-      return tw.ui.notify('Not a twikki workspace file', 'E');
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return tw.ui.notify('Invalid JSON', 'E');
+    }
+    if (data.format !== FORMAT || typeof data.keys !== 'object' || !data.keys) return tw.ui.notify('Not a twikki workspace file', 'E');
     tw.store.keys().forEach(k => tw.store.delete(k)); // wipe
     Object.entries(data.keys).forEach(([rel, val]) => tw.store.importRaw(rel, val)); // overwrite
     tw.events.send('reboot.hard'); // reloads everything from the restored store
@@ -50,15 +53,10 @@
   return {
     meta,
     init() {
-      tw.extensions.registerMacro(
-        'dump',
-        'dumpButton',
-        () => tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"'),
-        {
-          description: 'Button to dump the entire workspace to a downloadable file.',
-          example: '<<dump.dumpButton>>',
-        },
-      );
+      tw.extensions.registerMacro('dump', 'dumpButton', () => tw.ui.button('{{$IconPush}}', 'workspace.dump', null, 'dump', 'title="Dump entire workspace to a file"'), {
+        description: 'Button to dump the entire workspace to a downloadable file.',
+        example: '<<dump.dumpButton>>',
+      });
 
       tw.events.subscribe('workspace.dump', dumpWorkspace, 'dumpworkspaceplugin');
       tw.run.registerDropHandler('*.workspace.json', restoreWorkspace);

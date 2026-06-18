@@ -7,7 +7,7 @@
   const meta = {
     name: 'Highlight',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Lazy-loads highlight.js and syntax-highlights code blocks on render.',
   };
 
@@ -45,49 +45,54 @@
   return {
     meta,
     init() {
-      // Dedup across hot reloads: re-running init() would otherwise stack a second set
-      // of handlers on top of the live ones (the de-dup *key* on subscribe protects
-      // against same-name re-registration but only within a single subscription pass).
-      if (tw.tmp.codeSyntaxHighlightBound) return;
-      tw.tmp.codeSyntaxHighlightBound = true;
-
-      tw.events.subscribe('ui.loaded', () => {
-        tw.core.dom.addStyleSheet('highlight-light', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css');
-        tw.core.dom.addStyleSheet('highlight-dark', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css');
-        tw.core.dom.addScript('highlight-core', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js');
-        tw.events.subscribe('script.loaded', (name) => {
-          if (name === 'highlight-core') {
-            tw.core.dom.addScript('highlight-lang-javascript', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/javascript.min.js');
-            tw.core.dom.addScript('highlight-lang-css', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/css.min.js');
-            tw.core.dom.addScript('highlight-lang-xml', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/xml.min.js');
-            tw.core.dom.addScript('highlight-lang-json', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/json.min.js');
-            return;
-          }
-          if (name !== 'highlight-lang-json') return;
-          tw.lib.highlight = window.hljs;
-          // Since the scripts/css above load after the core has rendered all visible tiddlers,
-          //   we have to highlight them now:
-          tw.tiddlers.visible
-            .forEach(title => {
-              let tiddler = tw.run.getTiddler(title);
-              let el = tw.run.getTiddlerElement(tiddler.title);
-              el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
-            });
-        }, 'CodeSyntaxHighlightPlugin');
-        // Apply the correct light/dark highlight for the current theme on load.
-        // Set the sheet state DIRECTLY (don't fire theme.switch): firing relied on
-        // $CoreThemeManager.themeSwitch running and not early-returning, and left a window
-        // where both sheets were enabled (dark, added last, wins) — which is why a light
-        // theme could come back with dark code blocks after a reload.
-        applyHighlightTheme();
-      }, 'CodeSyntaxHighlightPlugin');
+      tw.events.subscribe(
+        'ui.loaded',
+        () => {
+          tw.core.dom.addStyleSheet('highlight-light', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css');
+          tw.core.dom.addStyleSheet('highlight-dark', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css');
+          tw.core.dom.addScript('highlight-core', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js');
+          tw.events.subscribe(
+            'script.loaded',
+            name => {
+              if (name === 'highlight-core') {
+                tw.core.dom.addScript('highlight-lang-javascript', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/javascript.min.js');
+                tw.core.dom.addScript('highlight-lang-css', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/css.min.js');
+                tw.core.dom.addScript('highlight-lang-xml', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/xml.min.js');
+                tw.core.dom.addScript('highlight-lang-json', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/json.min.js');
+                return;
+              }
+              if (name !== 'highlight-lang-json') return;
+              tw.lib.highlight = window.hljs;
+              // Since the scripts/css above load after the core has rendered all visible tiddlers,
+              //   we have to highlight them now:
+              tw.tiddlers.visible.forEach(title => {
+                let tiddler = tw.run.getTiddler(title);
+                let el = tw.run.getTiddlerElement(tiddler.title);
+                el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)}));
+              });
+            },
+            'Highlight',
+          );
+          // Apply the correct light/dark highlight for the current theme on load.
+          // Set the sheet state DIRECTLY (don't fire theme.switch): firing relied on
+          // $CoreThemeManager.themeSwitch running and not early-returning, and left a window
+          // where both sheets were enabled (dark, added last, wins) — which is why a light
+          // theme could come back with dark code blocks after a reload.
+          applyHighlightTheme();
+        },
+        'Highlight',
+      );
 
       // Re-apply on soft reload too (the highlight <link>s persist in <head>).
-      tw.events.subscribe('ui.reloaded', applyHighlightTheme, 'CodeSyntaxHighlightPlugin');
+      tw.events.subscribe('ui.reloaded', applyHighlightTheme, 'Highlight');
 
-      tw.events.subscribe('tiddler.rendered', ({tiddler, newElement}) => {
-        newElement.querySelectorAll('pre code:not([data-highlighted])').forEach(el => (tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)})));
-      }, 'CodeSyntaxHighlightPlugin');
+      tw.events.subscribe(
+        'tiddler.rendered',
+        ({tiddler, newElement}) => {
+          newElement.querySelectorAll('pre code:not([data-highlighted])').forEach(el => tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)}));
+        },
+        'Highlight',
+      );
     },
   };
 })();

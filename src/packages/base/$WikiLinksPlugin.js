@@ -47,7 +47,7 @@
     meta: {
       name: 'WikiLinks',
       version: '0.1.0',
-      platform: '0.26.0',
+      platform: '0.27.0',
       description:
         'Late `renderer.post` pass that turns any surviving `[[Title]]` token in rendered text into an `<a href="#Title">` link. Skips text inside <pre>/<code>/<a> so wikilink syntax inside code blocks (and existing links) stays literal. Catches the cases where a renderer.override produces HTML without going through renderTWikki — e.g. the JSDoc of single-file script/js plugins.',
     },

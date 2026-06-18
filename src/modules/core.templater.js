@@ -5,11 +5,10 @@
  * interpolation (dot-paths allowed), `{{key}}…{{:key}}…{{/key}}` if/else
  * blocks, `{{!key}}` negation, and `{{@key}}` iteration exposing `_key`/`_val`.
  */
-(function(tw) {
-
+(function (tw) {
   const name = 'core.templater';
   const version = '0.24.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   let blockregex = /\{\{(([@!]?)(.+?))\}\}(([\s\S]+?)(\{\{:\1\}\}([\s\S]+?))?)\{\{\/\1\}\}/g;
   let valregex = /\{\{([=%])(.+?)\}\}/g;
@@ -44,7 +43,7 @@
   }
   function render(fragment, vars) {
     return fragment
-      .replace(blockregex, function(_, __, meta, key, inner, if_true, has_else, if_false) {
+      .replace(blockregex, function (_, __, meta, key, inner, if_true, has_else, if_false) {
         let val = get_value(vars, key);
         let temp = '';
         if (!val) {
@@ -69,11 +68,10 @@
         }
         return '';
       })
-      .replace(valregex, function(_, meta, key) {
+      .replace(valregex, function (_, meta, key) {
         let val = get_value(vars, key);
         if (val || val === 0) return meta === '%' ? scrub(val) : val;
         return '';
       });
   }
-
 });

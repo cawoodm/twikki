@@ -2,7 +2,7 @@
   const meta = {
     name: 'UnsavedChanges',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Tracks unsaved changes and shows them in a dialog.',
   };
 
@@ -18,8 +18,7 @@
     let changes = [];
     current.forEach(cur => {
       let old = savedByTitle.get(cur.title);
-      if (!old)
-        changes.push({title: cur.title, status: 'new', summary: summarize(cur, null, 'new')});
+      if (!old) changes.push({title: cur.title, status: 'new', summary: summarize(cur, null, 'new')});
       else if (differs(cur, old))
         changes.push({
           title: cur.title,
@@ -42,11 +41,7 @@
   // objects while stored ones are ISO strings, and a metadata-only touch
   // shouldn't count as a change.
   function differs(a, b) {
-    return (
-      (a.text || '') !== (b.text || '') ||
-      (a.type || '') !== (b.type || '') ||
-      JSON.stringify(a.tags || []) !== JSON.stringify(b.tags || [])
-    );
+    return (a.text || '') !== (b.text || '') || (a.type || '') !== (b.type || '') || JSON.stringify(a.tags || []) !== JSON.stringify(b.tags || []);
   }
 
   // Short human summary of what changed, clamped to 100 words (tooltip text).
@@ -60,8 +55,7 @@
       parts.push(`Deleted ${old.type} tiddler, ${size(old.text)}.`);
       if (old.tags?.length) parts.push(`Tags: ${old.tags.filter(Boolean).join(', ')}.`);
     } else {
-      if ((cur.text || '') !== (old.text || ''))
-        parts.push(textDelta(old.text || '', cur.text || ''));
+      if ((cur.text || '') !== (old.text || '')) parts.push(textDelta(old.text || '', cur.text || ''));
       if ((cur.type || '') !== (old.type || '')) parts.push(`Type: ${old.type} → ${cur.type}.`);
       let tagChange = tagDelta(old.tags || [], cur.tags || []);
       if (tagChange) parts.push(tagChange);
@@ -107,9 +101,7 @@
 
   function showDialog() {
     let changes = computeChanges();
-    let html = changes.length
-      ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>`
-      : '<p>No unsaved changes.</p>';
+    let html = changes.length ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>` : '<p>No unsaved changes.</p>';
     let buttons = [{text: 'Close', close: true}];
     if (changes.length) buttons.unshift({text: 'Save', msg: 'save.all', close: true});
     tw.ui.dialog({
@@ -125,10 +117,7 @@
     let tip = attrEscape(c.summary);
     // Deleted tiddlers can't be opened, render them as plain text.
     // No href on the link: `#...` hrefs are intercepted as local links before data-msg dispatch.
-    let label =
-      c.status === 'deleted'
-        ? `<span>${title}</span>`
-        : `<a data-msg="tiddler.show" data-params="---enc:${tw.core.common.encoder(c.title)}">${title}</a>`;
+    let label = c.status === 'deleted' ? `<span>${title}</span>` : `<a data-msg="tiddler.show" data-params="---enc:${tw.core.common.encoder(c.title)}">${title}</a>`;
     return `<li title="${tip}"><span class="tw-change-status ${c.status}">${c.status}</span>${label}</li>`;
   }
 
@@ -163,13 +152,11 @@
   return {
     meta,
     init() {
-      if (tw.tmp.unsavedChanges) return; // guard against duplicate wiring
-      tw.tmp.unsavedChanges = 1;
       tw.events.subscribe('unsaved.show', showDialog, 'UnsavedChanges');
       tw.events.subscribe('dirty.changed', refreshIndicator, 'UnsavedChanges');
       tw.events.subscribe('ui.loaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
       tw.events.subscribe('ui.reloaded', () => refreshIndicator(tw.ui.isDirty), 'UnsavedChanges');
-      window.addEventListener('beforeunload', onBeforeUnload); // platform's preventBrowserClose stays untouched
+      tw.core.dom.on(window, 'beforeunload', onBeforeUnload, 'UnsavedChanges');
     },
   };
 })();

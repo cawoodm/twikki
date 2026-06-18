@@ -3,10 +3,26 @@
 ## General
 
 - Loading http://localhost:3002/packages/demo.json breaks broadsheet theme because of OnboardingMacro
+- Move automatic [[wikilinks]] into a base plugin
+- Move automatic WikiLinks into a demo plugin
+- Link to tiddlers via (possibly not installed) package name [[demo:WikiLinksPlugin]]
+  - System fetches the package if it does not exist
 
-## Macros
+## Failover
 
-- Create a `<<macros>>` widget to list macros
+Goal: make twikki recover gracefully from errors
+
+- On boot, after loading packages we save. If this fails, don't implode, warn and continue
+  - Suggest cleaning up localStorage by listing the largest keys (probably workspaces)
+  - Create a base plugin similar to MassDelete but prettier which shows heavy localStorage keys and allows deletion
+
+## Performance
+
+Can/should we offload large scripts (like markdown-it) to HTTP (like hljs) - we're not truly offline anyway.
+Or find a simpler/smaller implementation?
+
+## Search
+
 - Create a `<<pill>>` widget to list tiddlers matching a search:
   - `<<pill "Search Meta" Meta>>`: <<pill "Search Meta" Meta>>
   - `<<pill "Demo Package" $pck:demo>>`
@@ -22,7 +38,7 @@ We need a Tag picker widget for editing tiddlers
 - Plugin to auto link CamelCase tiddlers if they exist
 - Browser history (back)
 
-## Tabs
+## Explorer Views
 
 - Favorites view of favorite tiddlers
 - History view of recently viewed tiddlers

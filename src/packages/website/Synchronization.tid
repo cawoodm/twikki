@@ -1,14 +1,15 @@
 Synchronization replicates local changes to a remote server.
 
-The standard setup uses [Github Gists](https://gists.github.com/) so create a gist and PAT add your `gistId` and `accessToken` to [[$GeneralSettings]]
+The standard setup uses [Github Gists](https://gists.github.com/) so create a gist and [Personal Access Token](https://github.com/settings/tokens) add your `gistId` and `accessToken` to [[$GeneralSettings]]
 
-* <<synch.test>>: Simulate a Synch
-* <<synch.full>>: Run full synch (pull+push)
-* <<synch.push>>: Push changes to remote without pulling anything in locally
-* <<synch.pull>>: Pull changes from remote without pushing anything to remote
-* <<synch.upload>>: Push changes to remote overwriting everything
+- <<synch.test>>: Simulate a Synch
+- <<synch.full>>: Run full synch (pull+push)
+- <<synch.push>>: Push changes to remote without pulling anything in locally
+- <<synch.pull>>: Pull changes from remote without pushing anything to remote
+- <<synch.upload>>: Push changes to remote overwriting everything
 
 The synch algorithm is:
-* Latest change/deletion wins
-  * This includes local deletions in your trash - they will be deleted remotely unless the remote update is newer than the deletion
-* Tiddlers tagged `$NoSynch` or marked `DoNotSave` are not considered for synching
+
+- Latest change/deletion wins
+  - This includes local deletions in your trash - they will be deleted remotely unless the remote update is newer than the deletion
+- Tiddlers tagged `$NoSynch` or marked `DoNotSave` are not considered for synching

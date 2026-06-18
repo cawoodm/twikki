@@ -10,7 +10,7 @@
 (function (tw) {
   const name = 'core.workspaces';
   const version = '0.25.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   // Init
   if (!tw.store.global.get('workspaces')) tw.store.global.set('workspaces', ['default']);

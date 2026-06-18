@@ -8,8 +8,8 @@
  */
 (function (tw) {
   const name = 'core.packaging';
-  const version = '0.24.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const version = '0.27.0';
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   const exports = {
     loadPackageFromURL,
@@ -18,6 +18,7 @@
 
   return {name, version, platform, exports};
 
+  // Import package (no reload, stuff isn't run)
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
     // Resolve relative URLs (e.g. `packages/website.json`) against the platform's
     // baseUrl rather than the document URL — the latter drops a no-trailing-slash
@@ -32,6 +33,14 @@
       tw.ui.notify(`Failed to load tiddler package '${name}' from ${url} (see console log)`, 'E', e.stack);
       return 0;
     }
+  }
+
+  // Import package and reload (plugins, scripts run)
+  async function reloadPackageFromUrl(pck) {
+    let count = await loadPackageFromURL(pck);
+    tw.events.send('ui.reload');
+    // TODO: This never displays:
+    tw.ui.notify(`${count} tiddlers imported from package ${pck.name || pck.url}`, 'D');
   }
 
   function loadList(list, {name, filter, overWrite = false, doNotSave = false, noOverWrite = false} = {}) {
@@ -71,6 +80,7 @@
     });
     return count;
   }
+
   function tiddlerDiff(t1, t2) {
     if (t1.title !== t2.title) return 'title';
     if (t1.text !== t2.text) return 'text';
@@ -78,12 +88,6 @@
     return false;
   }
 
-  async function reloadPackageFromUrl(pck) {
-    let count = await loadPackageFromURL(pck);
-    tw.events.send('ui.reload');
-    // TODO: This never displays:
-    tw.ui.notify(`${count} tiddlers imported from package ${pck.name || pck.url}`, 'D');
-  }
   async function httpGetJSON(url, name, headers = {}) {
     let res;
     try {

@@ -4,16 +4,13 @@
     meta: {
       name: 'OpenLinksInNewWindow',
       version: '0.0.2',
-      platform: '0.26.0',
+      platform: '0.27.0',
       author: 'Marc Cawood',
       description: 'Open http(s):// links in markdown in a new window',
       dependencies: ['BaseMarkdown'],
     },
     init() {
-      if (!tw.core.markdown?.md)
-        throw new Error(
-          'markdown-it not active ($BaseMarkdownPlugin missing or replaced) — OpenLinksInNewWindow disabled!',
-        );
+      if (!tw.core.markdown?.md) throw new Error('markdown-it not active ($BaseMarkdownPlugin missing or replaced) — OpenLinksInNewWindow disabled!');
     },
     start() {
       // Source: https://www.jsdelivr.com/package/npm/markdown-it-for-inline
@@ -31,15 +28,10 @@
         }
         md.core.ruler.push(ruleName, scan);
       }
-      tw.core.markdown.md.use(
-        for_inline_plugin,
-        'url_new_win',
-        'link_open',
-        function (tokens, idx) {
-          // Open external links in new window
-          if (tokens[idx].attrs[0][1].match(/^https?:/)) tokens[idx].attrSet('target', '_blank');
-        },
-      );
+      tw.core.markdown.md.use(for_inline_plugin, 'url_new_win', 'link_open', function (tokens, idx) {
+        // Open external links in new window
+        if (tokens[idx].attrs[0][1].match(/^https?:/)) tokens[idx].attrSet('target', '_blank');
+      });
     },
   };
 })();

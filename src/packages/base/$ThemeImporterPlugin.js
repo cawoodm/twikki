@@ -26,7 +26,7 @@
   const meta = {
     name: 'ThemeImporter',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Import themes from a packaged JSON gist into the local workspace.',
   };
 
@@ -68,10 +68,13 @@
   function unwrap(parsed) {
     if (parsed && Array.isArray(parsed.tiddlers)) return parsed;
     if (parsed && parsed.files) {
-      let file = parsed.files['themes.json']
-        || Object.values(parsed.files).find(f => f.filename?.endsWith('.json'));
+      let file = parsed.files['themes.json'] || Object.values(parsed.files).find(f => f.filename?.endsWith('.json'));
       if (!file) return null;
-      try {return JSON.parse(file.content);} catch {return null;}
+      try {
+        return JSON.parse(file.content);
+      } catch {
+        return null;
+      }
     }
     return null;
   }
@@ -99,7 +102,10 @@
     // Reload the theme list whenever the URL changes.
     urlInput.addEventListener('change', refresh);
     urlInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {e.preventDefault(); refresh();}
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        refresh();
+      }
     });
     root.querySelector('#theme-import-load').addEventListener('click', e => {
       e.preventDefault();
@@ -158,12 +164,16 @@
   }
 
   function listHtml(themes) {
-    let rows = themes.map((t, i) => `
+    let rows = themes
+      .map(
+        (t, i) => `
       <tr>
         <td><input type="checkbox" name="import" value="${attr(t.title)}" id="ti-imp-${i}"></td>
         <td><input type="radio" name="apply" value="${attr(t.title)}" id="ti-app-${i}"></td>
         <td><label for="ti-imp-${i}">${escapeHtml(displayName(t.title))}</label></td>
-      </tr>`).join('');
+      </tr>`,
+      )
+      .join('');
     return `
       <table class="theme-import-list">
         <thead><tr><th>Import</th><th>Apply</th><th>Theme</th></tr></thead>
@@ -226,15 +236,10 @@
   return {
     meta,
     init() {
-      tw.extensions.registerMacro(
-        'themeImport',
-        'button',
-        () => tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"'),
-        {
-          description: 'Button to open the theme-import dialog.',
-          example: '<<themeImport.button>>',
-        },
-      );
+      tw.extensions.registerMacro('themeImport', 'button', () => tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"'), {
+        description: 'Button to open the theme-import dialog.',
+        example: '<<themeImport.button>>',
+      });
 
       tw.events.subscribe('theme.import', open, 'ThemeImporter');
     },

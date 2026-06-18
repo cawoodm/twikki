@@ -20,7 +20,7 @@
 (function (tw) {
   const name = 'core.ui';
   const version = '0.25.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   // Events are alphanumeric with "." e.g. 'foo.bar' (lowercase only)
   const reEventName = /[a-z0-9\.]+/g;

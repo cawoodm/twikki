@@ -4,7 +4,7 @@ tags: Help
 
 TWikki's look is driven entirely by stylesheets which you can change or replace.
 
-The current theme is always stored in the special [[Theme]] tiddler.
+The current theme is always stored in the special [[$Theme]] tiddler.
 
 A basic theme is just one or more stylesheets in list format:
 

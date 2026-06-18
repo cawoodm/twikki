@@ -10,7 +10,7 @@
   const meta = {
     name: 'Favorites',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Toggle a Favorite tag on tiddlers and surface a star widget.',
   };
 
@@ -23,8 +23,7 @@
     let btn = tw.call('getTiddlerElement', title)?.querySelector('button[title=favorite]');
     // dp(t.tags.includes('Favorite'), btn);
     if (btn) {
-      if (!t.tags.includes('Favorite'))
-        btn.className += ' yellow';
+      if (!t.tags.includes('Favorite')) btn.className += ' yellow';
     }
     // dp(btn.className);
     tw.events.send('save.silent');

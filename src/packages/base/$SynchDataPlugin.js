@@ -20,7 +20,7 @@
   const meta = {
     name: 'SynchData',
     version: '2.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Two-way sync of tiddlers with a private GitHub Gist (per-tiddler files).',
   };
 

@@ -1,24 +1,99 @@
 # TWikki Themes
 
-TWikki's look is driven entirely by **data, not a build step**. A theme is just a
-tiddler tagged `$Theme` whose body lists the stylesheet tiddlers to apply.
+A theme in TWikki a tiddler tagged `$Theme` whose body lists the
+stylesheet tiddlers to apply, plus an optional layout override. Switching themes
+re-paints instantly.
 
-```
+`$CoreThemeManager` (in `src/packages/base/`) watches the `$Theme` pointer and rebuilds
+one constructable stylesheet, wrapped in four [CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer),
+whenever the theme — or any tiddler it points at — changes.
+
+## A worked example: `BroadsheetTheme.tid`
+
+A single `.tid` under `src/packages/themes/` becomes one **parent** tiddler plus
+addressable sub-sections (one tiddler per `# Heading`):
+
+````
 tags: $Theme
 
+A light editorial theme with serif headlines and a centered reading column.
+
+# BroadsheetTheme
+tags: $Theme
 * [[$CoreThemeLayout]]
 * [[$CoreThemeAppearance]]
-* [[MyPalette]]
+* [[BroadsheetTheme::BroadsheetPalette]]
+
+# BroadsheetPalette
+tags: $StyleSheet
+```css
+:root { --col6: #b5462f; … }
+div.tiddler { padding: 2.6rem 3rem; … }
 ```
 
-`$CoreThemeManager` composes those into one constructable stylesheet wrapped in three
-[CSS cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer) and
-adopts it at runtime, so switching or editing a theme re-paints instantly with no
-reload.
+# MainLayout
+[[$MainLayoutHeader]]
+````
 
-```js
-tw.events.send('theme.switch', 'AuroraTheme');
+What you get from this single file:
+
+- **`BroadsheetTheme`** — the parent tiddler, tagged `$Theme`; this is the name the
+  theme picker and `theme.switch` use.
+- **`BroadsheetTheme::BroadsheetPalette`** — a sub-section tagged `$StyleSheet`; holds
+  the bespoke CSS for this theme.
+- **`BroadsheetTheme::MainLayout`** — the optional layout override (see below).
+
+### Bullet list → list of stylesheets
+
+When the manager activates the theme it calls `tw.run.getTiddlerList('BroadsheetTheme')`,
+which scans the parent tiddler's text for `* [[…]]` bullet lines (skipping anything
+inside a fenced code block, so a CSS `* { }` selector is never mistaken for a bullet)
+and strips the `[[]]` wrappers. From the file above the manager gets:
+
 ```
+$CoreThemeLayout
+$CoreThemeAppearance
+BroadsheetTheme::BroadsheetPalette
+```
+
+Each name is resolved to a tiddler whose text is concatenated, in order, into the
+`theme` cascade layer. The first two are shared shadow tiddlers — every theme can
+re-use the core layout and appearance rules without copying them — and the third
+points to this file's own `# BroadsheetPalette` section, where Broadsheet's fonts,
+colours and component tweaks live.
+
+### How a theme can change the layout
+
+The page chrome (header, sidebar, main area) is rendered from the tiddler named by the
+`$Layout` pointer — `$MainLayout` by default. A theme overrides that by shipping a
+`# MainLayout` section whose body is a single `[[Reference]]`. Broadsheet wants the
+alternative header-style layout, so its `# MainLayout` section reads
+`[[$MainLayoutHeader]]`.
+
+On `theme.switch` the manager calls `layoutTitleForTheme(name)`; if that differs from
+the current `$Layout`, it persists the new pointer and triggers a hard reload so the
+new chrome paints from the very first frame. A theme that omits `# MainLayout` (or
+whose section already matches `$Layout`) gets the instant in-place repaint instead.
+
+## How a theme is applied
+
+End-to-end, a `theme.switch` event runs through `$CoreThemeManager` as:
+
+1. **Update the `$Theme` pointer** to `[[BroadsheetTheme]]` and persist it.
+2. **Resolve the bullet list** via `getTiddlerList(theme)` — the ordered list of
+   stylesheet tiddlers.
+3. **Concatenate CSS into four layers** (`base, plugin, theme, user`) — see "The four
+   layers" below — and `replaceSync` the constructable stylesheet that's already
+   adopted on `document.adoptedStyleSheets`. Browsers re-render immediately; no FOUC.
+4. **Flip the syntax highlighter** if the theme tiddler carries the `$ThemeDark` tag
+   (swaps `highlight-light` ↔ `highlight-dark`).
+5. **Swap the layout** if `# MainLayout` named a different layout tiddler — by
+   updating `$Layout` and triggering a hard reload; otherwise the switch stays
+   reload-free.
+
+A live edit to any stylesheet tiddler in the list (or to the bullet list itself) fires
+`tiddler.updated`, which re-runs steps 2–3 and re-paints — so authoring a theme in the
+editor feels like editing CSS in DevTools.
 
 ---
 
@@ -28,12 +103,12 @@ tw.events.send('theme.switch', 'AuroraTheme');
 @layer base, plugin, theme, user;
 ```
 
-| Layer | Contents | Core default tiddlers |
-|---|---|---|
-| **base** | Reset rules + `:root` token declarations | `$BaseReset`, `$BaseVariables` |
+| Layer      | Contents                                                                                | Core default tiddlers                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **base**   | Reset rules + `:root` token declarations                                                | `$BaseReset`, `$BaseVariables`                                                                                         |
 | **plugin** | `# StyleSheet` section of every `$Plugin`-tagged tiddler (auto-collected, alphabetical) | `$SettingsDialogPlugin`, `$PickerPlugin`, `$TabsPlugin`, `$ExplorerPlugin`, `$CommandPalette`, `$UnsavedChangesPlugin` |
-| **theme** | Whatever the active `$Theme` tiddler's bullet list points to | `$CoreThemeLayout`, `$CoreThemeAppearance`, `$CoreThemePalette` |
-| **user** | `$StyleSheetUser` (delivered empty) | — |
+| **theme**  | Whatever the active `$Theme` tiddler's bullet list points to                            | `$CoreThemeLayout`, `$CoreThemeAppearance`, `$CoreThemePalette`                                                        |
+| **user**   | `$StyleSheetUser` (delivered empty)                                                     | —                                                                                                                      |
 
 Three guarantees from `@layer`:
 
@@ -92,6 +167,17 @@ The `$ThemeDark` tag is **not** part of the cascade. Its only job is to flip the
 syntax highlighter between `highlight-light` and `highlight-dark`. Any dark theme
 should carry it; light themes should not.
 
+## Code Examples
+
+Switch to a specific theme:
+
+```js
+tw.events.send('theme.switch', 'BroadsheetTheme');
+```
+
+Create a button to switch themes:
+`<<button Aurora theme.switch AuroraTheme>>`
+
 ---
 
 ## Built-in themes
@@ -100,30 +186,35 @@ These live in `src/packages/themes/`. Switch between them with the theme selecto
 in the sidebar, or via `tw.events.send('theme.switch', 'AuroraTheme')`.
 
 ### Aurora — dark, cool, glassy
+
 ![Aurora](./screenshots/01-aurora.png)
 
 Deep navy canvas with a cyan glow, gradient glass cards, soft drop-shadows and mint
 accents. A modern dark-dashboard feel.
 
 ### Manuscript — light, editorial
+
 ![Manuscript](./screenshots/02-manuscript.png)
 
 Warm parchment background, Georgia serif throughout, an oxblood accent rule on each
 card and hairline borders. Reads like print.
 
 ### Terminal — brutalist / retro CRT
+
 ![Terminal](./screenshots/03-terminal.png)
 
 Near-black surface, phosphor-green monospace, zero border radius, hard 1px borders,
 uppercase titles and a subtle scanline texture.
 
 ### Bubblegum — soft, playful
+
 ![Bubblegum](./screenshots/04-bubblegum.png)
 
 Pastel pink wash, candy accents, chunky 24px rounded cards and soft glow shadows.
 Toy-like and friendly.
 
 ### Broadsheet — editorial, light
+
 ![Broadsheet](./screenshots/06-broadsheet.png)
 
 **DM Serif Display** titles over an **Outfit** body. The header flattens to a hairline
@@ -131,6 +222,7 @@ bar with a centred pill search, the toolbar is trimmed to essentials, and conten
 in a centred 820px reading column. Terracotta accent.
 
 ### Nocturne — dark, tech
+
 ![Nocturne](./screenshots/07-nocturne.png)
 
 **Syne** display titles with a **Sora** body. A floating glass header with a blurred
@@ -138,6 +230,7 @@ backdrop, the toolbar collapsed into a rounded pill of chartreuse icons, and dar
 gradient cards. Lime `#c6f24e` accent.
 
 ### Kontrast — Swiss / neo-brutalist
+
 ![Kontrast](./screenshots/09-kontrast-fixed.png)
 
 **Anton** condensed uppercase titles with an **IBM Plex Sans** body. Thick 2px black
@@ -145,6 +238,7 @@ borders, hard 6px offset shadows, a square search box and a segmented row of bor
 icon boxes. Red `#e5322d` accent.
 
 ### Obsidian — modern dark with violet accent
+
 A dense dark theme used as TWikki's previous default. Now ships as a regular theme
 in the same package.
 
@@ -167,9 +261,10 @@ tags: $Theme
 * [[MyTheme::MyPalette]]
 ```
 
-```
+````
 # MyPalette
 tags: $StyleSheet
+
 ```css
 :root {
   --colbg1: #1a1a2e;
@@ -177,7 +272,7 @@ tags: $StyleSheet
   --col6:   #e94560;
 }
 ```
-```
+````
 
 You don't have to copy every variable from `$BaseVariables` — only the ones you want
 to change. The rest inherit from the base layer.
@@ -211,7 +306,7 @@ A plugin ships its CSS inside its own `.tid` file, in a `# StyleSheet` section. 
 manager auto-collects every `# StyleSheet` section from `$Plugin`-tagged tiddlers and
 wraps the result in `@layer plugin`, between the base and theme layers.
 
-```
+````
 tags: $Plugin
 
 # Description
@@ -234,7 +329,7 @@ A picker for foos.
   border-radius: var(--rad1);
 }
 ```
-```
+````
 
 What this gets you:
 
@@ -264,7 +359,9 @@ snippet won't work. Use `@font-face` directly instead — it loads fine:
   font-weight: 400;
   font-display: swap;
 }
-* { font-family: 'Outfit', system-ui, sans-serif; }
+* {
+  font-family: 'Outfit', system-ui, sans-serif;
+}
 ```
 
 For a fully offline theme, embed the font as a base64 `data:` URI in the `src` instead
@@ -286,7 +383,9 @@ forking a theme:
 
 ```css
 :root {
-  --col6: hotpink;          /* recolour every link */
+  --col6: hotpink; /* recolour every link */
 }
-div.tiddler { max-width: 1100px; }
+div.tiddler {
+  max-width: 1100px;
+}
 ```

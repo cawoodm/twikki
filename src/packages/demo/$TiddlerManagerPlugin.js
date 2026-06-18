@@ -8,17 +8,18 @@
   const meta = {
     name: 'TiddlerManager',
     version: '1.1.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Mass tiddler search and delete UI via the manager.form macro.',
   };
 
   let tiddlersToManage = [];
 
   function managerDelete({title, tag, pck}) {
-    let list = tw.call('tiddlerSearch')({title, tag, pck})
+    let list = tw
+      .call('tiddlerSearch')({title, tag, pck})
       .map(t => t.title);
     if (!confirm(`Sure you want to delete these ${list.length} tiddlers?`)) return;
-    list.forEach(title => (tw.run.deleteTiddler(title, true)));
+    list.forEach(title => tw.run.deleteTiddler(title, true));
   }
 
   return {
@@ -42,7 +43,7 @@
           if (!tiddlersToManage.length) return alert('No tiddlers selected!');
           setTimeout(() => {
             if (!confirm(`Sure you want to delete these ${tiddlersToManage.length} tiddlers?`)) return;
-            tiddlersToManage.forEach(t => (tw.run.deleteTiddler(t.title, true)));
+            tiddlersToManage.forEach(t => tw.run.deleteTiddler(t.title, true));
           }, 300);
         },
       };

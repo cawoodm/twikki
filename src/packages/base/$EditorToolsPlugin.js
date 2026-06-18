@@ -12,7 +12,7 @@
   const meta = {
     name: 'EditorTools',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Editor enhancements: Ctrl+Enter save hotkey and the preview pane.',
   };
 
@@ -28,27 +28,25 @@
     tw.core.dom.preview.close();
   }
 
+  function onEditorKeydown(e) {
+    if (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter')) {
+      e.preventDefault();
+      tw.events.send('form.done');
+    }
+  }
+
   return {
     meta,
     init() {
       Object.assign(tw.run, {previewTiddler, closePreview});
-      // handlerName === the function name so the bus's duplicate-handler guard
-      // suppresses re-subscription on soft reloads.
-      tw.events.subscribe('tiddler.preview', previewTiddler, 'previewTiddler');
-      tw.events.subscribe('tiddler.preview.close', closePreview, 'closePreview');
-
-      if (!tw.tmp.editorHotkeysBound) {
-        tw.tmp.editorHotkeysBound = true;
-        // `keydown` (not the deprecated `keypress`): keypress is no longer
-        // dispatched by automation tools (Playwright, chrome-devtools MCP) so
-        // the hotkey is undriveable from tests. `preventDefault()` suppresses
-        // the textarea's default Enter→newline insertion.
-        tw.core.dom.frm?.addEventListener('keydown', e => {
-          if (e.ctrlKey && (e.code === 'Enter' || e.code === 'NumpadEnter')) {
-            e.preventDefault();
-            tw.events.send('form.done');
-          }
-        });
+      tw.events.subscribe('tiddler.preview', previewTiddler, 'EditorTools');
+      tw.events.subscribe('tiddler.preview.close', closePreview, 'EditorTools');
+      // `keydown` (not the deprecated `keypress`): keypress is no longer
+      // dispatched by automation tools (Playwright, chrome-devtools MCP) so
+      // the hotkey is undriveable from tests. `preventDefault()` suppresses
+      // the textarea's default Enter→newline insertion.
+      if (tw.core.dom.frm) {
+        tw.core.dom.on(tw.core.dom.frm, 'keydown', onEditorKeydown, 'EditorTools');
       }
     },
   };

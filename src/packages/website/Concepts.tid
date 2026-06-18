@@ -5,7 +5,8 @@
 - [[Themes]] - Stylesheets and Layouts to change the look of Twikki
 - [[Tags]] - An easy way to organize your data
 - [[Packages]] - A way to bundle tiddlers
-- [[Commands]] - A way to run stuff
+- [[Commands]] - A way to run stuff from keyboard (Ctrl+K)
+- [[BootScript]] - A way to customize twikki early in boot process
 
 - Shadow tiddlers (tagged with `$Shadow`) are included in source, expected to be there and we cannot start without them
 - Packages are loaded from URLs when we start — [[$CorePackages]] first, then [[$ExtensionPackages]]:

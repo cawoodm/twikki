@@ -20,7 +20,13 @@ window.load
   │
   ├─ twikki.init()                                       twikki.platform.js:47
   │    parse URL params (?safemode, ?reload, ?update, ?trace, ?debug, ?logfilter, ?breakpoint)
-  │    set up tw.core / tw.modules / tw.tmp / tw.tiddlers / tw.run / tw.storage / tw.logging
+  │    set up tw.core / tw.modules / tw.tmp / tw.tiddlers / tw.run / tw.logging
+  │
+  │    await runBootScript()                             twikki.platform.js:370
+  │       eval the /twikki.boot.js localStorage key (if present) BEFORE tw.storage exists
+  │       its source evaluates to a function(tw); may assign a custom tw.storage (e.g. IndexedDB)
+  │       on parse/throw/reject → alert once + fall back  ── see BootScript.md
+  │    if (!tw.storage) tw.storage = initLocalStorage()  ── default backing when no boot script set one
   │
   │    await fetchModules()                              twikki.platform.js:119
   │       fetch each core module's source from <baseUrl>/modules/<name>
@@ -168,6 +174,7 @@ A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at e
 
 ## Related
 
+- [BootScript.md](./BootScript.md) — the pre-boot `/twikki.boot.js` hook that runs inside `init()` before `tw.storage` exists; the contract and a worked IndexedDB-backed storage example.
 - [MODULES.md](./MODULES.md) — what each core module is, the compatibility gate, the cache, the static-parse compat reader.
 - [PACKAGES.md](./PACKAGES.md) — `$CorePackages` / `$ExtensionPackages` lists, package JSON shape, how URLs resolve.
 - [PLUGINS.md](./PLUGINS.md) — the `{meta, init?, start?}` contract, `$Plugin` vs `$Script`, the plugin registry (`tw.plugins[]`), `<<pluginMeta>>` macro.

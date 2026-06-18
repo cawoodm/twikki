@@ -206,7 +206,7 @@
     meta: {
       name: 'GistBackup',
       version: '1.0.0',
-      platform: '0.26.0',
+      platform: '0.27.0',
       description: 'Back up tiddlers to a private GitHub Gist.',
     },
     init() {

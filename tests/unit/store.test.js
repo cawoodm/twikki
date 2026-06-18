@@ -21,7 +21,7 @@ function freshStore(workspace = 'default') {
   })) Object.defineProperty(backing, m, {value: fn, enumerable: false});
   global.localStorage = backing;
 
-  // Mirror initStorage() in src/platform/twikki.platform.js: tw.store now
+  // Mirror initLocalStorage() in src/platform/twikki.platform.js: tw.store now
   // delegates remove/keys/exportRaw/importRaw through these methods (the
   // previous version reached straight into localStorage).
   const tw = {

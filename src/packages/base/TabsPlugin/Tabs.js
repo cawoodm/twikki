@@ -2,7 +2,7 @@
   const meta = {
     name: 'Tabs',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Tabbed open-tiddlers view with keyboard navigation.',
   };
 
@@ -34,6 +34,10 @@
     tw.events.subscribe(event, handler, 'TabsPlugin');
   }
 
+  function onWindowResize() {
+    if (mode === 'tabs') schedule();
+  }
+
   function init() {
     strip = document.getElementById('tab-strip');
     vis = document.getElementById('visible-tiddlers');
@@ -56,9 +60,7 @@
       // No tabs: let every open note stack (the .tabbed show/hide rule is off).
       vis.classList.remove('tabbed');
       strip.innerHTML = '';
-      vis
-        .querySelectorAll(':scope > .tiddler.tab-active')
-        .forEach(el => el.classList.remove('tab-active'));
+      vis.querySelectorAll(':scope > .tiddler.tab-active').forEach(el => el.classList.remove('tab-active'));
       return;
     }
 
@@ -67,14 +69,11 @@
       strip._tabsBound = true;
       strip.addEventListener('click', onStripClick);
     }
-    // Re-split tabs vs. overflow when the available width changes. Bound once.
-    tw.tmp = tw.tmp || {};
-    if (!tw.tmp.tabsResizeBound) {
-      tw.tmp.tabsResizeBound = true;
-      window.addEventListener('resize', () => {
-        if (mode === 'tabs') schedule();
-      });
-    }
+    // Re-split tabs vs. overflow when the available width changes. Tracked
+    // so the platform's unloadPlugins() phase removes it before re-evaluating
+    // this plugin's code — otherwise old IIFE's closure (with stale `mode` /
+    // `schedule`) keeps firing alongside the new one.
+    tw.core.dom.on(window, 'resize', onWindowResize, 'TabsPlugin');
     lastVisible = tw.tiddlers.visible.slice();
     flush();
   }

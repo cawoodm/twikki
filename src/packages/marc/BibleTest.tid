@@ -1,0 +1,5 @@
+The bible package tests how twikki handles larger data volumes:
+
+<<packages.import name:bible url:tmp/bible.json force:true save:true>>
+
+[[Bible]]

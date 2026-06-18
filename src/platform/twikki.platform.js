@@ -1,6 +1,6 @@
 (function () {
   const NAME = 'twikki';
-  const VERSION = '0.26.0';
+  const VERSION = '0.27.0';
 
   overrides();
 
@@ -91,7 +91,11 @@
       tw.tiddlers = {all: [], visible: [], trashed: []};
 
       tw.logging = initLogging(qs);
-      tw.storage = initStorage();
+
+      await runBootScript(tw);
+
+      if (!tw.storage) tw.storage = initLocalStorage();
+
       tw.run = {
         reload,
         executeText,
@@ -330,7 +334,7 @@
       },
     };
   }
-  function initStorage() {
+  function initLocalStorage() {
     return {
       get(key) {
         let res = read(key);
@@ -357,6 +361,27 @@
         return localStorage.setItem(key, raw);
       },
     };
+  }
+
+  // Pre-boot hook. A single localStorage-stored script at `/twikki.boot.js` is
+  // eval'd before tw.storage is initialised. Its source must evaluate to a
+  // function (sync or async) that receives `tw` and may mutate it — most
+  // commonly to assign a custom `tw.storage` implementation (e.g. an
+  // IndexedDB adaptor). If the script fails (parse, throw, rejected promise)
+  // we alert the user and continue with the default localStorage backing, so
+  // a broken boot script can never brick the app.
+  async function runBootScript(tw) {
+    const src = window.localStorage.getItem('/twikki.boot.js');
+    if (!src) return;
+    try {
+      const fn = (1, eval)(src);
+      if (typeof fn !== 'function') return;
+      const result = fn(tw);
+      if (result && typeof result.then === 'function') await result;
+    } catch (e) {
+      console.error('twikki.boot.js failed:', e);
+      alert(`Pre-boot script failed:\n\n${e.message}\n\nProceeding without it.`);
+    }
   }
 
   // Renders the boot-halt page when one or more modules failed to eval or run.
@@ -441,14 +466,18 @@
   }
 
   function reload() {
-    // TODO: Clear events.clearAll()
     tw.tiddlers.visible = tw.tiddlers.visible.filter(title => tw.util.tiddlerExists(title));
     tw.core.tiddlers.runCoreTiddlers();
-    // Three-phase plugin lifecycle, parallel to core modules:
-    //   load   — eval each $Plugin tiddler's code; the returned {meta, init?, start?} is the plugin.
+    // Four-phase plugin lifecycle, parallel to core modules:
+    //   unload — call each existing plugin's unload() (if any), then clear its
+    //            owner-scoped event subscriptions and tracked DOM listeners.
+    //            No-op on the first reload (tw.plugins is empty).
+    //   load   — eval each $Plugin tiddler's code; the returned {meta, init?, start?, unload?} is the plugin.
     //   init   — every plugin is loaded before any init() runs, so init() can check deps via tw.plugin().
     //   start  — every plugin is initialised before any start() runs.
     // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
+    bootProgress({phase: 'plugins', step: 'unload'});
+    unloadPlugins();
     bootProgress({phase: 'plugins', step: 'load'});
     loadPlugins();
     checkPluginDependencies();
@@ -521,11 +550,38 @@
     tw.plugins = tw.tiddlers.all.filter(t => t.tags?.includes('$Plugin') && !t.tags?.includes('$CodeDisabled')).map(t => loadOnePlugin(t, seenNames));
   }
 
+  // Tear down the previous generation of plugins before re-evaluating their
+  // code. For each loaded plugin we invoke its optional unload() (catching
+  // throws so one bad plugin can't block the rest), then drop every event
+  // subscription and tracked DOM listener tagged with its meta.name. Plugins
+  // that subscribe / bind via the tracked APIs (tw.events.subscribe(..., name)
+  // and tw.core.dom.on(..., name)) need NO explicit cleanup — the platform
+  // does it for them here. unload() exists for the things the helpers don't
+  // own: setIntervals, MutationObservers, cached DOM elements that should be
+  // removed on reload.
+  function unloadPlugins() {
+    if (!tw.plugins?.length) return;
+    tw.plugins.forEach(p => {
+      const owner = p.meta?.name;
+      if (!owner) return;
+      if (typeof p.unload === 'function') {
+        try {
+          p.unload();
+        } catch (e) {
+          console.warn(`Plugin '${owner}' unload() threw: ${e.message}`, e.stack);
+        }
+      }
+      tw.events.unsubscribeByOwner?.(owner);
+      tw.core.dom.offOwner?.(owner);
+    });
+  }
+
   function loadOnePlugin(t, seenNames) {
     const entry = {
       meta: {},
       init: undefined,
       start: undefined,
+      unload: undefined,
       source: t.title,
       package: t.package || null,
       compat: {compatible: true, severity: 'exempt', reason: 'no platform field'},
@@ -565,6 +621,7 @@
     entry.meta = returned.meta || {};
     entry.init = typeof returned.init === 'function' ? returned.init : undefined;
     entry.start = typeof returned.start === 'function' ? returned.start : undefined;
+    entry.unload = typeof returned.unload === 'function' ? returned.unload : undefined;
     if (!entry.meta.name) {
       entry.error = {phase: 'load', message: 'plugin meta.name is required'};
       return entry;

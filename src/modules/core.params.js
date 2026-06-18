@@ -1,23 +1,22 @@
 /**
-  * Parameters
-  * When calling macros we need a way to deserialize paramezers
-  * Some widgets expect positional parameters
-  *    <<WidgetP "1 a" 2 false>>
-  *    => WidgetP("1 a", 2, false)
-  * Some Widgets expect named parameters (an object):
-  *   <<WidgetO foo:"1 a" bar:2 baz:false>>
-  *     => WidgetO({foo: "1 a", bar: 2, baz: false})
-  * JSON payloads (starting with { or [) are parsed as-is:
-  *   <<WidgetO {"foo": "1 a", "bar": 2}>>
-  *     => WidgetO({foo: "1 a", bar: 2})
-  *   <<WidgetP ["a b", 2]>> => WidgetP("a b", 2) (arrays spread as positional parameters)
-  */
-(function() {
-
+ * Parameters
+ * When calling macros we need a way to deserialize paramezers
+ * Some widgets expect positional parameters
+ *    <<WidgetP "1 a" 2 false>>
+ *    => WidgetP("1 a", 2, false)
+ * Some Widgets expect named parameters (an object):
+ *   <<WidgetO foo:"1 a" bar:2 baz:false>>
+ *     => WidgetO({foo: "1 a", bar: 2, baz: false})
+ * JSON payloads (starting with { or [) are parsed as-is:
+ *   <<WidgetO {"foo": "1 a", "bar": 2}>>
+ *     => WidgetO({foo: "1 a", bar: 2})
+ *   <<WidgetP ["a b", 2]>> => WidgetP("a b", 2) (arrays spread as positional parameters)
+ */
+(function () {
   // Meta
   const name = 'core.params';
   const version = '0.24.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   // Constants
   const reDoubleQuoted = /^["](.+)["]$/g;
@@ -32,20 +31,18 @@
   return {name, version, platform, exports, run};
 
   /**
- * Always returns an object or an array of params to be spread:
- *   - foo:'1 a' bar:2 => {foo: '1 a', bar: 2}
- *   - foo 'bar 2' false => ['foo', 'bar 2', false]
- */
+   * Always returns an object or an array of params to be spread:
+   *   - foo:'1 a' bar:2 => {foo: '1 a', bar: 2}
+   *   - foo 'bar 2' false => ['foo', 'bar 2', false]
+   */
   function parseParams(params) {
     // We do not try/catch here to be consistent and inform the macro: Anything that starts with { or [ must be JSON
     if (params?.match(/^[\[\{]/)) return JSON.parse(params);
     if (params?.match(/^[a-z0-9_]+:/i)) return strToObject(params);
     if (reEvalExpression.test(params)) {
       let res = evalParam(params);
-      if (typeof res === 'object')
-        return res;
-      else
-        return [res]; // Primitives are wrapped as arrays to spread to function calls (...res)
+      if (typeof res === 'object') return res;
+      else return [res]; // Primitives are wrapped as arrays to spread to function calls (...res)
     }
     return paramsToArray(params);
   }
@@ -56,7 +53,7 @@
   function strToObject(str) {
     let obj = {};
     paramsToArray(str) // .split(',')
-      .map(k => (k.trim()))
+      .map(k => k.trim())
       .forEach(k => {
         let val = getKeyVal(k, ':');
         let prop = Object.keys(val)[0];
@@ -70,19 +67,23 @@
    */
   function paramsToArray(str) {
     if (typeof str === 'undefined' || str === '') return [];
-    let res = str.match(/\\?.|^$/g).reduce((p, c) => {
-    // TODO: Support unquoted eval with spaces: {1 + 'a'}
-    // TODO: Support quotes inside eval: {fcn('a')}
-    // TODO: Support quoteed booleans/numbers '"true" "1"' => ["true", "1"]
-      if (c === '"') { // || c === '\''){
-        p.quote ^= 1;
-      } else if (!p.quote && c === ' ') {
-        p.a.push('');
-      } else {
-        p.a[p.a.length - 1] += c.replace(/\\(.)/, '$1');
-      }
-      return p;
-    }, {a: ['']}).a;
+    let res = str.match(/\\?.|^$/g).reduce(
+      (p, c) => {
+        // TODO: Support unquoted eval with spaces: {1 + 'a'}
+        // TODO: Support quotes inside eval: {fcn('a')}
+        // TODO: Support quoteed booleans/numbers '"true" "1"' => ["true", "1"]
+        if (c === '"') {
+          // || c === '\''){
+          p.quote ^= 1;
+        } else if (!p.quote && c === ' ') {
+          p.a.push('');
+        } else {
+          p.a[p.a.length - 1] += c.replace(/\\(.)/, '$1');
+        }
+        return p;
+      },
+      {a: ['']},
+    ).a;
     return getTypedParams(res);
   }
 
@@ -97,8 +98,7 @@
 
   function getTypedParams(arr) {
     return arr.map(getTypedParam) || [];
-  };
-
+  }
 
   // 'true' => true
   function getTypedParam(val) {
@@ -124,5 +124,4 @@
   function strIsNumber(str) {
     return !isNaN(str) && !isNaN(parseFloat(str));
   }
-
 });

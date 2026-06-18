@@ -23,12 +23,11 @@
  * Pure and DOM-free so it can be unit-tested by eval'ing this module with a stub
  * `tw` and reading `.exports` (mirrors how the runtime itself loads modules).
  */
-(function() {
-
+(function () {
   // Meta
   const name = 'core.sections';
   const version = '0.24.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   // Fence info-string → tiddler type. Unknown info-strings are used verbatim.
   const FENCE_TYPES = {
@@ -53,7 +52,9 @@
   return {name, version, platform, exports, run};
 
   function fenceToType(info) {
-    let key = String(info || '').trim().toLowerCase();
+    let key = String(info || '')
+      .trim()
+      .toLowerCase();
     if (!key) return null; // bare ``` fence → inherit parent type
     return FENCE_TYPES[key] || key;
   }
@@ -120,7 +121,11 @@
       let value = line.slice(colon + 1).trim();
       if (value === 'true') value = true;
       else if (value === 'false') value = false;
-      if (field === 'tags') tags = String(value).split(',').map(v => v.trim()).filter(Boolean);
+      if (field === 'tags')
+        tags = String(value)
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean);
       else meta[field] = value;
       i++;
     }
@@ -132,7 +137,8 @@
       const closes = body[body.length - 1].trim() === '```';
       if (open && closes) {
         const inner = body.slice(1, -1);
-        if (!inner.some(l => /^```/.test(l))) { // no nested fence → it's a single block
+        if (!inner.some(l => /^```/.test(l))) {
+          // no nested fence → it's a single block
           type = fenceToType(open[1]);
           text = inner.join('\n');
         }
@@ -150,5 +156,4 @@
     while (end > start && lines[end - 1].trim() === '') end--;
     return lines.slice(start, end);
   }
-
 });

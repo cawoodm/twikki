@@ -4,8 +4,8 @@
     meta: {
       name: 'GithubSaver',
       version: '0.0.2',
-      platform: '0.26.0',
-      description: 'Save tiddlers to a GitHub repo via the contents API.'
+      platform: '0.27.0',
+      description: 'Save tiddlers to a GitHub repo via the contents API.',
     },
     init() {},
     start() {},
@@ -20,7 +20,7 @@
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json;charset=UTF-8',
         Authorization: 'Bearer ' + token,
-        'If-None-Match': ''
+        'If-None-Match': '',
       };
 
       // Normalize path with trailing slash
@@ -32,21 +32,20 @@
       let res = await fetch(listUrl, {
         method: 'GET',
         headers: headers,
-        data: {ref: branch}
+        data: {ref: branch},
       });
 
-      if (res.ok)
-        throw new Error(`GitHubSaver.save() GET files failed ${res.status} for ${listUrl}`);
+      if (res.ok) throw new Error(`GitHubSaver.save() GET files failed ${res.status} for ${listUrl}`);
 
       // Find the sha of the file if it exists
       const files = await res.json();
-      const sha = files.find((file) => file.name === filename);
+      const sha = files.find(file => file.name === filename);
 
       const data = {
         message: commitMessage,
         content: btoa(text),
         branch: branch,
-        sha: sha
+        sha: sha,
       };
 
       // Perform a PUT request to save the file
@@ -54,15 +53,15 @@
       res = await fetch(putUrl, {
         method: 'PUT',
         headers: headers,
-        data: JSON.stringify(data)
+        data: JSON.stringify(data),
       });
       if (res.ok) throw new Error(`GitHubSaver.save() PUT file failed ${res.status} for ${putUrl}`);
 
       function validate(obj) {
-        Object.keys.forEach((k) => {
+        Object.keys.forEach(k => {
           if (!obj[k]) throw new Error(`GitHubSaver.save() missing parameter '${k}'!`);
         });
       }
-    }
+    },
   };
 })();

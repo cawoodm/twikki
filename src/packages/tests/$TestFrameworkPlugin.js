@@ -14,7 +14,7 @@
   const meta = {
     name: 'TestFramework',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Macros and runner for sequential UI/E2E tests (queue/clear/run/results).',
   };
 
@@ -58,32 +58,23 @@
   function doTyping({type, input}) {
     if (!type) return;
     let src = document.querySelector(type);
-    if (!src || typeof src.value === 'undefined')
-      throw new Error(`Failed to find input element matching '${type}!`);
+    if (!src || typeof src.value === 'undefined') throw new Error(`Failed to find input element matching '${type}!`);
     src.value = input;
     src.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 13}));
   }
   function checkExpectations({find, expect, expectNone, expectSome}) {
     if (!find) return;
     let target = document.querySelectorAll(find);
-    let targetIds = target?.length
-      ? Array.from(target).map((t) => t.getAttribute('data-tiddler-title'))
-      : [];
-    if (!target?.length && !expectNone)
-      throw new Error(`Failed to find target element matching selector '${find}!`);
-    else if (expect && expect?.length && target?.length !== expect.length)
-      throw new Error(
-        `Failed to find correct number of elements (got ${target?.length || 0} expected ${expect.length})!`,
-      );
-    else if (expectSome && expectSome.every((t) => targetIds.indexOf(t) > 0))
-      throw new Error(
-        `Failed to find some elements (expected ${expectSome.join(', ')} missing ${expectSome.find((t) => targetIds.indexOf(t) < 0)})!`,
-      );
+    let targetIds = target?.length ? Array.from(target).map(t => t.getAttribute('data-tiddler-title')) : [];
+    if (!target?.length && !expectNone) throw new Error(`Failed to find target element matching selector '${find}!`);
+    else if (expect && expect?.length && target?.length !== expect.length) throw new Error(`Failed to find correct number of elements (got ${target?.length || 0} expected ${expect.length})!`);
+    else if (expectSome && expectSome.every(t => targetIds.indexOf(t) > 0))
+      throw new Error(`Failed to find some elements (expected ${expectSome.join(', ')} missing ${expectSome.find(t => targetIds.indexOf(t) < 0)})!`);
     // TODO: expect.all(id => target.find
   }
 
   function sleep(ms) {
-    return new Promise((r) => setTimeout(r, ms));
+    return new Promise(r => setTimeout(r, ms));
   }
   function randstr() {
     return Math.random().toString(36).replace('0.', '');
@@ -156,7 +147,7 @@
     `;
         },
         {
-          description: 'Render the last test run\'s pass/fail summary.',
+          description: "Render the last test run's pass/fail summary.",
           example: '<<tests.results>>',
         },
       );
@@ -166,7 +157,7 @@
         async ({suite}) => {
           results.length = 0;
           isRunning = true;
-          for (let t of queue.filter((t) => !!t.name)) {
+          for (let t of queue.filter(t => !!t.name)) {
             try {
               let res = await t.test();
               results.push({suite, name: t.name, success: res});

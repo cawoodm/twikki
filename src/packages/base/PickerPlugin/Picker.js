@@ -2,7 +2,7 @@
   const meta = {
     name: 'Picker',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Generic clickable picker bound via document-level delegation.',
   };
 
@@ -37,24 +37,24 @@
   // Lazy menu sources: a `.picker[data-source]` builds its items on open (so the
   // list is fresh and not baked into markup). Each returns [{value, label}].
   const SOURCES = {
-    tag: (arg) =>
+    tag: arg =>
       (tw.run.getTiddlersByTag(arg) || [])
-        .map((t) => t.title)
+        .map(t => t.title)
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-        .map((title) => ({value: title, label: title})),
-    package: (arg) =>
+        .map(title => ({value: title, label: title})),
+    package: arg =>
       (tw.run.getTiddlersByPackage(arg) || [])
-        .map((t) => t.title)
+        .map(t => t.title)
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-        .map((title) => ({value: title, label: title})),
+        .map(title => ({value: title, label: title})),
     // Open notes that overflow the tab strip (the split is owned by TabsPlugin).
-    taboverflow: () => (tw.tabs?.overflow || []).map((t) => ({value: t, label: t.replace(/^\$/, '')})),
+    taboverflow: () => (tw.tabs?.overflow || []).map(t => ({value: t, label: t.replace(/^\$/, '')})),
     // Every tag in the store, dispatched as a `search` for `tag:<name>`.
     alltags: () =>
       (tw.run?.allTags?.() || [])
         .filter(Boolean)
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-        .map((tag) => ({value: 'tag:' + tag, label: tag})),
+        .map(tag => ({value: 'tag:' + tag, label: tag})),
   };
 
   function populate(picker, menu) {
@@ -95,22 +95,23 @@
   }
 
   function closeAll() {
-    document.querySelectorAll('.picker-menu:not([hidden])').forEach((m) => (m.hidden = true));
+    document.querySelectorAll('.picker-menu:not([hidden])').forEach(m => (m.hidden = true));
+  }
+
+  function onEscape(e) {
+    if (e.key === 'Escape') closeAll();
   }
 
   return {
     meta,
     init() {
-      tw.tmp = tw.tmp || {};
-      if (tw.tmp.pickerBound) return;
-      tw.tmp.pickerBound = true;
-
-      document.addEventListener('click', onClick);
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeAll();
-      });
-      window.addEventListener('scroll', closeAll, true);
-      window.addEventListener('resize', closeAll);
+      tw.core.dom.on(document, 'click', onClick, 'Picker');
+      tw.core.dom.on(document, 'keydown', onEscape, 'Picker');
+      tw.core.dom.on(window, 'scroll', closeAll, 'Picker', true);
+      tw.core.dom.on(window, 'resize', closeAll, 'Picker');
+    },
+    unload() {
+      closeAll();
     },
   };
 })();

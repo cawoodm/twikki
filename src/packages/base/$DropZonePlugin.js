@@ -15,7 +15,7 @@
   const meta = {
     name: 'DropZone',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'File drag-and-drop with glob-registered handlers and a drop overlay.',
   };
 
@@ -56,9 +56,7 @@
       el.textContent = '⤓ Drop a file to import';
       // Inline styles keep the overlay self-contained (no CSS-tiddler dependency);
       // pointer-events:none so it never intercepts the drop or fires dragleave itself.
-      el.style.cssText =
-        'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;' +
-        'justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:2em;pointer-events:none;';
+      el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;' + 'justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:2em;pointer-events:none;';
       document.body.appendChild(el);
     }
     el.style.display = 'flex';
@@ -68,24 +66,30 @@
     if (el) el.style.display = 'none';
   }
 
+  const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
+  function onDragEnter(e) {
+    if (!hasFiles(e)) return;
+    dragDepth++;
+    showDropOverlay();
+  }
+  function onDragOver(e) {
+    if (hasFiles(e)) e.preventDefault(); // required to enable drop
+  }
+  function onDragLeave(e) {
+    if (hasFiles(e) && --dragDepth <= 0) hideDropOverlay();
+  }
+
   return {
     meta,
     start() {
-      if (tw.tmp.dropZoneBound) return; // soft reload re-runs start(); bind the document listeners once
-      tw.tmp.dropZoneBound = true;
-      const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
-      document.addEventListener('dragenter', e => {
-        if (!hasFiles(e)) return;
-        dragDepth++;
-        showDropOverlay();
-      });
-      document.addEventListener('dragover', e => {
-        if (hasFiles(e)) e.preventDefault(); // required to enable drop
-      });
-      document.addEventListener('dragleave', e => {
-        if (hasFiles(e) && --dragDepth <= 0) hideDropOverlay();
-      });
-      document.addEventListener('drop', handleDrop);
+      tw.core.dom.on(document, 'dragenter', onDragEnter, 'DropZone');
+      tw.core.dom.on(document, 'dragover', onDragOver, 'DropZone');
+      tw.core.dom.on(document, 'dragleave', onDragLeave, 'DropZone');
+      tw.core.dom.on(document, 'drop', handleDrop, 'DropZone');
+    },
+    unload() {
+      dragDepth = 0;
+      hideDropOverlay();
     },
   };
 })();

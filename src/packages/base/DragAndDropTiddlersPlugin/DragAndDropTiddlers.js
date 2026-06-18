@@ -2,9 +2,8 @@
   const meta = {
     name: 'DragAndDropTiddlers',
     version: '1.0.0',
-    platform: '0.26.0',
-    description:
-      'Drag tiddlers between TWikki windows; also imports packages (*.json files with a tiddlers array).',
+    platform: '0.27.0',
+    description: 'Drag tiddlers between TWikki windows; also imports packages (*.json files with a tiddlers array).',
     dependencies: ['DropZone'],
   };
 
@@ -55,18 +54,20 @@
   // TabsPlugin rewrites #tab-strip.innerHTML wholesale on every flush, so we
   // can't just decorate once: re-apply on every mutation.
   function decorateTabs() {
-    document
-      .querySelectorAll('#tab-strip .tab[data-tab]')
-      .forEach(el => el.setAttribute('draggable', 'true'));
+    document.querySelectorAll('#tab-strip .tab[data-tab]').forEach(el => el.setAttribute('draggable', 'true'));
   }
+  let tabObserver = null;
   function startTabStripObserver() {
-    if (tw.tmp.dndTabObserver) return;
+    if (tabObserver) return;
     const strip = document.getElementById('tab-strip');
     if (!strip) return;
-    const obs = new MutationObserver(decorateTabs);
-    obs.observe(strip, {childList: true});
-    tw.tmp.dndTabObserver = obs;
+    tabObserver = new MutationObserver(decorateTabs);
+    tabObserver.observe(strip, {childList: true});
     decorateTabs();
+  }
+  function stopTabStripObserver() {
+    tabObserver?.disconnect();
+    tabObserver = null;
   }
 
   // -- Target side -----------------------------------------------------------
@@ -205,12 +206,13 @@
       tw.events.subscribe('ui.reloaded', startTabStripObserver, HANDLER_KEY);
     },
     start() {
-      if (tw.tmp.dndTiddlersBound) return;
-      tw.tmp.dndTiddlersBound = true;
-      document.addEventListener('dragstart', onDragStart);
-      document.addEventListener('dragend', onDragEnd);
-      document.addEventListener('dragover', onDragOver);
-      document.addEventListener('drop', onDrop);
+      tw.core.dom.on(document, 'dragstart', onDragStart, HANDLER_KEY);
+      tw.core.dom.on(document, 'dragend', onDragEnd, HANDLER_KEY);
+      tw.core.dom.on(document, 'dragover', onDragOver, HANDLER_KEY);
+      tw.core.dom.on(document, 'drop', onDrop, HANDLER_KEY);
+    },
+    unload() {
+      stopTabStripObserver();
     },
   };
 })();

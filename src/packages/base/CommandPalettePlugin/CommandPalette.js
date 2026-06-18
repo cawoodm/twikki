@@ -2,7 +2,7 @@
   const meta = {
     name: 'CommandPalette',
     version: '1.0.0',
-    platform: '0.26.0',
+    platform: '0.27.0',
     description: 'Ctrl/Cmd+K palette for actions and tiddler navigation.',
   };
 
@@ -38,10 +38,12 @@
       input.value = '';
     });
 
-    if (!tw.tmp.commandPaletteBound) {
-      tw.tmp.commandPaletteBound = true;
-      document.addEventListener('keydown', onDocKeydown);
-    }
+    // Tracked via tw.core.dom.on so the platform's unloadPlugins() phase
+    // tears it down before re-evaluating this plugin. The pre-migration
+    // guard idiom (tw.tmp.commandPaletteBound) only prevented re-binding
+    // — it never removed the previous IIFE's listener, which kept calling
+    // a stale open() with a detached dialog.
+    tw.core.dom.on(document, 'keydown', onDocKeydown, 'CommandPalette');
   }
 
   function onDocKeydown(e) {
@@ -158,6 +160,9 @@
       tw.tmp = tw.tmp || {};
       wireUp('ui.loaded', init);
       wireUp('ui.reloaded', init);
+    },
+    unload() {
+      document.getElementById('command-palette')?.remove();
     },
   };
 })();

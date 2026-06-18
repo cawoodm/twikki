@@ -8,8 +8,8 @@
  */
 (function (tw) {
   const name = 'twikki.core';
-  const version = '0.25.0';
-  const platform = '0.26.0'; // built for platform ^0.26.0
+  const version = '0.27.0';
+  const platform = '0.27.0'; // built for platform ^0.27.0
 
   dp('TWikki Core started');
   tw.events = (function () {
@@ -76,23 +76,22 @@
         if (typeof params === 'string' && params.match(/^---enc:/)) return tw.core.common.decoder(params.substring(7));
         return params;
       },
-      // TODO: Should have subscribe to listen and override to handle
-      // handlerName is used to ensure we don't call the same function twice for the same event
-      subscribe(event, handler, handlerName) {
+      // owner is used to ensure we don't call the same function twice for the same event
+      subscribe(event, handler, owner) {
         if (!initialized) throw new Error('Events not yet initialized!');
-        if (!handlerName && typeof handler === 'string') {
-          handlerName = handler;
-          handler = eval(handlerName);
+        if (!owner && typeof handler === 'string') {
+          owner = handler;
+          handler = eval(owner);
         }
-        if (!handlerName) handlerName = handler.name;
-        if (!handlerName) {
-          console.warn(`No handlerName provided in events.subscribe(${event})!`);
-          if (window.devMode) throw new Error(`No handlerName provided in events.subscribe(${event})!`);
+        if (!owner) owner = handler.name;
+        if (!owner) {
+          console.warn(`No owner provided in events.subscribe(${event})!`);
+          if (window.devMode) throw new Error(`No owner provided in events.subscribe(${event})!`);
         }
         // Prevent same handler function for same event
-        if (handlers.find(h => h.event === event && h.handler.name === handlerName)) return dp('Ignoring duplicate event handler', event, handlerName);
-        dp('subscribe', event, handlerName);
-        handlers.push({event, handler});
+        if (handlers.find(h => h.event === event && h.handler.name === owner)) return dp('Ignoring duplicate event handler', event, owner);
+        dp('subscribe', event, owner);
+        handlers.push({event, handler, owner});
       },
       override(event, handler) {
         if (typeof handler === 'string') handler = eval(handler);
@@ -100,6 +99,22 @@
         handlers.filter(h => h.event === event).forEach(h => delete h.event);
         // Add new handler
         this.subscribe(event, handler);
+      },
+      // Remove every handler whose owner matches — used by the platform's
+      // unloadPlugins() step to tear down a plugin's subscriptions in one
+      // call. Owners are typically the plugin's meta.name (the convention
+      // every base plugin already follows via subscribe(..., 'PluginName')).
+      unsubscribeByOwner(owner) {
+        if (!owner) return 0;
+        let removed = 0;
+        for (let i = handlers.length - 1; i >= 0; i--) {
+          if (handlers[i].owner === owner) {
+            handlers.splice(i, 1);
+            removed++;
+          }
+        }
+        if (removed) dp('unsubscribeByOwner', owner, removed);
+        return removed;
       },
       handlers() {
         return handlers;
