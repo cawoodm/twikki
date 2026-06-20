@@ -226,6 +226,35 @@ test('write-through: data survives close + reopen via a second boot', async () =
   assert.equal(tw2.storage.getRaw('/ws/foo/tiddlers'), 'foo-data');
 });
 
+test('flush(): exists and returns a promise (storage contract)', async () => {
+  freshEnv();
+  const tw = {};
+  await runBoot(tw);
+  assert.equal(typeof tw.storage.flush, 'function');
+  const p = tw.storage.flush();
+  assert.ok(typeof p.then === 'function', 'flush() must return a thenable');
+  await p;
+});
+
+test('flush(): awaiting it guarantees queued writes have committed to IDB', async () => {
+  // The bug: reboot reloads before the fire-and-forget IDB put commits. flush()
+  // is the fix — awaiting it must mean the data is durably in the store, with NO
+  // arbitrary setTimeout (the other tests use a timeout precisely because they
+  // can't await persistence; flush() removes that need).
+  freshEnv();
+  const tw = {};
+  await runBoot(tw);
+
+  tw.storage.set('/ws/default/tiddlers', '[{"title":"Edited"}]');
+  tw.storage.set('/ws/foo/tiddlers', 'foo-data'); // also forces a lazy store upgrade
+  await tw.storage.flush();
+
+  const defStore = await readStore('ws_default');
+  assert.equal(defStore.tiddlers, '[{"title":"Edited"}]');
+  const fooStore = await readStore('ws_foo');
+  assert.deepEqual(fooStore, {tiddlers: 'foo-data'});
+});
+
 test('migration runs once: sentinel blocks a second LS-copy on the next boot', async () => {
   const ls = freshEnv({'/ws/default/tiddlers': 'first'});
   const tw1 = {};
