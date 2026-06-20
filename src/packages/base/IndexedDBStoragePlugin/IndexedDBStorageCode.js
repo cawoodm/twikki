@@ -1,7 +1,7 @@
 (function () {
   const meta = {
     name: 'IndexedDBStorage',
-    version: '0.1.0',
+    version: '0.2.0',
     platform: '0.27.0',
     description: 'Routes tw.storage to IndexedDB via a pre-boot script at /twikki.boot.js.',
   };
@@ -14,7 +14,7 @@
   // localStorage on boot — installing a pre-boot script is a deliberate,
   // user-driven action.
   function install() {
-    const src = tw.run.getTiddlerTextRaw('IndexedDBStorage::BootScript');
+    const src = tw.run.getTiddlerTextRaw('IndexedDBStoragePlugin::BootScript');
     if (!src) {
       tw.ui.notify('IndexedDBStorage: BootScript section not found.', 'E');
       return;

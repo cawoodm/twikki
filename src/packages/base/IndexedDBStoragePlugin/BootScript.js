@@ -64,6 +64,24 @@
     });
   }
 
+  // First open uses NO version arg: opens the current version if the DB
+  // exists (without firing an upgrade), or creates a fresh v1 if it
+  // doesn't. The onupgradeneeded handler here only runs on the very first
+  // install — that's when we create the initial set of stores.
+  function openCurrentOrCreate(initialStores) {
+    return new Promise((resolve, reject) => {
+      const req = window.indexedDB.open(DB);
+      req.onupgradeneeded = e => {
+        const upgrading = e.target.result;
+        for (const s of initialStores) {
+          if (!upgrading.objectStoreNames.contains(s)) upgrading.createObjectStore(s);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('IDB open failed'));
+    });
+  }
+
   function discoverWorkspaces() {
     const set = new Set(['default']); // every install has at least a default workspace
     for (let i = 0; i < window.localStorage.length; i++) {
@@ -78,14 +96,22 @@
     return [...set];
   }
 
-  // Open at version 1 with the discovered workspace stores. If the DB
-  // already exists at a higher version (a previous boot added stores), the
-  // browser ignores our lower version request and just returns the existing
-  // DB — we read its actual version off the result and align our counter.
+  // Open at the existing version (or create v1 if the DB is brand new).
+  // After this we may still need to add stores for workspaces that have
+  // appeared since the DB was last opened — handled by the upgrade below.
   const initialStores = [GLOBAL_STORE, ...discoverWorkspaces().map(workspaceStoreName)];
-  db = await openWithStores(dbVersion, initialStores);
+  db = await openCurrentOrCreate(initialStores);
   dbVersion = db.version;
   for (const s of db.objectStoreNames) existingStores.add(s);
+  const missing = initialStores.filter(s => !existingStores.has(s));
+  if (missing.length) {
+    db.close();
+    dbVersion++;
+    const wanted = [...existingStores, ...missing];
+    db = await openWithStores(dbVersion, wanted);
+    dbVersion = db.version;
+    for (const s of missing) existingStores.add(s);
+  }
 
   // Hydrate the in-memory Map from every store. Workspace stores reconstruct
   // the full `/ws/<name>/<key>` form; `_global` keys are stored verbatim.
