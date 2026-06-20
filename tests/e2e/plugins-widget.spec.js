@@ -1,8 +1,9 @@
-// E2E for the <<plugins>> widget's enable/disable checkbox. Disabling a plugin
-// adds the $CodeDisabled tag to its source tiddler and persists it. The key
-// requirement: it survives a full reload even though plugin tiddlers ship in
-// force-loaded packages — core.packaging PRESERVED_TAGS carries $CodeDisabled
-// over when loadList overwrites the existing tiddler.
+// E2E for the <<plugins>> widget's enable/disable checkbox. Toggling adds/removes
+// the $CodeDisabled tag via updateTiddlerSilent, which marks the store dirty (no
+// auto-save) so the unsaved-changes indicator reflects it. After an explicit save
+// it survives a full reload even though plugin tiddlers ship in force-loaded
+// packages — core.packaging PRESERVED_TAGS carries $CodeDisabled over when
+// loadList overwrites the existing tiddler.
 
 import {expect, test} from '@playwright/test';
 import {bootApp, card, createTiddler} from './helpers.js';
@@ -31,12 +32,15 @@ test.describe('plugins widget enable/disable', () => {
 
     await checkbox.click();
 
-    // ui.reload drops it from the registry and the $CodeDisabled tag is set + saved.
+    // ui.reload drops it from the registry; the tag is set and the store is dirty
+    // (marked, not auto-saved).
     await page.waitForFunction(s => !tw.plugins.some(p => p.source === s), target, {timeout: 30000});
     expect(await hasTag(page, target, '$CodeDisabled')).toBe(true);
+    expect(await page.evaluate(() => tw.ui.isDirty)).toBe(true);
 
-    // The real test: a full reload re-fetches base.json with force, but the tag
-    // is preserved, so the plugin stays disabled.
+    // Persist explicitly, then a full reload re-fetches base.json with force — the
+    // tag is preserved (PRESERVED_TAGS), so the plugin stays disabled.
+    await page.evaluate(() => tw.run.save());
     await bootApp(page);
     expect(await isLoaded(page, target)).toBe(false);
     expect(await hasTag(page, target, '$CodeDisabled')).toBe(true);
@@ -63,5 +67,6 @@ test.describe('plugins widget enable/disable', () => {
 
     await page.waitForFunction(s => tw.plugins.some(p => p.source === s), target, {timeout: 30000});
     expect(await hasTag(page, target, '$CodeDisabled')).toBe(false);
+    expect(await page.evaluate(() => tw.ui.isDirty)).toBe(true);
   });
 });

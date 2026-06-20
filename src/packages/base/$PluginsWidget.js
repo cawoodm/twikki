@@ -23,8 +23,10 @@
   // Flip a plugin's enabled state via the $CodeDisabled tag, then reload so
   // loadPlugins() honours the change (unloadPlugins() tears down the old
   // generation first, so disabling fully removes the plugin's effects). The tag
-  // is written directly (plugins are usually $NoEdit) and persisted; core.packaging
-  // PRESERVED_TAGS keeps it across the next forced package load.
+  // is written with updateTiddlerSilent — a $NoEdit-safe raw upsert that also
+  // marks the store dirty, so the ● unsaved indicator shows the change without
+  // auto-saving; the user saves to persist it (core.packaging PRESERVED_TAGS then
+  // keeps $CodeDisabled across the next forced package load).
   function togglePlugin(source) {
     if (!source) return;
     const t = tw.run.getTiddler(source);
@@ -32,10 +34,9 @@
     const willDisable = !t.tags.includes('$CodeDisabled');
     if (willDisable) t.tags.push('$CodeDisabled');
     else t.tags = t.tags.filter(tg => tg !== '$CodeDisabled');
-    tw.run.updateTiddlerHard(source, t);
-    tw.events.send('save');
-    tw.ui.notify(`Plugin '${source}' ${willDisable ? 'disabled' : 'enabled'}, a full reload is recommended!`, 'S');
-    if (confirm('Do you want to reload? (recommended)')) tw.events.send('reboot.hard');
+    tw.run.updateTiddlerSilent(source, t);
+    tw.ui.notify(`Plugin '${source}' ${willDisable ? 'disabled' : 'enabled'} — reloading (save to keep)…`, 'S');
+    tw.events.send('ui.reload');
   }
   tw.events.override('plugin.toggle', togglePlugin);
 

@@ -29,6 +29,7 @@
     addTiddlerHard,
     updateTiddler,
     updateTiddlerHard,
+    updateTiddlerSilent,
     updateTiddlerText,
     deleteTiddler,
     getTiddler,
@@ -83,6 +84,7 @@
   Object.assign(tw.run, {
     updateTiddler,
     updateTiddlerHard,
+    updateTiddlerSilent,
     addTiddler,
     addTiddlerHard,
     deleteTiddler,
@@ -151,6 +153,14 @@
   }
   function updateTiddlerHard(currentTitle, newTiddler) {
     upsertInArray(tw.tiddlers.all, titleIs(currentTitle), newTiddler);
+  }
+  // Like updateTiddlerHard (raw upsert: no validation, no $NoEdit guard, no story
+  // reorder, no rerender) but DOES flag the store dirty, so the unsaved-changes
+  // indicator reflects the edit and it persists on the next save. For programmatic
+  // metadata edits (e.g. toggling a plugin's $CodeDisabled tag).
+  function updateTiddlerSilent(currentTitle, newTiddler) {
+    updateTiddlerHard(currentTitle, newTiddler);
+    tw.run.setDirty?.(true); // setDirty lives in core.ui (loads later); call lazily
   }
   function updateTiddlerText(title, text) {
     let t = getTiddler(title);
