@@ -4,15 +4,7 @@
 // tw.run for internal or programmatic-only events.
 
 import {expect, test} from '@playwright/test';
-import {
-    acceptDialogs,
-    bootApp,
-    card,
-    createTiddler,
-    persistedStore, persistedTrash,
-    send,
-    visibleTitles,
-} from './helpers.js';
+import {acceptDialogs, bootApp, card, createTiddler, persistedStore, persistedTrash, send, visibleTitles} from './helpers.js';
 
 test.beforeEach(async ({page}) => {
   await bootApp(page);
@@ -122,9 +114,9 @@ test.describe('preview', () => {
 });
 
 test.describe('save', () => {
-  test('save.all persists store changes to localStorage', async ({page}) => {
+  test('save persists store changes to localStorage', async ({page}) => {
     await createTiddler(page, {title: 'SaveMe', text: 'persist me'});
-    await send(page, 'save.all');
+    await send(page, 'save');
     expect((await persistedStore(page)).some(t => t.title === 'SaveMe')).toBe(true);
   });
 
@@ -136,7 +128,7 @@ test.describe('save', () => {
 
   test('save.silent persists without showing a toast', async ({page}) => {
     await createTiddler(page, {title: 'SilentSave', text: 'quiet'});
-    await send(page, 'save.silent');
+    await send(page, 'save.auto');
     expect((await persistedStore(page)).some(t => t.title === 'SilentSave')).toBe(true);
     await expect(page.locator('#notify')).toHaveClass(/notifyHidden/);
   });
@@ -144,19 +136,20 @@ test.describe('save', () => {
 
 test.describe('reload / reboot', () => {
   test('ui.reload is a soft reload (no page navigation)', async ({page}) => {
-    await page.evaluate(() => {window.__sentinel = 'soft';});
+    await page.evaluate(() => {
+      window.__sentinel = 'soft';
+    });
     await send(page, 'ui.reload');
     expect(await page.evaluate(() => window.__sentinel)).toBe('soft');
     expect(await page.evaluate(() => !!(window.tw && tw.tiddlers))).toBe(true);
   });
 
   test('reboot.hard triggers a full page reload', async ({page}) => {
-    await page.evaluate(() => {window.__sentinel = 'hard';});
+    await page.evaluate(() => {
+      window.__sentinel = 'hard';
+    });
     await page.evaluate(() => tw.events.send('reboot.hard')).catch(() => {});
-    await page.waitForFunction(
-      () => !!(window.tw && tw.tiddlers && tw.tiddlers.all.length) && window.__sentinel === undefined,
-      null, {timeout: 30000},
-    );
+    await page.waitForFunction(() => !!(window.tw && tw.tiddlers && tw.tiddlers.all.length) && window.__sentinel === undefined, null, {timeout: 30000});
     expect(await page.evaluate(() => window.__sentinel)).toBeUndefined();
   });
 });
@@ -198,7 +191,7 @@ test.describe('refresh / content / text / created / updated', () => {
 
 test.describe('store.load', () => {
   test('store.load repopulates tw.tiddlers.all from persisted store', async ({page}) => {
-    await send(page, 'save.all'); // ensure store reflects current tiddlers
+    await send(page, 'save'); // ensure store reflects current tiddlers
     await page.evaluate(() => {
       const cur = tw.store.get('tiddlers') || [];
       tw.store.set('tiddlers', [...cur, {title: 'StoreLoadProbe', text: 'seeded', type: 'markdown', tags: [], created: new Date(), updated: new Date()}]);
@@ -214,8 +207,7 @@ test.describe('package load', () => {
   const PKG = {tiddlers: [{title: 'PkgProbe', text: 'from package', type: 'markdown', tags: []}]};
 
   test('package.load.url imports tiddlers from a URL', async ({page}) => {
-    await page.route('**/fake-package.json', route =>
-      route.fulfill({contentType: 'application/json', body: JSON.stringify(PKG)}));
+    await page.route('**/fake-package.json', route => route.fulfill({contentType: 'application/json', body: JSON.stringify(PKG)}));
     await page.evaluate(async () => {
       await Promise.all(tw.events.send('package.load.url', {url: '/fake-package.json', name: 'fakepkg'}));
     });
@@ -232,8 +224,7 @@ test.describe('package load', () => {
   // Save checked by default) brings the selected tiddlers in.
   test('package.reload.url opens the import dialog and imports on confirm', async ({page}) => {
     const pkg2 = {tiddlers: [{title: 'PkgProbe2', text: 'reloaded', type: 'markdown', tags: []}]};
-    await page.route('**/fake-package2.json', route =>
-      route.fulfill({contentType: 'application/json', body: JSON.stringify(pkg2)}));
+    await page.route('**/fake-package2.json', route => route.fulfill({contentType: 'application/json', body: JSON.stringify(pkg2)}));
     await page.evaluate(() => {
       tw.events.send('package.reload.url', {url: '/fake-package2.json', name: 'fakepkg2'});
     });

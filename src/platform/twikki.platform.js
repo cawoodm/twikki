@@ -546,7 +546,7 @@
       // If name === 'core' AND tw.tiddlers.all.find(t => t.package === 'core') panic or open $CorePackages for edit as it's screwed!
       tw.ui.notify(`${count} tiddlers imported from package ${name}`, 'D');
     }
-    tw.core.store.saveSilent();
+    tw.core.store.autoSave();
   }
 
   /* Plugin lifecycle host */

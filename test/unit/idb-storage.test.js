@@ -292,3 +292,37 @@ test('IDB open throws: boot promise rejects so platform can catch + fall back', 
   await assert.rejects(() => fn(tw), /simulated open failure/);
   assert.equal(tw.storage, undefined);
 });
+
+// ---------------------------------------------------------------------------
+// `shouldPrompt` — pure predicate extracted from IndexedDBStorageCode.js by
+// sentinel-comment regex (mirrors the build-url helper extraction pattern).
+// ---------------------------------------------------------------------------
+const CODE_PATH = join(ROOT, 'src/packages/base/IndexedDBStoragePlugin/IndexedDBStorageCode.js');
+const CODE_SRC = readFileSync(CODE_PATH, 'utf8');
+const SHOULD_PROMPT = (() => {
+  const m = CODE_SRC.match(/\/\* BEGIN shouldPrompt[\s\S]*?\/\* END shouldPrompt \*\//);
+  if (!m) throw new Error('shouldPrompt helper block not found — sentinel comments moved?');
+  // eslint-disable-next-line no-new-func
+  return new Function(m[0] + '\nreturn shouldPrompt;')();
+})();
+
+test('shouldPrompt: up-to-date source returns false', () => {
+  assert.equal(SHOULD_PROMPT({installed: 'X', bundled: 'X', dismissedToday: false, sessionFlag: false}), false);
+});
+
+test('shouldPrompt: different source returns true', () => {
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: false}), true);
+});
+
+test('shouldPrompt: no install returns false (user has not opted in)', () => {
+  assert.equal(SHOULD_PROMPT({installed: null, bundled: 'B', dismissedToday: false, sessionFlag: false}), false);
+});
+
+test('shouldPrompt: dismissed today returns false (per-day snooze)', () => {
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: true, sessionFlag: false}), false);
+});
+
+test('shouldPrompt: session flag set returns false (per-page-load guard)', () => {
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: true}), false);
+});
+

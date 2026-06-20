@@ -121,10 +121,7 @@
       cursor.onsuccess = e => {
         const c = e.target.result;
         if (!c) return resolve();
-        const fullKey =
-          storeName === GLOBAL_STORE
-            ? c.key
-            : `/ws/${storeName.slice(WS_PREFIX.length)}/${c.key}`;
+        const fullKey = storeName === GLOBAL_STORE ? c.key : `/ws/${storeName.slice(WS_PREFIX.length)}/${c.key}`;
         map.set(fullKey, c.value);
         c.continue();
       };
@@ -198,7 +195,7 @@
     });
     return pendingDb;
   }
-
+  let a;
   function idbPut(fullKey, value) {
     const {store, key} = routeKey(fullKey);
     ensureStore(store)

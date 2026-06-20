@@ -35,8 +35,11 @@
     if (willDisable) t.tags.push('$CodeDisabled');
     else t.tags = t.tags.filter(tg => tg !== '$CodeDisabled');
     tw.run.updateTiddlerSilent(source, t);
-    tw.ui.notify(`Plugin '${source}' ${willDisable ? 'disabled' : 'enabled'} — reloading (save to keep)…`, 'S');
-    tw.events.send('ui.reload');
+    tw.ui.notify(`Plugin '${source}' ${willDisable ? 'disabled' : 'enabled'} — reload is recommended!`, 'S');
+    if (confirm('Would you like to reload?')) {
+      tw.core.store.save();
+      tw.events.send('reboot.hard');
+    }
   }
   tw.events.override('plugin.toggle', togglePlugin);
 

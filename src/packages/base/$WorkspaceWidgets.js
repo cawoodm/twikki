@@ -32,12 +32,12 @@ if (!tw.tmp.workspaceEvents) {
   tw.tmp.workspaceEvents = 1;
   // Guard against losing unsaved changes when switching/creating a workspace.
   // Matters with auto-save off: a dirty in-memory tiddler would be discarded by
-  // the hard reboot (workspace.load) or omitted from a clone. `save.all` is not
+  // the hard reboot (workspace.load) or omitted from a clone. `save` is not
   // gated by auto-save, so OK always persists; Cancel keeps the user put.
   function guardUnsaved() {
     if (!tw.ui.isDirty) return true;
     if (!confirm('You have unsaved changes that would be lost.\n\nOK = save them and continue\nCancel = stay in this workspace')) return false;
-    tw.events.send('save.all');
+    tw.events.send('save');
     return true;
   }
   tw.events.subscribe(

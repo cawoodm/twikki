@@ -149,7 +149,7 @@
         failed.push(`${tiddler.title}: ${e.message}`);
       }
     });
-    tw.core.store.save();
+    tw.core.store.autoSave();
     const baseMsg = `Imported ${ok} tiddler${ok === 1 ? '' : 's'}`;
     if (failed.length) {
       tw.ui.notify(`${baseMsg} (${failed.length} failed)`, 'W');

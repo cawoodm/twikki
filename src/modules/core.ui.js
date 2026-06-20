@@ -138,8 +138,7 @@
     wireUp('ui.open.all', tw.core.tiddlers.showAllTiddlers);
     wireUp('ui.close.all', tw.core.tiddlers.closeAllTiddlers);
     wireUp('save', tw.core.store.save);
-    wireUp('save.silent', tw.core.store.saveSilent);
-    wireUp('save.all', tw.core.store.saveAll);
+    wireUp('save.auto', tw.core.store.autoSave);
 
     wireUp('tiddler.new', formNewTiddler);
     wireUp('tiddler.edit', formEditTiddler);
@@ -402,7 +401,7 @@
     tw.events.send('tiddler.updated', t.title); // tiddlerUpdated()
     tw.core.render.renderAllTiddlers();
     setDirty(true);
-    tw.core.store.save();
+    tw.core.store.autoSave();
   }
 
   // Edit button on a section card: close the section view and open its parent
@@ -449,11 +448,15 @@
         tw.events.send('reboot.hard');
       }
     } else if (tw.core.tiddlers.isRunnableTiddler(t)) {
-      tw.core.store.save();
-      if (confirm(`Code '${t.title}' was edited. Reload now to apply changes?`)) tw.events.send('reboot.hard');
+      if (confirm(`Code '${t.title}' was edited. Reload now to apply changes?`)) {
+        tw.core.store.save();
+        tw.events.send('reboot.hard');
+      }
     } else if (tw.core.tiddlers.tiddlerIsATemplate(t)) {
-      tw.core.store.save();
-      if (confirm(`Template '${t.title}' was edited. Reload now to apply changes?`)) tw.events.send('reboot.hard');
+      if (confirm(`Template '${t.title}' was edited. Reload now to apply changes?`)) {
+        tw.core.store.save();
+        tw.events.send('reboot.hard');
+      }
     }
   }
 

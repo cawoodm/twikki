@@ -183,8 +183,7 @@ These three events form the render pipeline called for every tiddler. Use `rende
 | Event         | Params | Description                                 |
 | ------------- | ------ | ------------------------------------------- |
 | `save`        | —      | Persist all tiddlers to localStorage.       |
-| `save.silent` | —      | Persist without showing a notification.     |
-| `save.all`    | —      | Persist all stores (tiddlers + settings).   |
+| `save.auto  ` | —      | Persist if autoSave is on.                  |
 | `store.load`  | —      | Reload the tiddler store from localStorage. |
 
 ### Packages

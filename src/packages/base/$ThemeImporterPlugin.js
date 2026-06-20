@@ -196,7 +196,7 @@
         imported.add(t.title);
       });
     });
-    tw.events.send('save.silent');
+    tw.events.send('save.auto');
     if (applyTitle) tw.events.send('theme.switch', applyTitle);
     let suffix = applyTitle ? `, applied '${displayName(applyTitle)}'` : '';
     tw.ui.notify(`Imported ${titles.length} theme(s), ${imported.size} tiddler(s)${suffix}`, 'S');

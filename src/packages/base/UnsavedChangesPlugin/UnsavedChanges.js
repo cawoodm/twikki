@@ -103,7 +103,7 @@
     let changes = computeChanges();
     let html = changes.length ? `<ul class="tw-changes-list">${changes.map(rowHtml).join('')}</ul>` : '<p>No unsaved changes.</p>';
     let buttons = [{text: 'Close', close: true}];
-    if (changes.length) buttons.unshift({text: 'Save', msg: 'save.all', close: true});
+    if (changes.length) buttons.unshift({text: 'Save', msg: 'save', close: true});
     tw.ui.dialog({
       id: DIALOG_ID,
       title: 'Unsaved Changes',

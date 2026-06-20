@@ -13,14 +13,14 @@ These ship with the `base` package, so they are always available.
 
 ### Notes
 
-| Command | What it does | Event |
-|---|---|---|
-| New note | Create a new tiddler | `tiddler.new` |
-| Save all | Persist all changes to `localStorage` | `save.all` |
-| Reload UI | Re-evaluate templates and re-render — no full page reload | `ui.reload` |
-| Open all notes | Open every (non-system) note | `ui.open.all` |
-| Close all notes | Close every open note | `ui.close.all` |
-| Toggle sidebar | Show or hide the explorer sidebar | _no event — direct DOM toggle_ |
+| Command         | What it does                                              | Event                          |
+| --------------- | --------------------------------------------------------- | ------------------------------ |
+| New note        | Create a new tiddler                                      | `tiddler.new`                  |
+| Save            | Persist all changes to `localStorage`                     | `save`                         |
+| Reload UI       | Re-evaluate templates and re-render — no full page reload | `ui.reload`                    |
+| Open all notes  | Open every (non-system) note                              | `ui.open.all`                  |
+| Close all notes | Close every open note                                     | `ui.close.all`                 |
+| Toggle sidebar  | Show or hide the explorer sidebar                         | _no event — direct DOM toggle_ |
 
 ### Search & navigation
 
@@ -28,49 +28,49 @@ The palette **is** the navigator: type a note's name (no `>` prefix) to jump to 
 
 ### Trash
 
-| Command | What it does | Event |
-|---|---|---|
-| Open trash | Open the [[$TrashManager]] | `tiddler.show` → `$TrashManager` |
-| Empty trash | Discard every trashed note permanently | `tiddlers.trashed.empty` |
+| Command     | What it does                           | Event                            |
+| ----------- | -------------------------------------- | -------------------------------- |
+| Open trash  | Open the [[$TrashManager]]             | `tiddler.show` → `$TrashManager` |
+| Empty trash | Discard every trashed note permanently | `tiddlers.trashed.empty`         |
 
 ### Settings
 
-| Command | What it does | Event |
-|---|---|---|
+| Command       | What it does              | Event                               |
+| ------------- | ------------------------- | ----------------------------------- |
 | Open Settings | Open [[$GeneralSettings]] | `tiddler.show` → `$GeneralSettings` |
 
 ### Workspaces
 
-| Command | What it does | Event |
-|---|---|---|
-| Create workspace | Prompt for a name; offer to clone the current workspace | `workspace.create.prompt` |
-| Switch workspace: _name_ | One entry per stored workspace (provided dynamically) | `workspace.load.prompt` |
+| Command                  | What it does                                            | Event                     |
+| ------------------------ | ------------------------------------------------------- | ------------------------- |
+| Create workspace         | Prompt for a name; offer to clone the current workspace | `workspace.create.prompt` |
+| Switch workspace: _name_ | One entry per stored workspace (provided dynamically)   | `workspace.load.prompt`   |
 
 See [[Workspaces]] for the bigger picture and other ways to switch.
 
 ### Themes
 
-| Command | What it does | Event |
-|---|---|---|
+| Command              | What it does                                         | Event          |
+| -------------------- | ---------------------------------------------------- | -------------- |
 | Switch theme: _name_ | One entry per installed theme (provided dynamically) | `theme.switch` |
 
 See [[Themes]] for how the cascade composes.
 
 ### Packages
 
-| Command | What it does | Event |
-|---|---|---|
+| Command                  | What it does                                                         | Event                |
+| ------------------------ | -------------------------------------------------------------------- | -------------------- |
 | Import package from URL… | Prompt for a JSON URL and load it as an [[$ExtensionPackages]] entry | `package.reload.url` |
 
 ### Sync (when configured)
 
 The Gist sync setup in [[Synchronization]] adds three more entries — they appear in the palette only after sync is configured:
 
-| Command | What it does | Event |
-|---|---|---|
-| Synch: full (pull + push) | Full reconcile with the remote | `synch.full` |
-| Synch: push | Send local changes to the remote | `synch.push` |
-| Synch: pull | Take remote changes locally | `synch.pull` |
+| Command                   | What it does                     | Event        |
+| ------------------------- | -------------------------------- | ------------ |
+| Synch: full (pull + push) | Full reconcile with the remote   | `synch.full` |
+| Synch: push               | Send local changes to the remote | `synch.push` |
+| Synch: pull               | Take remote changes locally      | `synch.pull` |
 
 ## Dynamic commands
 
@@ -97,8 +97,8 @@ Add one entry:
 ```js
 tw.extensions.registerCommand({
   label: 'My command',
-  event: 'my.event',           // or `run: () => { ... }` for an inline action
-  payload: 'optional-arg',     // forwarded to the event handler
+  event: 'my.event', // or `run: () => { ... }` for an inline action
+  payload: 'optional-arg', // forwarded to the event handler
 });
 ```
 

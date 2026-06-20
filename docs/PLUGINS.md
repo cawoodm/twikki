@@ -30,12 +30,12 @@ Why the order matters:
 (function () {
   return {
     meta: {
-      name: 'MyPlugin',          // required, must be unique across loaded plugins
-      version: '1.0.0',          // required
-      platform: '0.24.0',        // optional — caret-checked against running platform
-      description: '…',          // optional
-      author: '…',               // optional
-      url: 'https://…',          // optional homepage / install source
+      name: 'MyPlugin', // required, must be unique across loaded plugins
+      version: '1.0.0', // required
+      platform: '0.24.0', // optional — caret-checked against running platform
+      description: '…', // optional
+      author: '…', // optional
+      url: 'https://…', // optional homepage / install source
       // any other field is kept verbatim on the registry entry
     },
     init() {
@@ -108,7 +108,7 @@ For tiddlers that just need to run at boot — register a macro, subscribe to an
 
 ```js
 // tags: $Script
-tw.extensions.registerMacro('greet', 'hello', (name) => `Hello ${name}!`);
+tw.extensions.registerMacro('greet', 'hello', name => `Hello ${name}!`);
 tw.events.subscribe('ui.loaded', () => console.log('UI ready'));
 ```
 
@@ -155,7 +155,7 @@ A plugin may declare `meta.dependencies: ['Picker', 'Tabs']` — names of other 
 A macro is a `<<...>>` block in markdown that runs and produces dynamic content. Register one with a namespace to avoid collisions (call from inside `init()` for plugins, top-level for `$Script`):
 
 ```js
-tw.extensions.registerMacro('greet', 'hello', (name) => `Hello ${name}!`, {
+tw.extensions.registerMacro('greet', 'hello', name => `Hello ${name}!`, {
   description: 'Greet someone by name.',
   example: '<<greet.hello Marc>>',
 });
@@ -166,15 +166,14 @@ Use as `<<greet.hello "Marc">>`. The 4th argument is a `meta` object — `{descr
 Commands appear in the command palette (Ctrl/Cmd+K). A command is `{label, event?, payload?, run?}`:
 
 ```js
-tw.extensions.registerCommand({label: 'Save all', event: 'save.all'});
+tw.extensions.registerCommand({label: 'Save', event: 'save'});
 tw.extensions.registerCommand({label: 'Say hi', run: () => tw.ui.notify('Hi!', 'D')});
 ```
 
 For lists that change at runtime (themes, workspaces, …), register a keyed provider that re-evaluates each time the palette opens:
 
 ```js
-tw.extensions.registerCommandProvider('myThings', () =>
-  myThings().map((t) => ({label: `Open: ${t}`, event: 'thing.open', payload: t})));
+tw.extensions.registerCommandProvider('myThings', () => myThings().map(t => ({label: `Open: ${t}`, event: 'thing.open', payload: t})));
 ```
 
 Commands dedupe by `label` (last-wins, so a plugin can override a built-in).
@@ -183,7 +182,7 @@ Commands dedupe by `label` (last-wins, so a plugin can override a built-in).
 
 Plugin code is bound at boot — event subscriptions and DOM listeners live on the original factory's instance. Re-evaluating a plugin's code mid-session would leak duplicates while the old instance keeps running, so the platform takes a different route:
 
-- Editing and saving a **`$Plugin`** tiddler **skips re-execution** and prompts: *"Plugin <name> was edited. Reload now to apply changes?"* — choose Yes to reboot with the new code, No to defer.
+- Editing and saving a **`$Plugin`** tiddler **skips re-execution** and prompts: _"Plugin <name> was edited. Reload now to apply changes?"_ — choose Yes to reboot with the new code, No to defer.
 - Editing and saving a **`$Script`** tiddler re-runs the code immediately (same behaviour as before this change). Macros and event handlers are re-registered live.
 
 ## Reacting to events
@@ -220,7 +219,7 @@ init() {
 
 When no handler is subscribed — i.e. with zero plugins, or if `$BaseMarkdownPlugin` is disabled — TWikki falls back to escaped plain text. (`?safemode` does **not** trigger this: it skips only extension packages, so the base `$BaseMarkdownPlugin` still loads and markdown still renders.)
 
-The default markdown-it instance is exposed as `tw.core.markdown.md`, so you can also *extend* it (e.g. `tw.core.markdown.md.use(...)` — see `$OpenLinksInNewWindow`).
+The default markdown-it instance is exposed as `tw.core.markdown.md`, so you can also _extend_ it (e.g. `tw.core.markdown.md.use(...)` — see `$OpenLinksInNewWindow`).
 
 ## Loading external libraries
 

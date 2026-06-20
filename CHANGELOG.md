@@ -20,6 +20,7 @@
 - **Your place is remembered** — the active note (selected tab) is restored when you reload.
 - **New notes open in tabs view** — creating a note while the tabs layout is active now switches to and shows the new note, instead of leaving the previous tab on screen.
 - **Workspace switch** — switching or creating a workspace with unsaved changes now prompts to save first instead of silently discarding them
+- **Saving** — persistence now splits into `autoSave()` (respects the Auto Save setting) and `save()` (always persists). With Auto Save off, toggling a plugin, editing a code/template tiddler, or restoring a Gist backup and choosing "reload" now persists the change before reload instead of discarding it; settings changes always persist.
 
 ## 15 Jun 2026 (v0.26.0)
 

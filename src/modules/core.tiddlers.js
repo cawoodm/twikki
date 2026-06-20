@@ -186,7 +186,7 @@
       tw.events.send('tiddler.removed', title);
       return;
     } else tw.events.send('tiddler.deleted', title);
-    tw.core.store.save();
+    tw.core.store.autoSave();
   }
 
   function tiddlerToggleTag(title, tag) {

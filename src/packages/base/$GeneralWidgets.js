@@ -8,7 +8,7 @@ tw.extensions.registerMacro('core', 'Reload', () => tw.ui.button('🔄️', 'ui.
   description: 'Reload the UI.',
   example: '<<Reload>>',
 });
-tw.extensions.registerMacro('core', 'Save', () => tw.ui.button('{{$IconSave}}', 'save.all', null, '', 'title="Save"'), {
+tw.extensions.registerMacro('core', 'Save', () => tw.ui.button('{{$IconSave}}', 'save', null, '', 'title="Save"'), {
   description: 'Save all tiddlers (icon button).',
   example: '<<Save>>',
 });
@@ -32,20 +32,15 @@ tw.extensions.registerMacro(
     example: '<<TagInput id:my-tags>>',
   },
 );
-tw.extensions.registerMacro(
-  'core',
-  'AllTypesMacro',
-  () => tw.lib.markdown([...new Set(tw.tiddlers.all.map(t => `* [${t.type}](#msg:tiddlers.show:type:${t.type})\n`))].join('')),
-  {
-    description: 'All tiddler types in use, as links opening tiddlers of that type.',
-    example: '<<AllTypesMacro>>',
-  },
-);
+tw.extensions.registerMacro('core', 'AllTypesMacro', () => tw.lib.markdown([...new Set(tw.tiddlers.all.map(t => `* [${t.type}](#msg:tiddlers.show:type:${t.type})\n`))].join('')), {
+  description: 'All tiddler types in use, as links opening tiddlers of that type.',
+  example: '<<AllTypesMacro>>',
+});
 
 // Command palette commands for the general widgets defined above.
 tw.extensions.registerCommand([
   {label: 'New note', event: 'tiddler.new'},
-  {label: 'Save all', event: 'save.all'},
+  {label: 'Save', event: 'save'},
   {label: 'Reload UI', event: 'ui.reload'},
   {label: 'Open Settings', event: 'tiddler.show', payload: '$GeneralSettings'},
 ]);

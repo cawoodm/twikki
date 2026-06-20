@@ -30,7 +30,7 @@
     if (!confirm('Are you sure you want to permanently deleted your trashed tiddlers?')) return;
     tw.tiddlers.trashed = [];
     trashCanRefresh();
-    tw.run.save();
+    tw.run.autoSave();
   }
   tw.extensions.registerMacro(
     'core',
@@ -62,7 +62,7 @@
     tw.tiddlers.trashed.splice(tiddlerIndex, 1);
     trashCanRefresh();
     tw.core.dom.preview.close();
-    tw.run.save();
+    tw.run.autoSave();
   }
 
   tw.events.subscribe('tiddler.deleted', trashCanRefresh);
@@ -84,6 +84,6 @@
     let tiddlerIndex = tw.tiddlers.trashed.findIndex(t => t.title === title);
     tw.tiddlers.trashed.splice(tiddlerIndex, 1);
     trashCanRefresh();
-    tw.run.save();
+    tw.run.autoSave();
   }
 })();

@@ -199,7 +199,7 @@
     tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
     // This url is global (read by the platform before any workspace exists)
     if (path === 'urls.moduleUrl') tw.store.global.set('/moduleUrl', parsed.urls?.moduleUrl);
-    tw.events.send('save.silent');
+    tw.events.send('save.auto');
   }
 
   /* ---------- helpers ---------- */

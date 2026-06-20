@@ -2,8 +2,8 @@
 //  - every shipped plugin still loads/inits/starts cleanly against the new
 //    module layout (a broken tw.call or missing tw.run entry shows up here),
 //  - tw.call still resolves names that used to live in the platform closure,
-//  - the no-plugin invariant: under ?safemode TWikki can still create, edit,
-//    validate, save and navigate with ZERO plugins loaded.
+//  - ?safemode: extension packages are skipped but the base package (and its
+//    plugins) still load; TWikki can create, edit, validate, save and navigate.
 
 import {expect, test} from '@playwright/test';
 import {bootApp, card} from './helpers.js';
@@ -442,8 +442,8 @@ test('boot halts on an incompatible module and shows the (lazily-loaded) compat 
   await expect(page.locator('#tw-compat-dialog .tw-compat-pick').first()).toBeDisabled();
 });
 
-test.describe('?safemode (the no-plugin invariant)', () => {
-  test('boots with zero plugins and the full edit round-trip works', async ({page}) => {
+test.describe('?safemode (extension packages skipped, base plugins still load)', () => {
+  test('boots with base plugins only and the full edit round-trip works', async ({page}) => {
     await page.goto('/?safemode&trace');
     await page.waitForFunction(
       () =>
@@ -457,20 +457,24 @@ test.describe('?safemode (the no-plugin invariant)', () => {
       null,
       {timeout: 30000},
     );
-    expect(await page.evaluate(() => tw.plugins.length)).toBe(0);
+    // safemode loads the base package (its plugins) but skips extension packages,
+    // so every loaded plugin must come from the base package and there must be some.
+    const plugins = await page.evaluate(() => tw.plugins.map(p => p.package));
+    expect(plugins.length).toBeGreaterThan(0);
+    expect(plugins.every(pkg => pkg === 'base')).toBe(true);
 
-    // create / edit / save via the form (core.ui + core.tiddlers + core.store only)
+    // create / edit / save via the form (core.ui + core.tiddlers + core.store)
     await page.evaluate(() => tw.events.send('tiddler.new'));
     await expect(page.locator('#new-dialog')).toBeVisible();
     await page.fill('#new-title', 'SafemodeNote');
-    await page.fill('#new-body', 'created with no plugins');
+    await page.fill('#new-body', 'created in safemode');
     await page.fill('#new-type', 'markdown');
     await page.locator('[data-msg="form.done"]').click();
     await expect(page.locator('#new-dialog')).toBeHidden();
     await expect(card(page, 'SafemodeNote')).toBeVisible();
-    // markdown falls back to escaped plain text (no $BaseMarkdownPlugin) but MUST render
+    // markdown renders via the base $BaseMarkdownPlugin (it loads under safemode)
     await expect(card(page, 'SafemodeNote').locator('.text')).toContainText(
-      'created with no plugins',
+      'created in safemode',
     );
     const stored = await page.evaluate(() =>
       (tw.store.get('tiddlers') || []).some(t => t.title === 'SafemodeNote'),

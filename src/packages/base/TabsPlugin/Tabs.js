@@ -221,7 +221,7 @@
       // Re-apply when the layout mode changes (raw edit emits tiddler.modified; the
       // settings form saves via updateTiddlerHard + save.silent). Cheap; only re-inits
       // when the mode actually flips.
-      ['save.silent', 'tiddler.modified', 'tiddler.updated'].forEach(ev => wireUp(ev, refreshMode));
+      ['save.auto', 'tiddler.modified', 'tiddler.updated'].forEach(ev => wireUp(ev, refreshMode));
 
       wireUp('tiddler.rendered', ({tiddler}) => {
         batch.push(tiddler.title);

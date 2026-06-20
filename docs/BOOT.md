@@ -58,7 +58,7 @@ window.load
        ├─ tw.events.init()                               core.js
        ├─ tw.core.ui.wireUpEvents()                      core.ui.js:121
        │    bus subscriptions (event → handler):
-       │    save / save.silent / save.all / ui.open.all / ui.close.all,
+       │    save / save.auto / ui.open.all / ui.close.all,
        │    tiddler.new / edit / show / close / delete / refresh / edited / created / updated,
        │    section.edit, store.load, form.done / form.cancel,
        │    package.load.url / package.reload.url
@@ -140,34 +140,34 @@ window.load
 
 ## Lifecycle events the platform fires
 
-| Event              | When                                                                       | Payload                     |
-| ------------------ | -------------------------------------------------------------------------- | --------------------------- |
-| `ui.loading`       | early in `start()`, before any package is fetched                          | —                           |
-| `ui.loaded`        | end of `reload()`, **first** boot only, before `renderAllTiddlers()`       | —                           |
-| `ui.reloaded`      | end of `reload()`, every subsequent run                                    | boot count                  |
-| `tiddler.rendered` | once per tiddler, inside `renderAllTiddlers()` / `showTiddler()` / `rerenderTiddler()` | `{tiddler, newElement}` |
-| `ui.ready`         | end of `renderAllTiddlers()`                                               | `tw.tiddlers.visible` array |
-| `story.changed`    | a tiddler was hidden / closed (visible set shrank)                         | title                       |
-| `reboot.hard`      | request a full `window.location.reload()`                                  | —                           |
-| `ui.reload`        | request a soft re-run of `reload()`                                        | —                           |
+| Event              | When                                                                                   | Payload                     |
+| ------------------ | -------------------------------------------------------------------------------------- | --------------------------- |
+| `ui.loading`       | early in `start()`, before any package is fetched                                      | —                           |
+| `ui.loaded`        | end of `reload()`, **first** boot only, before `renderAllTiddlers()`                   | —                           |
+| `ui.reloaded`      | end of `reload()`, every subsequent run                                                | boot count                  |
+| `tiddler.rendered` | once per tiddler, inside `renderAllTiddlers()` / `showTiddler()` / `rerenderTiddler()` | `{tiddler, newElement}`     |
+| `ui.ready`         | end of `renderAllTiddlers()`                                                           | `tw.tiddlers.visible` array |
+| `story.changed`    | a tiddler was hidden / closed (visible set shrank)                                     | title                       |
+| `reboot.hard`      | request a full `window.location.reload()`                                              | —                           |
+| `ui.reload`        | request a soft re-run of `reload()`                                                    | —                           |
 
 A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at each milestone (`init`, `fetch`, `compat`, `eval`, `modules-loaded`, `modules-run`, `package`, `plugins`, `ready`). It is the channel the splash UI subscribes to before the bus exists — see [src/index.html](../src/index.html) for a `console.log` example.
 
 ## What the URL query params do at boot
 
-| Param                 | Effect                                                                                                                                       |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Param                 | Effect                                                                                                                                                                                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `?safemode`           | Skip `loadExtensionPackages()`. The core modules and the **base** package (its plugins, listed in `$CorePackages`) still load; only the **extension** packages (`$ExtensionPackages`) are skipped. Useful when an extension package breaks the boot. |
-| `?reload` / `?update` | Force-refetch the core modules from the network instead of using the localStorage cache.                                                     |
-| `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                 |
-| `?debug`              | Activates debug toast notifications                                                                                                          |
-| `?logfilter=<regex>`  | Restrict `dp()` output to messages matching the regex. "." shows everything                                                                  |
-| `?breakpoint=<regex>` | Break in the debugger on any logging name matching the regex.                                                                                |
-| `?clear`              | Clear `localStorage` before boot (effectively a factory reset for the current workspace).                                                    |
+| `?reload` / `?update` | Force-refetch the core modules from the network instead of using the localStorage cache.                                                                                                                                                             |
+| `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                                                                                                                         |
+| `?debug`              | Activates debug toast notifications                                                                                                                                                                                                                  |
+| `?logfilter=<regex>`  | Restrict `dp()` output to messages matching the regex. "." shows everything                                                                                                                                                                          |
+| `?breakpoint=<regex>` | Break in the debugger on any logging name matching the regex.                                                                                                                                                                                        |
+| `?clear`              | Clear `localStorage` before boot (effectively a factory reset for the current workspace).                                                                                                                                                            |
 
 ## Failure modes
 
-- **Compat block during `fetchModules()`** → `showCompatDialog`, boot aborts. The cached set still works; the user can downgrade the source URL or click *Keep current versions*.
+- **Compat block during `fetchModules()`** → `showCompatDialog`, boot aborts. The cached set still works; the user can downgrade the source URL or click _Keep current versions_.
 - **Module eval throws** (`loadModules` / `runModules`) → error collected in `errMsgs`; boot aborts via `handleModuleErrors` which writes a tip page (`document.write`) suggesting `?trace`. `handleModuleErrors` returns `true` when it has aborted, so the calling function bails early.
 - **Plugin load / init / start throws** → caught per-plugin and recorded on the plugin's `entry.error`; the user is notified (`tw.ui.notify`) and asked whether to disable the plugin via `$CodeDisabled`. The rest of the boot continues — **plugin failures are isolated, module failures are fatal**.
 - **`$Script` tiddler throws** → same treatment as plugin errors (notify + offer `$CodeDisabled`).

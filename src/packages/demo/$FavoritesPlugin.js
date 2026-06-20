@@ -26,7 +26,7 @@
       if (!t.tags.includes('Favorite')) btn.className += ' yellow';
     }
     // dp(btn.className);
-    tw.events.send('save.silent');
+    tw.events.send('save.auto');
   }
 
   return {

@@ -52,7 +52,7 @@
   // Exports
   const exports = {
     save,
-    saveSilent,
+    autoSave,
     saveAll,
     saveVisible,
     loadStore,
@@ -61,6 +61,7 @@
 
   Object.assign(tw.run, {
     save,
+    autoSave,
     saveAll,
     saveVisible,
   });
@@ -79,13 +80,17 @@
   function isAutoSave() {
     return tw.core.common.getSetting('data.autoSave', true) !== false;
   }
-  function save() {
+  // autoSave() — persist ONLY if the user has Auto Save on. For automatic,
+  // opt-out-able saves (a normal edit, delete, trash op, import).
+  function autoSave() {
     if (!isAutoSave()) return;
-    saveAll({});
+    saveAll();
   }
-  function saveSilent() {
-    if (!isAutoSave()) return;
-    saveAll({silent: true});
+  // save() — ALWAYS persist, ignoring the Auto Save setting. For
+  // "we really need this on disk": before a reboot, a restore, a settings
+  // change.
+  function save() {
+    saveAll();
   }
   function saveAll() {
     const oldTiddlers = tw.store.get('tiddlers');
