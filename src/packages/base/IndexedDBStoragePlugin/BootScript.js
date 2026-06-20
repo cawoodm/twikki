@@ -195,24 +195,42 @@
     });
     return pendingDb;
   }
-  let a;
+  // In-flight write transactions. flush() awaits these so a reload can wait for
+  // pending puts/deletes to commit (writes are otherwise fire-and-forget). Each
+  // promise removes itself once settled, so the set stays bounded.
+  const pending = new Set();
+  function track(p) {
+    pending.add(p);
+    p.catch(() => {}).then(() => pending.delete(p));
+    return p;
+  }
+  // Resolve when a transaction commits (oncomplete), reject on error.
+  function txDone(tx) {
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'));
+    });
+  }
   function idbPut(fullKey, value) {
     const {store, key} = routeKey(fullKey);
-    ensureStore(store)
-      .then(() => {
-        try {
-          db.transaction(store, 'readwrite').objectStore(store).put(value, key);
-        } catch (e) {
-          console.warn('IDB put failed', fullKey, e);
-        }
-      })
-      .catch(e => console.warn('IDB ensureStore failed', store, e));
+    track(
+      ensureStore(store)
+        .then(() => {
+          const tx = db.transaction(store, 'readwrite');
+          tx.objectStore(store).put(value, key);
+          return txDone(tx);
+        })
+        .catch(e => console.warn('IDB put failed', fullKey, e)),
+    );
   }
   function idbDelete(fullKey) {
     const {store, key} = routeKey(fullKey);
     if (!existingStores.has(store)) return; // nothing persisted there yet
     try {
-      db.transaction(store, 'readwrite').objectStore(store).delete(key);
+      const tx = db.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(key);
+      track(txDone(tx).catch(e => console.warn('IDB delete failed', fullKey, e)));
     } catch (e) {
       console.warn('IDB delete failed', fullKey, e);
     }
@@ -248,6 +266,12 @@
       key = ensureSlash(key);
       map.set(key, raw);
       idbPut(key, raw);
+    },
+    // Await all currently in-flight writes. Callers (e.g. rebootHard) use this to
+    // ensure a save() reaches IDB before the page reloads. A snapshot is enough:
+    // save() queues every write synchronously before reboot.hard is sent.
+    flush() {
+      return Promise.all([...pending]);
     },
     // Wipe every key under `/ws/<name>/` from the in-memory Map immediately
     // (so callers see the workspace gone right away), and queue an async

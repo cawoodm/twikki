@@ -1,7 +1,7 @@
 (function () {
   const meta = {
     name: 'IndexedDBStorage',
-    version: '0.2.0',
+    version: '0.3.0',
     platform: '0.27.0',
     description: 'Routes tw.storage to IndexedDB via a pre-boot script at /twikki.boot.js.',
   };
@@ -54,7 +54,8 @@
     const ok = window.confirm('IndexedDB boot script has changed. Re-install and reload now?\n\n' + 'Click Cancel to skip — you will be asked again tomorrow.');
     if (ok) {
       install();
-      location.reload();
+      // Go through reboot.hard so the storage flush runs before the reload.
+      tw.events.send('reboot.hard');
     } else {
       window.localStorage.setItem(DISMISS_KEY, todayKey());
     }

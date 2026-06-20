@@ -345,6 +345,12 @@
         if (typeof value === 'object') return write(key, JSON.stringify(value));
         return write(key, value);
       },
+      // localStorage writes are durable synchronously, so a flush is a no-op.
+      // The IndexedDBStoragePlugin overrides tw.storage with an async-backed
+      // flush() that awaits in-flight writes (see rebootHard()).
+      flush() {
+        return Promise.resolve();
+      },
       remove(key) {
         if (key[0] !== '/') key = '/' + key;
         return localStorage.removeItem(key);
@@ -469,8 +475,19 @@
   }
 
   /* Boot lifecycle */
-  function rebootHard() {
+  async function rebootHard() {
     location.hash = ''; // Prevent infinite loop of msg:... commands
+    // Wait for any in-flight storage writes to commit before reloading. With the
+    // default (localStorage) backend flush() resolves immediately; with the
+    // IndexedDBStoragePlugin writes are async and fire-and-forget, so without this
+    // a save()-then-reboot.hard race reloads before the edit reaches disk. This is
+    // the single chokepoint every reboot.hard reload funnels through; tw.events.send
+    // ignores the returned promise, so all callers stay synchronous.
+    try {
+      await tw.storage.flush?.();
+    } catch (e) {
+      console.warn('flush before reboot failed', e);
+    }
     window.location.reload();
   }
 
