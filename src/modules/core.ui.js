@@ -118,8 +118,9 @@
   });
   // Plain tags input for the edit form. The base package's TagInput ($GeneralWidgets)
   // overrides this with an autocomplete version; this fallback keeps the edit form
-  // usable with ZERO plugins/scripts loaded (?safemode — the no-plugin invariant
-  // requires tags to stay editable, e.g. to add $CodeDisabled to a broken plugin).
+  // usable with ZERO plugins/scripts loaded — the no-plugin invariant requires tags
+  // to stay editable, e.g. to add $CodeDisabled to a broken plugin. (Note ?safemode
+  // still loads the base package, so there the autocomplete version wins.)
   tw.extensions.registerMacro('core', 'TagInput', ({id}) => `<input id="${id}" placeholder="Tags"/>`, {
     description: 'Tags input for the edit form (no-plugin fallback; overridden with autocomplete by the base package).',
     example: '<<TagInput id:my-tags>>',

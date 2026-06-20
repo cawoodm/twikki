@@ -13,4 +13,4 @@ tw.core.markdown = {render: myRenderer};
 tw.events.override('markdown.render', myRenderer);
 ```
 
-If no handler is subscribed (e.g. `?safemode`), the platform falls back to escaped plain text.
+If no handler is subscribed — i.e. with zero plugins, or if [[$BaseMarkdownPlugin]] is disabled — the platform falls back to escaped plain text. (`?safemode` does *not* cause this: it skips only extension packages, so the base [[$BaseMarkdownPlugin]] still loads and markdown still renders.)

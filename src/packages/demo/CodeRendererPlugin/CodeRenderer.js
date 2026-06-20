@@ -29,8 +29,8 @@
         const md = (comment ? comment + '\n\n' : '') + '```javascript\n' + code + '\n```';
         // Route back through markdown.render so any plugin-supplied engine
         // wins. Same fallback shape as renderMarkdown() in core.render: if
-        // no handler is subscribed (e.g. ?safemode), drop to an escaped
-        // <pre> of the composed markdown.
+        // no handler is subscribed (zero plugins / $BaseMarkdownPlugin disabled),
+        // drop to an escaped <pre> of the composed markdown.
         const results = tw.events.send('markdown.render', md);
         const html = results?.[0] ?? `<pre><code>${esc(md)}</code></pre>`;
         return `<div class="code-rendered">${html}</div>`;

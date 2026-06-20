@@ -84,7 +84,8 @@ window.load
             ├─ filter tw.tiddlers.visible to titles that still exist
             ├─ tw.core.tiddlers.runCoreTiddlers()        core.tiddlers.js:507
             │
-            │ ─── plugin lifecycle (skipped under ?safemode) ───
+            │ ─── plugin lifecycle (runs even under ?safemode — for whatever ───
+            │ ─── $Plugin tiddlers are present; safemode just skips extension packages) ───
             ├─ loadPlugins()                             twikki.platform.js:478
             │    eval every $Plugin tiddler; capture returned {meta, init?, start?}
             │    into tw.plugins[]
@@ -156,7 +157,7 @@ A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at e
 
 | Param                 | Effect                                                                                                                                       |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `?safemode`           | Skip `loadExtensionPackages()`. Only the core modules + Base plugins defined `$CorePackages` load. Useful when a plugin/extension package breaks the boot. |
+| `?safemode`           | Skip `loadExtensionPackages()`. The core modules and the **base** package (its plugins, listed in `$CorePackages`) still load; only the **extension** packages (`$ExtensionPackages`) are skipped. Useful when an extension package breaks the boot. |
 | `?reload` / `?update` | Force-refetch the core modules from the network instead of using the localStorage cache.                                                     |
 | `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                 |
 | `?debug`              | Activates debug toast notifications                                                                                                          |

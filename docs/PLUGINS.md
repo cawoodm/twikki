@@ -218,7 +218,7 @@ init() {
 }
 ```
 
-Under `?safemode`, no handler is subscribed and TWikki falls back to escaped plain text.
+When no handler is subscribed — i.e. with zero plugins, or if `$BaseMarkdownPlugin` is disabled — TWikki falls back to escaped plain text. (`?safemode` does **not** trigger this: it skips only extension packages, so the base `$BaseMarkdownPlugin` still loads and markdown still renders.)
 
 The default markdown-it instance is exposed as `tw.core.markdown.md`, so you can also *extend* it (e.g. `tw.core.markdown.md.use(...)` — see `$OpenLinksInNewWindow`).
 

@@ -4,7 +4,7 @@
 
 ### Features
 
-- **IndexedDB** — Break out of the 5MB limit by using IndexedDB storage. With the IndexedDBStoragePlugin your existing notes are migrated automatically and everything stays just as fast.
+- **IndexedDB** — Break out of the 5MB limit by using IndexedDB storage. With the IndexedDBStoragePlugin your existing notes are migrated automatically.
 - **Docker** — Run Twikki in a container with `npm run docker`.
 - **Multi-Tab Workspaces** — Open a different workspace in each browser tab, work in them side by side and drag data between them.
 - **Browse all macros** — a new `<<macros>>` reference lists every macro available in your wiki with its description and an example.
@@ -19,7 +19,7 @@
 - **"Close others" keeps the right note** — closing other notes now reliably keeps the one you're currently viewing.
 - **Your place is remembered** — the active note (selected tab) is restored when you reload.
 - **New notes open in tabs view** — creating a note while the tabs layout is active now switches to and shows the new note, instead of leaving the previous tab on screen.
-- **No lost changes on workspace switch** — switching or creating a workspace with unsaved changes now prompts to save first instead of silently discarding them (matters when auto-save is off).
+- **Workspace switch** — switching or creating a workspace with unsaved changes now prompts to save first instead of silently discarding them
 
 ## 15 Jun 2026 (v0.26.0)
 

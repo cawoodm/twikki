@@ -26,7 +26,7 @@ has been eval'd):
 * `core.dom`: Functionality for dealing with the DOM
 * `core.store`: Owns `tw.store` — the public, **workspace-scoped** persistence API (`get`/`set`/`delete`/`keys`, raw `exportRaw`/`importRaw` for dump/restore, `global` for unscoped keys like `/settings.json`) — plus persisting the tiddler store itself (`save`/`saveAll`/`saveVisible`/`loadStore`, the `doNotSave` policy). Layering: `localStorage ← tw.storage (platform, raw) ← tw.store (core.store, scoped) ← consumers`. **Only the platform and core.store touch localStorage** (lint-enforced).
 * `core.tiddlers`: Listing, getting, changing tiddlers — CRUD, show/hide, `Title::Section` reference resolution, text/data accessors, predicates, validation, code-block selection. Merges the tiddler action API into `tw.run` and the legacy predicates into `tw.util`.
-* `core.render`: The TWikki render pipeline — `renderTWikki` (macros/inclusions/links), element creation from templates, markdown dispatch via the overridable `markdown.render` event (escaped-plain-text fallback under `?safemode`), DOM inclusion attributes
+* `core.render`: The TWikki render pipeline — `renderTWikki` (macros/inclusions/links), element creation from templates, markdown dispatch via the overridable `markdown.render` event (escaped-plain-text fallback when no handler is subscribed, e.g. zero plugins; note `?safemode` still loads `$BaseMarkdownPlugin`), DOM inclusion attributes
 * `core.defaults.json`: Essential tiddlers/content we need to run. These "shadow" tiddlers can be overridden by users. Some examples are:
   * Icons: Some basic (ugly) icons. Users will typically load their own "icons" package.
   * Themes: 2 basic themes (CoreThemeLight & CoreThemeDark)
