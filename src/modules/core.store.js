@@ -17,8 +17,6 @@
   const version = '0.1.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
 
-  const autoSave = true;
-
   tw.store = {
     get(key) {
       return tw.storage.get(fullKey(key));
@@ -78,12 +76,15 @@
   }
 
   /* Persisting tw.tiddlers */
+  function isAutoSave() {
+    return tw.core.common.getSetting('data.autoSave', true) !== false;
+  }
   function save() {
-    if (!autoSave) return;
+    if (!isAutoSave()) return;
     saveAll({});
   }
   function saveSilent() {
-    if (!autoSave) return;
+    if (!isAutoSave()) return;
     saveAll({silent: true});
   }
   function saveAll() {

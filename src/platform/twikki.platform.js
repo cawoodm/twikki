@@ -360,6 +360,15 @@
         if (key[0] !== '/') key = '/' + key;
         return localStorage.setItem(key, raw);
       },
+      // Drop every key under `/ws/<name>/`. Used by core.workspaces.workspaceDelete
+      // to wipe a workspace's data; the IndexedDBStoragePlugin overrides this on
+      // its own `tw.storage` to also drop the per-workspace object store.
+      clearWorkspace(name) {
+        const prefix = `/ws/${name}/`;
+        Object.keys(localStorage)
+          .filter(k => k.startsWith(prefix))
+          .forEach(k => localStorage.removeItem(k));
+      },
     };
   }
 

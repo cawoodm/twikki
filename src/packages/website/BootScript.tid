@@ -19,6 +19,6 @@ Because it runs so early, the most common use is to **replace the storage backen
 
 **Scope.** The boot script lives in `localStorage` and is global per origin — installing one affects **every** workspace on the device, not just the current one.
 
-The base [[IndexedDBStorage]] plugin is a real, installable example: it writes a boot script that swaps `tw.storage` for an IndexedDB-backed wrapper.
+The base [[IndexedDBStoragePlugin]] is a real, installable example: it writes a boot script that swaps `tw.storage` for an IndexedDB-backed wrapper.
 
 See [Boot Script Docs](https://github.com/cawoodm/twikki/blob/main/docs/BootScript.md) for the full contract and a worked IndexedDB example, and [[Concepts]] / the [Boot order docs](https://github.com/cawoodm/twikki/blob/main/docs/BOOT.md) for where it fits in the wider boot sequence.

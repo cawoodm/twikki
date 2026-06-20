@@ -179,6 +179,26 @@
     return pendingDb;
   }
 
+  // Inverse of ensureStore — drop the named object store, also via a version
+  // bump (deleteObjectStore is only callable inside onupgradeneeded). Shares
+  // the pendingDb chain so concurrent ensures and drops can't race on close().
+  function dropStore(storeName) {
+    pendingDb = pendingDb.then(async () => {
+      if (!existingStores.has(storeName)) return;
+      db.close();
+      dbVersion++;
+      db = await new Promise((resolve, reject) => {
+        const req = window.indexedDB.open(DB, dbVersion);
+        req.onupgradeneeded = e => e.target.result.deleteObjectStore(storeName);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('IDB drop failed'));
+      });
+      dbVersion = db.version;
+      existingStores.delete(storeName);
+    });
+    return pendingDb;
+  }
+
   function idbPut(fullKey, value) {
     const {store, key} = routeKey(fullKey);
     ensureStore(store)
@@ -231,6 +251,15 @@
       key = ensureSlash(key);
       map.set(key, raw);
       idbPut(key, raw);
+    },
+    // Wipe every key under `/ws/<name>/` from the in-memory Map immediately
+    // (so callers see the workspace gone right away), and queue an async
+    // upgrade that drops the underlying `ws_<name>` object store. No-op if
+    // the workspace was never written to.
+    clearWorkspace(name) {
+      const prefix = `/ws/${name}/`;
+      for (const k of [...map.keys()]) if (k.startsWith(prefix)) map.delete(k);
+      dropStore(WS_PREFIX + name).catch(e => console.warn('IDB dropStore failed', name, e));
     },
   };
 });

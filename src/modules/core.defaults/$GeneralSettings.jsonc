@@ -1,5 +1,9 @@
 // tags: $Shadow $NoSynch $NoBackup
 {
+  "data": {
+    "autoSave": true,
+    "autoSave~": "Automatically save changes to local storage (boolean)"
+  },
   "backup": {
     "Gist": {
       "accessToken": "",

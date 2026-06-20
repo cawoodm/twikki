@@ -11,7 +11,7 @@ import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
 // source. The test reads the raw file directly — that's the exact text the
 // platform stores in /twikki.boot.js and evals.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const BOOT_PATH = join(ROOT, 'src/packages/base/IndexedDBStorage/BootScript.js');
+const BOOT_PATH = join(ROOT, 'src/packages/base/IndexedDBStoragePlugin/BootScript.js');
 const BOOT_SRC = readFileSync(BOOT_PATH, 'utf8');
 
 function makeLocalStorage(seed = {}) {
@@ -44,6 +44,45 @@ async function runBoot(tw) {
   return tw;
 }
 
+// Inspect the underlying IDB the boot script just opened — used for
+// schema-shape assertions (per-workspace stores).
+async function listStoreNames() {
+  // The boot script's db is internal; reach it via a second open() on the
+  // shared factory. fake-indexeddb honours the standard IDB contract here.
+  return new Promise((resolve, reject) => {
+    const req = globalThis.indexedDB.open('twikki');
+    req.onsuccess = () => {
+      const names = [...req.result.objectStoreNames].sort();
+      req.result.close();
+      resolve(names);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function readStore(storeName) {
+  return new Promise((resolve, reject) => {
+    const req = globalThis.indexedDB.open('twikki');
+    req.onsuccess = () => {
+      const tx = req.result.transaction(storeName, 'readonly');
+      const cursor = tx.objectStore(storeName).openCursor();
+      const out = {};
+      cursor.onsuccess = e => {
+        const c = e.target.result;
+        if (c) {
+          out[c.key] = c.value;
+          c.continue();
+        } else {
+          req.result.close();
+          resolve(out);
+        }
+      };
+      cursor.onerror = () => reject(cursor.error);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
 test('boot script evaluates to a function (platform contract)', () => {
   // The platform's runBootScript does `const fn = (1, eval)(src); fn(tw)`.
   // The source MUST evaluate to a function or the hook silently no-ops.
@@ -68,7 +107,6 @@ test('interface parity: get / set / remove / keys / getRaw / setRaw', async () =
   // setRaw + getRaw bypass JSON coercion
   tw.storage.setRaw('/c', 'literal');
   assert.equal(tw.storage.getRaw('/c'), 'literal');
-  // setRaw of an object-looking string is returned raw via getRaw, parsed via get
   tw.storage.setRaw('/d', '{"x":1}');
   assert.equal(tw.storage.getRaw('/d'), '{"x":1}');
   assert.deepEqual(tw.storage.get('/d'), {x: 1});
@@ -91,63 +129,110 @@ test('auto-prefix: keys without leading "/" get one prepended', async () => {
   await runBoot(tw);
 
   tw.storage.set('foo', 'bar');
-  // Stored under '/foo' regardless of how the caller wrote the key
   assert.equal(tw.storage.get('foo'), 'bar');
   assert.equal(tw.storage.get('/foo'), 'bar');
   assert.equal(tw.storage.getRaw('foo'), 'bar');
-  // remove also auto-prefixes
   tw.storage.remove('foo');
   assert.equal(tw.storage.get('/foo'), undefined);
 });
 
-test('write-through: data survives DB close + reopen via a second boot', async () => {
-  const ls = freshEnv();
-  const tw1 = {};
-  await runBoot(tw1);
-  tw1.storage.set('/persist-test', {hello: 'world'});
-
-  // Wait a tick for the fire-and-forget IDB write to land.
-  await new Promise(r => setTimeout(r, 20));
-
-  // Reuse same IDB factory + same localStorage — simulate the next page
-  // load. A fresh tw object goes through the boot script again.
-  globalThis.window = {indexedDB: globalThis.indexedDB, localStorage: ls};
-  const tw2 = {};
-  await runBoot(tw2);
-  assert.deepEqual(tw2.storage.get('/persist-test'), {hello: 'world'});
+test('schema: one IDB store per workspace + _global', async () => {
+  // Discover-from-LS path: keys for two workspaces + the /workspaces JSON.
+  freshEnv({
+    '/ws/foo/tiddlers': 'F',
+    '/ws/bar/tiddlers': 'B',
+    '/workspaces': '["foo","bar","unused"]',
+  });
+  await runBoot({});
+  // _global + ws_foo + ws_bar + ws_unused (declared in /workspaces) +
+  // ws_default (always present). Sorted.
+  const names = await listStoreNames();
+  assert.deepEqual(names, ['_global', 'ws_bar', 'ws_default', 'ws_foo', 'ws_unused']);
 });
 
-test('migration: copies all LS keys EXCEPT /twikki.boot.js and /modules/*; writes sentinel', async () => {
+test('routing: workspace-prefixed keys land in their store under the unprefixed key', async () => {
+  freshEnv();
+  const tw = {};
+  await runBoot(tw);
+  tw.storage.set('/ws/foo/tiddlers', '[1,2,3]');
+  tw.storage.set('/workspaces', '["foo"]');
+  await new Promise(r => setTimeout(r, 30));
+
+  const fooStore = await readStore('ws_foo');
+  assert.deepEqual(fooStore, {tiddlers: '[1,2,3]'});
+  const globalStore = await readStore('_global');
+  // Sentinel + /workspaces (full key, since global keys aren't re-keyed)
+  assert.equal(globalStore['/workspaces'], '["foo"]');
+});
+
+test('dynamic store: writing to an unknown workspace lazily creates ws_<name>', async () => {
+  freshEnv();
+  const tw = {};
+  await runBoot(tw);
+
+  // Workspace 'brand-new' wasn't in localStorage and wasn't in /workspaces;
+  // the boot script's discovery never saw it. A live write should still
+  // succeed, lazily upgrading the DB to add ws_brand-new.
+  tw.storage.set('/ws/brand-new/tiddlers', 'hello');
+  await new Promise(r => setTimeout(r, 50));
+
+  const names = await listStoreNames();
+  assert.ok(names.includes('ws_brand-new'), `expected ws_brand-new in ${names}`);
+  const store = await readStore('ws_brand-new');
+  assert.deepEqual(store, {tiddlers: 'hello'});
+});
+
+test('migration: routes localStorage keys to the right store, sets sentinel in _global', async () => {
   freshEnv({
     '/ws/default/tiddlers': '[{"title":"X"}]',
-    '/workspaces': '["default"]',
+    '/ws/foo/tiddlers': '[{"title":"Y"}]',
+    '/workspaces': '["default","foo"]',
     '/modules/core.common.js': 'CACHED',
     '/twikki.boot.js': '(function(tw){})',
   });
   const tw = {};
   await runBoot(tw);
+  await new Promise(r => setTimeout(r, 30));
 
-  // The two keepers landed in tw.storage (hence in IDB).
+  // Workspace data routed by store.
+  const defStore = await readStore('ws_default');
+  assert.equal(defStore.tiddlers, '[{"title":"X"}]');
+  const fooStore = await readStore('ws_foo');
+  assert.equal(fooStore.tiddlers, '[{"title":"Y"}]');
+  // Globals + sentinel routed to _global.
+  const globalStore = await readStore('_global');
+  assert.equal(globalStore['/workspaces'], '["default","foo"]');
+  assert.ok(globalStore['/_meta/migrated']);
+  // Skippables did NOT migrate (no store named for /modules, no entry for /twikki.boot.js).
+  assert.equal(globalStore['/modules/core.common.js'], undefined);
+  assert.equal(globalStore['/twikki.boot.js'], undefined);
+  // tw.storage exposes the full prefixed form on read.
   assert.equal(tw.storage.getRaw('/ws/default/tiddlers'), '[{"title":"X"}]');
-  assert.equal(tw.storage.getRaw('/workspaces'), '["default"]');
-  // The two skippables did NOT migrate.
-  assert.equal(tw.storage.getRaw('/modules/core.common.js'), null);
-  assert.equal(tw.storage.getRaw('/twikki.boot.js'), null);
-  // Sentinel is set.
-  assert.ok(tw.storage.getRaw('/_meta/migrated'));
+  assert.equal(tw.storage.getRaw('/ws/foo/tiddlers'), '[{"title":"Y"}]');
 });
 
-test('migration runs once: sentinel prevents re-copying when LS changes later', async () => {
+test('write-through: data survives close + reopen via a second boot', async () => {
+  const ls = freshEnv();
+  const tw1 = {};
+  await runBoot(tw1);
+  tw1.storage.set('/persist-test', {hello: 'world'});
+  tw1.storage.set('/ws/foo/tiddlers', 'foo-data');
+  await new Promise(r => setTimeout(r, 30));
+
+  globalThis.window = {indexedDB: globalThis.indexedDB, localStorage: ls};
+  const tw2 = {};
+  await runBoot(tw2);
+  assert.deepEqual(tw2.storage.get('/persist-test'), {hello: 'world'});
+  assert.equal(tw2.storage.getRaw('/ws/foo/tiddlers'), 'foo-data');
+});
+
+test('migration runs once: sentinel blocks a second LS-copy on the next boot', async () => {
   const ls = freshEnv({'/ws/default/tiddlers': 'first'});
   const tw1 = {};
   await runBoot(tw1);
   assert.equal(tw1.storage.getRaw('/ws/default/tiddlers'), 'first');
+  await new Promise(r => setTimeout(r, 30));
 
-  await new Promise(r => setTimeout(r, 20));
-
-  // User edits localStorage AFTER migration (unlikely in practice but
-  // proves the sentinel guard): on next boot we must NOT clobber IDB with
-  // the new LS value. IDB stays canonical.
   ls.setItem('/ws/default/tiddlers', 'second');
   globalThis.window = {indexedDB: globalThis.indexedDB, localStorage: ls};
   const tw2 = {};
@@ -155,20 +240,47 @@ test('migration runs once: sentinel prevents re-copying when LS changes later', 
   assert.equal(tw2.storage.getRaw('/ws/default/tiddlers'), 'first');
 });
 
-test('IDB unavailable: boot script returns without assigning tw.storage', async () => {
-  // Simulate no IndexedDB in the environment.
-  globalThis.window = {indexedDB: undefined, localStorage: makeLocalStorage()};
+test('clearWorkspace drops the ws_<name> object store + memory entries', async () => {
+  freshEnv();
   const tw = {};
   await runBoot(tw);
-  // tw.storage MUST remain unset so the platform's
-  // `if (!tw.storage) tw.storage = initLocalStorage()` fallback can take over.
+  tw.storage.set('/ws/foo/tiddlers', 'F');
+  tw.storage.set('/ws/bar/tiddlers', 'B');
+  await new Promise(r => setTimeout(r, 30));
+
+  tw.storage.clearWorkspace('foo');
+  await new Promise(r => setTimeout(r, 60));   // let the version-bump upgrade settle
+
+  const names = await listStoreNames();
+  assert.ok(!names.includes('ws_foo'), `ws_foo should be gone (got ${names.join(',')})`);
+  assert.ok(names.includes('ws_bar'), 'ws_bar untouched');
+  assert.equal(tw.storage.get('/ws/foo/tiddlers'), undefined, 'memory entry wiped sync');
+  assert.equal(tw.storage.getRaw('/ws/bar/tiddlers'), 'B', 'other workspace intact');
+});
+
+test('clearWorkspace on a never-created workspace is a no-op', async () => {
+  freshEnv();
+  const tw = {};
+  await runBoot(tw);
+  tw.storage.clearWorkspace('never-existed');   // must not throw
+  await new Promise(r => setTimeout(r, 30));
+  const names = await listStoreNames();
+  assert.ok(names.includes('_global'), '_global survives');
+  assert.ok(names.includes('ws_default'), 'ws_default survives');
+});
+
+test('IDB unavailable: boot script throws (visible failure, platform alerts)', async () => {
+  // The boot script throws an explicit Error in this case so the platform's
+  // runBootScript shows the alert + falls back to initLocalStorage().
+  globalThis.window = {indexedDB: undefined, localStorage: makeLocalStorage()};
+  const tw = {};
+  // eslint-disable-next-line no-eval
+  const fn = (1, eval)(BOOT_SRC);
+  await assert.rejects(() => fn(tw), /No IndexedDB available/);
   assert.equal(tw.storage, undefined);
 });
 
 test('IDB open throws: boot promise rejects so platform can catch + fall back', async () => {
-  // Force indexedDB.open to throw to simulate a corrupted store / blocked
-  // origin. The platform's runBootScript wraps the call in try/catch +
-  // alert; what matters here is that the returned promise rejects.
   const factory = new FDBFactory();
   factory.open = () => {
     throw new Error('simulated open failure');

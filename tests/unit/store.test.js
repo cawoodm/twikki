@@ -53,6 +53,12 @@ function freshStore(workspace = 'default') {
         if (key[0] !== '/') key = '/' + key;
         return localStorage.setItem(key, raw);
       },
+      clearWorkspace(name) {
+        const prefix = `/ws/${name}/`;
+        Object.keys(localStorage)
+          .filter(k => k.startsWith(prefix))
+          .forEach(k => localStorage.removeItem(k));
+      },
     },
     tiddlers: {all: [], visible: [], trashed: []},
     run: {},
@@ -79,6 +85,17 @@ test('get/set are scoped to the current workspace prefix', () => {
   assert.equal(tw.store.get('tiddlers'), null);
   tw.store.set('tiddlers', []);
   assert.ok(Object.hasOwn(backing, '/ws/other/tiddlers'));
+});
+
+test('tw.storage.clearWorkspace removes only the named workspace prefix', () => {
+  const {tw, backing} = freshStore('default');
+  tw.store.set('keep', '1');
+  tw.workspace = 'gone';
+  tw.store.set('drop', '2');
+  tw.workspace = 'default';
+  tw.storage.clearWorkspace('gone');
+  assert.ok(Object.hasOwn(backing, '/ws/default/keep'), 'unrelated workspace untouched');
+  assert.ok(!Object.hasOwn(backing, '/ws/gone/drop'), 'target workspace wiped');
 });
 
 test('keys() lists workspace keys prefix-stripped; delete removes', () => {

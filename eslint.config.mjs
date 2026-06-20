@@ -29,7 +29,10 @@ export default [...compat.extends('strongloop'), {
     'no-eval': 'off',
     'max-len': 'off',
     'no-with': 'off',
-    quotes: ['error', 'single'],
+    // avoidEscape keeps ESLint from fighting Prettier on apostrophe strings:
+    // Prettier keeps "it's" double-quoted to avoid an escape, so ESLint must too
+    // (without this it rewrites to 'it\'s' and the two oscillate on save).
+    quotes: ['error', 'single', {avoidEscape: true}],
     'object-curly-spacing': ['error', 'never'],
     'quote-props': 'off',
     'block-spacing': 'off',

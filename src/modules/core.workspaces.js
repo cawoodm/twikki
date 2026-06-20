@@ -79,7 +79,8 @@
    * Switch Workspace without reloading UI
    */
   function workspaceSwitch(name) {
-    // TODO: Save if dirty prompt
+    // Headless switch — no dirty check here (also used by boot and clone migration).
+    // The unsaved-changes guard lives at the prompt layer in $WorkspaceWidgets.js.
     let workspaces = tw.store.global.get('workspaces');
     let index = name ? workspaces.indexOf(name) : 0;
     if (index < 0) throw new Error(`workspaceSwitch Failed: Workspace '${name}' not found!`);
@@ -104,11 +105,12 @@
     let index = workspaces.indexOf(name);
     if (index < 0) throw new Error(`workspaceDelete Failed: Workspace '${name}' not found!`);
     if (name === currentWorkspace) throw new Error(`workspaceDelete Failed: Cannot delete current workspace '${name}'! Please switch first.`);
+    // Wipe the data BEFORE removing from the list — if the wipe throws, the
+    // workspace stays recoverable. The default tw.storage implementation
+    // (initLocalStorage) iterates and removes; the IndexedDBStoragePlugin
+    // override drops the per-workspace object store via a version upgrade.
+    tw.storage.clearWorkspace(name);
     workspaces.splice(index, 1);
-    // let oldStore = tw.storage.workspace(name);
-    // oldStore.clear();
-    alert('WORKSPACE CLEANUP NOT IMPLEMENTED!');
-    // Object.keys(localStorage).forEach(function(key){
     tw.store.global.set('workspaces', workspaces);
   }
   function workspaceMigrate(current, name, source) {

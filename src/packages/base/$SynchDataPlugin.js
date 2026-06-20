@@ -50,7 +50,7 @@
     const cfg = {
       accessToken: settings.synch.Gist.accessToken,
       gistId: settings.synch.Gist.gistId || '',
-      description: settings.synch.Gist.description || DEFAULT_DESCRIPTION,
+      description: settings.synch.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
 
     // Fetch remote

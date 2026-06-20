@@ -34,5 +34,5 @@
 
 .tiddler > .title[draggable='true'],
 #tab-strip .tab[draggable='true'] {
-  cursor: grab;
+  cursor: pointer;
 }

@@ -227,14 +227,20 @@ test.describe('package load', () => {
     expect(t?.pkg).toBe('fakepkg');
   });
 
-  test('package.reload.url imports then reloads the UI', async ({page}) => {
-    acceptDialogs(page); // overwrite confirms, if any
+  // PackageImportPlugin overrides package.reload.url with a selection dialog;
+  // the event now opens it rather than importing blindly. Clicking Import (with
+  // Save checked by default) brings the selected tiddlers in.
+  test('package.reload.url opens the import dialog and imports on confirm', async ({page}) => {
     const pkg2 = {tiddlers: [{title: 'PkgProbe2', text: 'reloaded', type: 'markdown', tags: []}]};
     await page.route('**/fake-package2.json', route =>
       route.fulfill({contentType: 'application/json', body: JSON.stringify(pkg2)}));
-    await page.evaluate(async () => {
-      await Promise.all(tw.events.send('package.reload.url', {url: '/fake-package2.json', name: 'fakepkg2'}));
+    await page.evaluate(() => {
+      tw.events.send('package.reload.url', {url: '/fake-package2.json', name: 'fakepkg2'});
     });
+    const dialog = page.locator('#package-import-dialog');
+    await dialog.waitFor({state: 'visible', timeout: 30000});
+    await expect(dialog.locator('.pkg-import-item')).toHaveCount(1);
+    await dialog.getByRole('button', {name: 'Import', exact: true}).click();
     await page.waitForFunction(() => !!tw.run.getTiddler('PkgProbe2'), null, {timeout: 30000});
     expect(await page.evaluate(() => tw.run.getTiddler('PkgProbe2')?.package)).toBe('fakepkg2');
   });

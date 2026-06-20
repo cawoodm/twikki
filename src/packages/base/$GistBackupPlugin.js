@@ -117,7 +117,7 @@
     return {
       accessToken: settings.backup.Gist.accessToken,
       gistId: settings.backup.Gist.gistId || '',
-      description: settings.backup.Gist.description || DEFAULT_DESCRIPTION,
+      description: settings.backup.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
   }
 
