@@ -124,7 +124,7 @@ The base and plugin layers are assembled by `$CoreThemeManager` — a theme cann
 - `$BaseVariables` — every CSS variable used anywhere, with light defaults
   (`--col*`, `--colbg*`, `--col-on-accent`, `--col-error`, `--rad*`, `--sidebar-w`,
   `--accent`, `--tab-bg`, …). The contract every component depends on; new tokens go
-  here. Enforced by [`tests/unit/tokens.test.js`](../tests/unit/tokens.test.js), which
+  here. Enforced by [`test/unit/tokens.test.js`](../test/unit/tokens.test.js), which
   fails if any `var(--x)` reference in `src/` has no matching declaration.
 - **Plugin `# StyleSheet` sections** — every built-in interaction plugin (settings
   dialog, picker, tabs, explorer, command palette, unsaved-changes dialog) ships its

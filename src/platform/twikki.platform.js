@@ -48,7 +48,7 @@
   // `base` may be omitted; in that case we fall through the same chain
   // fetchModules uses to determine the platform's own baseUrl. Exposed on
   // `tw.core` from init() so plugins can call it as `tw.core.buildUrl(...)`.
-  /* BEGIN buildUrl helper — extracted by tests/unit/build-url.test.js. Keep pure
+  /* BEGIN buildUrl helper — extracted by test/unit/build-url.test.js. Keep pure
      (no closure refs beyond `tw`, `window`); tests stub those globally. */
   function buildUrl(path, base) {
     if (/^https?:\/\//.test(path)) return path;
@@ -814,7 +814,7 @@
 
   /* END TWikki */
 
-  /* BEGIN semver helper (extracted verbatim by tests/unit/semver.test.js — keep pure, no closure refs) */
+  /* BEGIN semver helper (extracted verbatim by test/unit/semver.test.js — keep pure, no closure refs) */
   function semver(v) {
     const m = String(v)
       .trim()

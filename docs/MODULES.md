@@ -58,7 +58,7 @@ const platform = '0.24.0'; // the platform release this module was built for
 and returns both in its meta object: `return {name, version, platform, exports, run};`.
 
 - **`version`** — the module's own API/behaviour, following semver: bump the **major** for a breaking API change (a method renamed or removed), the **minor** for a new feature, the **patch** for a bugfix. (While a module is in `0.x` the usual pre-1.0 caveat applies — the API is not yet declared stable — but the major/minor/patch *intent* above is what we follow.)
-- **`platform`** — which platform release the module targets. Compatibility uses **caret / "min + same major"** semantics, identical to npm's `^`: a module built for `0.24.0` runs on platform `>= 0.24.0` *within the same major* (`0.24.x`, `0.99.x`, …) but **not** on an older platform (`0.23.x`) or a breaking one (`1.0.0`). The pure helper (`semver`/`semverCompare`/`caretSatisfies`) lives in `twikki.platform.js` between `/* BEGIN semver helper */` sentinels and is unit-tested by [tests/unit/semver.test.js](../tests/unit/semver.test.js).
+- **`platform`** — which platform release the module targets. Compatibility uses **caret / "min + same major"** semantics, identical to npm's `^`: a module built for `0.24.0` runs on platform `>= 0.24.0` *within the same major* (`0.24.x`, `0.99.x`, …) but **not** on an older platform (`0.23.x`) or a breaking one (`1.0.0`). The pure helper (`semver`/`semverCompare`/`caretSatisfies`) lives in `twikki.platform.js` between `/* BEGIN semver helper */` sentinels and is unit-tested by [test/unit/semver.test.js](../test/unit/semver.test.js).
 
 **Two tiers of incompatibility.** `checkModuleCompat` classifies each module as one of:
 
@@ -74,7 +74,7 @@ and returns both in its meta object: `return {name, version, platform, exports, 
 - **Keep current versions** — discard the update and reload using the already-installed (cached) modules. Offered only when a usable, non-blocking cached set exists.
 - **Re-check** — repoint the **Source base URL** (persisted to the `/base.url` localStorage key) and re-fetch + re-validate before deciding.
 
-Every loose `src/modules/*.js` is checked for the two fields by [tests/unit/module-compat.test.js](../tests/unit/module-compat.test.js).
+Every loose `src/modules/*.js` is checked for the two fields by [test/unit/module-compat.test.js](../test/unit/module-compat.test.js).
 
 ### Fetching & caching
 Two functions split the concern (so an incompatible download never clobbers the installed copy):

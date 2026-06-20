@@ -8,7 +8,7 @@ Documentation for [vite-plugin-tiddler-compile.js](../vite-plugin-tiddler-compil
 
 1. **A Vite plugin** (default export `tiddlerCompile`), used by [vite.config.js](../vite.config.js) during `npm run dev` and `npm run build`.
 2. **A standalone Node CLI** when executed directly: `node vite-plugin-tiddler-compile.js`. This is what `npm run compile` invokes.
-3. **A library of pure helpers** (`getType`, `getAutoTags`, `parseFile`, `compilePackage`) that the unit tests in [tests/unit/compile-plugin.test.js](../tests/unit/compile-plugin.test.js) import and exercise directly.
+3. **A library of pure helpers** (`getType`, `getAutoTags`, `parseFile`, `compilePackage`) that the unit tests in [test/unit/compile-plugin.test.js](../test/unit/compile-plugin.test.js) import and exercise directly.
 
 It replaced the earlier PowerShell script `ci/compile-packages.ps1`, making the compile step cross-platform pure Node.
 

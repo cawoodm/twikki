@@ -5,7 +5,7 @@ import {defineConfig, devices} from '@playwright/test';
 const PORT = 5180;
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './test/e2e',
   // The app shares localStorage semantics; run serially to avoid cross-test flakiness.
   // (Each test still gets a fresh browser context, so storage starts empty.)
   fullyParallel: false,

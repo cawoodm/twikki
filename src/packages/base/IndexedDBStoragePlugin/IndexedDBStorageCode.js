@@ -33,7 +33,7 @@
     return new Date().toISOString().slice(0, 10);
   }
 
-  /* BEGIN shouldPrompt — extracted verbatim by tests/unit/idb-storage.test.js.
+  /* BEGIN shouldPrompt — extracted verbatim by test/unit/idb-storage.test.js.
      Keep PURE (no closure refs, no I/O); the test eval's it in isolation. */
   function shouldPrompt({installed, bundled, dismissedToday, sessionFlag}) {
     if (sessionFlag) return false; // already prompted in this page load
