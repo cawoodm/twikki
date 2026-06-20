@@ -4,7 +4,7 @@ Twikki automatically saves everything you do to the browser (localStorage).
 
 In order to secure your data or share it between devices you can push/pull or synch your data to the cloud:
 
-- Synch: The [[$SynchDataPlugin]] saves all your data to a [GitHub Gist](https://gist.github.com/) which is free storage up to 100MB.
+- Synch: The [[$GistSynchPlugin]] saves all your data to a [GitHub Gist](https://gist.github.com/) which is free storage up to 100MB.
   - With a synch across multiple devices, the last update wins.
   - For more info see [[Synchronization]].
 - Backup: The [[$GistBackupPlugin]] works in a similar fashion but it has no synch: you backup and restore everything regardless of what was changed when.

@@ -78,7 +78,7 @@ Files that today do `tw.macros.X = …` / `tw.macros.core.X = …` / `Object.ass
 | `src/packages/demo/$TiddlerManagerPlugin.js` | `manager.form` | `registerMacro('manager', …)` |
 | `src/packages/demo/$FavoritesPlugin.js` | `favorites.toggle` | `registerMacro('favorites', …)` |
 | `src/packages/base/$DumpWorkspacePlugin.js` | `dump.dumpButton` | `registerMacro('dump', …)` |
-| `src/packages/base/$SynchDataPlugin.js` | `synch.full`, `synch.test`, `synch.pull`, `synch.push`, … | Per-key `registerMacro('synch', …)` |
+| `src/packages/base/$GistSynchPlugin.js` | `synch.full`, `synch.test`, `synch.pull`, `synch.push`, … | Per-key `registerMacro('synch', …)` |
 | `src/packages/base/$ThemeImporterPlugin.js` | `themeImport.button` | `registerMacro('themeImport', …)` |
 | `src/packages/base/$GistBackupPlugin.js` | `backup` (object assigned to `tw.macros.backup`) | Per-key `registerMacro('backup', …)` for each method |
 | `src/packages/tests/$TestFrameworkPlugin.js` | `tests.queue`, `tests.clear`, `tests.run`, `tests.results` | Already `registerMacro`; add `description` |

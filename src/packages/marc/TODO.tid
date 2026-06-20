@@ -88,10 +88,10 @@ Inline `// TODO` comments from across the codebase, grouped by file. The comment
 
 ## Base plugins — `src/packages/base/`
 
-- `$SynchDataPlugin.js:35` — Pull force, clearing local
-- `$SynchDataPlugin.js:36` — Selective Synch: Include/Exclude Tags/Packages
-- `$SynchDataPlugin.js:105` — **BUG**: Deleted local shadow tiddler is pulled in from remote
-- `$SynchDataPlugin.js:356` — Delete all local and pull (restore)
+- `$GistSynchPlugin.js:35` — Pull force, clearing local
+- `$GistSynchPlugin.js:36` — Selective Synch: Include/Exclude Tags/Packages
+- `$GistSynchPlugin.js:105` — **BUG**: Deleted local shadow tiddler is pulled in from remote
+- `$GistSynchPlugin.js:356` — Delete all local and pull (restore)
 
 ## Demo / marc / tests
 

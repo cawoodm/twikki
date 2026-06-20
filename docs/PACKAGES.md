@@ -17,6 +17,7 @@ The base package (defined in [[$CorePackages]]) are loaded first and provide a u
 - $ExplorerPlugin
 - $GeneralWidgets
 - $GistBackupPlugin
+- $GistSynchPlugin
 - $GithubSaverExtension
 - $CodeSyntaxHighlightPlugin
 - $IncludeFunctions
@@ -28,7 +29,6 @@ The base package (defined in [[$CorePackages]]) are loaded first and provide a u
 - $SelectorWidget
 - $SettingsDialogPlugin
 - $ShowTiddlersWidgets
-- $SynchDataPlugin
 - $TabsPlugin
 - $ThemeImporterPlugin
 - $TiddlerSearchResult

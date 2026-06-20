@@ -300,8 +300,8 @@
     tiddler.text = JSON.stringify(parsed, null, 2);
     delete tiddler.doNotSave;
     tw.run.updateTiddlerHard('$GeneralSettings', tiddler);
-    // TODO: Re-render $GeneralSettings
-    tw.events.send('save.silent');
+    tw.events.send('save.refresh');
+    tw.events.send('save.auto');
   }
 
   return {
