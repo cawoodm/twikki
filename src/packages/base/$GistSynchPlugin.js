@@ -307,10 +307,10 @@
   return {
     meta,
     init() {
-      tw.events.override('synch.full', doFull);
-      tw.events.override('synch.push', doPush);
-      tw.events.override('synch.pull', doPull);
-      tw.events.override('synch.upload', doUpload);
+      tw.events.override('synch.full', doFull, meta.name);
+      tw.events.override('synch.push', doPush, meta.name);
+      tw.events.override('synch.pull', doPull, meta.name);
+      tw.events.override('synch.upload', doUpload, meta.name);
 
       // Command palette entries (synch.upload is intentionally omitted — it overwrites
       // the remote and is too destructive for a one-keystroke command).

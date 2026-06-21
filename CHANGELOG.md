@@ -22,6 +22,7 @@
 - **Workspace switch** — switching or creating a workspace with unsaved changes now prompts to save first instead of silently discarding them
 - **Saving** — persistence now splits into `autoSave()` (respects the Auto Save setting) and `save()` (always persists). With Auto Save off, toggling a plugin, editing a code/template tiddler, or restoring a Gist backup and choosing "reload" now persists the change before reload instead of discarding it; settings changes always persist.
 - **Dynamic library loading** — new `tw.core.dom.loadScript(title, url, {integrity, global})` returns a promise, wires `onerror`, dedups by title (no duplicate `<script>` on soft reload) and supports Subresource Integrity; `tw.lib.require(name, loader)` memoises a shared load across plugins. The syntax-highlight plugin now uses these instead of nested `script.loaded` callbacks reading `window.hljs`.
+- **Event bus** — fixed the duplicate-handler guard (now compares handler identity, not function name), `override()` no longer leaks dead handler entries and accepts an owner so overridden handlers can be torn down on reload (no more double-firing), and `handlers()` returns a copy so callers can't mutate the bus's internal list.
 
 ## 15 Jun 2026 (v0.26.0)
 

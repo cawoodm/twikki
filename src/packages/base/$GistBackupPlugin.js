@@ -225,8 +225,8 @@
     },
     start() {
       // Override any previously installed backup provider — this plugin wins.
-      tw.events.override('backup.save', backup.save);
-      tw.events.override('backup.restore', backup.restore);
+      tw.events.override('backup.save', backup.save, meta.name);
+      tw.events.override('backup.restore', backup.restore, meta.name);
     },
   };
 })();
