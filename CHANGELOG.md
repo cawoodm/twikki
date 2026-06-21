@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Bugs/Technical
+
+- **Offline-tolerant package loading** — when a (force-loaded) package can't be fetched because the browser is offline and a copy was already loaded on a previous online boot, Twikki now keeps the cached copy and shows a quiet info notice instead of a scary error. Genuine online fetch failures (and offline boots with nothing cached) still surface the error as before.
+
 ## 20 Jun 2026 (v0.27.0)
 
 ### Features
