@@ -33,3 +33,15 @@ test.describe('Phone (≤600px)', () => {
     ).toBe(false);
   });
 });
+
+test.describe('Tablet (601–1024px)', () => {
+  test.use({viewport: {width: 800, height: 1024}});
+
+  test('sidebar width scales between 220 and 300px (clamp), not a fixed 280', async ({page}) => {
+    await bootApp(page);
+    const w = await page.evaluate(() => document.getElementById('sidebar').getBoundingClientRect().width);
+    // 24vw of 800 = 192 → clamped up to 220; must be < the old fixed 280.
+    expect(w).toBeGreaterThanOrEqual(219);
+    expect(w).toBeLessThan(280);
+  });
+});

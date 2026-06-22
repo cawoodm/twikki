@@ -39,7 +39,7 @@
   --rad4: 0.3rem;
 
   /* ---- Layout tokens ---- */
-  --sidebar-w: 280px;
+  --sidebar-w: clamp(220px, 24vw, 300px);
   --accent: #6db193;
   --accent-2: #8fbfdf;
 

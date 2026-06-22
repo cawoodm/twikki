@@ -162,6 +162,16 @@
 }
 
 /* ============================================================
+   Tablet — keep the two-pane grid but let the sidebar breathe.
+   Below the 600px phone tier the sidebar becomes a drawer (next block).
+   ============================================================ */
+@media (min-width: 601px) and (max-width: 1024px) {
+  #app {
+    grid-template-columns: clamp(220px, 24vw, 280px) 1fr;
+  }
+}
+
+/* ============================================================
    Responsive — sidebar collapses to a slide-in drawer
    ============================================================ */
 @media (max-width: 600px) {
