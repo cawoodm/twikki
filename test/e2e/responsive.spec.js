@@ -22,6 +22,12 @@ test.describe('Phone (≤600px)', () => {
     expect(r.width).toBeGreaterThan(r.vw - 2); // spans (essentially) the full viewport, > 280px
   });
 
+  test('tab strip scrolls horizontally instead of hiding overflowing tabs', async ({page}) => {
+    await bootApp(page);
+    const overflowX = await page.evaluate(() => getComputedStyle(document.getElementById('tab-strip')).overflowX);
+    expect(['auto', 'scroll']).toContain(overflowX);
+  });
+
   test('drawer scrim appears when open and closes the drawer on tap', async ({page}) => {
     await bootApp(page);
     await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));

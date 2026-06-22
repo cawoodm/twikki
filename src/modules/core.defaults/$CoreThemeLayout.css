@@ -76,8 +76,9 @@
   flex: 1 1 auto;
   display: flex;
   align-items: stretch;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 #visible-tiddlers {
