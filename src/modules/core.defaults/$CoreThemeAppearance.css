@@ -510,3 +510,23 @@ span.error {
   border-radius: 3px;
 }
 
+/* ============================================================
+   Touch ergonomics — coarse pointers get larger hit targets and
+   16px inputs (smaller would trigger iOS focus-zoom).
+   ============================================================ */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  button,
+  button.icon,
+  #menu-toggle,
+  .picker-trigger {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+

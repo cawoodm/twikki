@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {devices, expect, test} from '@playwright/test';
 import {bootApp, createTiddler} from './helpers.js';
 
 const PHONE = {width: 390, height: 844}; // iPhone 12/13/14 logical size
@@ -49,5 +49,23 @@ test.describe('Tablet (601–1024px)', () => {
     // 24vw of 800 = 192 → clamped up to 220; must be < the old fixed 280.
     expect(w).toBeGreaterThanOrEqual(219);
     expect(w).toBeLessThan(280);
+  });
+});
+
+test.describe('Touch device', () => {
+  // spread Pixel 5 but omit defaultBrowserType (not allowed in describe scope)
+  const {defaultBrowserType: _, ...pixel5} = devices['Pixel 5'];
+  test.use({...pixel5}); // sets viewport, isMobile, hasTouch → (pointer:coarse)/(hover:none)
+
+  test('inputs are ≥16px so iOS does not zoom on focus, and buttons meet ~44px', async ({page}) => {
+    await bootApp(page);
+    const m = await page.evaluate(() => {
+      const fs = parseFloat(getComputedStyle(document.getElementById('search')).fontSize);
+      const btn = document.querySelector('#main-topbar button, button.icon');
+      const h = btn ? btn.getBoundingClientRect().height : 0;
+      return {fs, h};
+    });
+    expect(m.fs).toBeGreaterThanOrEqual(16);
+    expect(m.h).toBeGreaterThanOrEqual(44);
   });
 });
