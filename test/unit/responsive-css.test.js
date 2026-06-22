@@ -8,7 +8,15 @@ const read = rel => readFileSync(join(SRC, rel), 'utf8');
 
 test('app shell uses dvh so it does not clip under mobile browser chrome', () => {
   const css = read('modules/core.defaults/$CoreThemeLayout.css');
-  assert.match(css, /height:\s*100dvh/, '#app should use 100dvh');
+  // Scope to the #app rule (between `#app {` and its closing `}`) so an
+  // unrelated `100dvh` elsewhere can't satisfy this test by accident.
+  const start = css.indexOf('#app {');
+  const appRule = css.slice(start, css.indexOf('}', start));
+  assert.match(appRule, /height:\s*100dvh/, '#app should use 100dvh');
+  // A 100vh fallback must come BEFORE the 100dvh line (browsers without dvh).
+  const vhIdx = appRule.indexOf('height: 100vh');
+  const dvhIdx = appRule.indexOf('height: 100dvh');
+  assert.ok(vhIdx !== -1 && vhIdx < dvhIdx, '100vh fallback must appear before 100dvh');
 });
 
 test('viewport meta opts into the safe-area with viewport-fit=cover', () => {
