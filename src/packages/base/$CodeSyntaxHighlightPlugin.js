@@ -42,37 +42,42 @@
     }
   }
 
+  const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0';
+
+  // Load highlight.js core (once, shared via tw.lib.require) then its language
+  // packs. Resolves to the live hljs instance. Idempotent end-to-end: loadScript
+  // dedups by title and tw.lib.require memoises, so soft reloads add no tags.
+  async function loadHighlight() {
+    const hljs = await tw.lib.require('hljs', () => tw.core.dom.loadScript('highlight-core', `${CDN}/highlight.min.js`, {global: 'hljs'}));
+    await Promise.all([
+      tw.core.dom.loadScript('highlight-lang-javascript', `${CDN}/languages/javascript.min.js`),
+      tw.core.dom.loadScript('highlight-lang-css', `${CDN}/languages/css.min.js`),
+      tw.core.dom.loadScript('highlight-lang-xml', `${CDN}/languages/xml.min.js`),
+      tw.core.dom.loadScript('highlight-lang-json', `${CDN}/languages/json.min.js`),
+    ]);
+    tw.lib.highlight = hljs;
+    return hljs;
+  }
+
+  function highlightAll() {
+    // Scripts/CSS load after the core has rendered all visible tiddlers, so
+    // highlight whatever is already on screen once the lib is ready.
+    tw.tiddlers.visible.forEach(title => {
+      let tiddler = tw.run.getTiddler(title);
+      let el = tw.run.getTiddlerElement(tiddler.title);
+      el?.querySelectorAll('pre code:not([data-highlighted])').forEach(node => tw.lib.highlight?.highlightElement(node, {language: languageFromTiddlerType(tiddler.type)}));
+    });
+  }
+
   return {
     meta,
     init() {
       tw.events.subscribe(
         'ui.loaded',
         () => {
-          tw.core.dom.addStyleSheet('highlight-light', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css');
-          tw.core.dom.addStyleSheet('highlight-dark', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css');
-          tw.core.dom.addScript('highlight-core', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js');
-          tw.events.subscribe(
-            'script.loaded',
-            name => {
-              if (name === 'highlight-core') {
-                tw.core.dom.addScript('highlight-lang-javascript', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/javascript.min.js');
-                tw.core.dom.addScript('highlight-lang-css', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/css.min.js');
-                tw.core.dom.addScript('highlight-lang-xml', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/xml.min.js');
-                tw.core.dom.addScript('highlight-lang-json', 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/json.min.js');
-                return;
-              }
-              if (name !== 'highlight-lang-json') return;
-              tw.lib.highlight = window.hljs;
-              // Since the scripts/css above load after the core has rendered all visible tiddlers,
-              //   we have to highlight them now:
-              tw.tiddlers.visible.forEach(title => {
-                let tiddler = tw.run.getTiddler(title);
-                let el = tw.run.getTiddlerElement(tiddler.title);
-                el.querySelectorAll('pre code:not([data-highlighted])').forEach(el => tw.lib.highlight?.highlightElement(el, {language: languageFromTiddlerType(tiddler.type)}));
-              });
-            },
-            'Highlight',
-          );
+          tw.core.dom.addStyleSheet('highlight-light', `${CDN}/styles/atom-one-light.min.css`);
+          tw.core.dom.addStyleSheet('highlight-dark', `${CDN}/styles/atom-one-dark.min.css`);
+          loadHighlight().then(highlightAll, err => console.error('[Highlight]', err));
           // Apply the correct light/dark highlight for the current theme on load.
           // Set the sheet state DIRECTLY (don't fire theme.switch): firing relied on
           // $CoreThemeManager.themeSwitch running and not early-returning, and left a window
