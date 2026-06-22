@@ -21,6 +21,7 @@
 - **New notes open in tabs view** — creating a note while the tabs layout is active now switches to and shows the new note, instead of leaving the previous tab on screen.
 - **Workspace switch** — switching or creating a workspace with unsaved changes now prompts to save first instead of silently discarding them
 - **Saving** — persistence now splits into `autoSave()` (respects the Auto Save setting) and `save()` (always persists). With Auto Save off, toggling a plugin, editing a code/template tiddler, or restoring a Gist backup and choosing "reload" now persists the change before reload instead of discarding it; settings changes always persist.
+- **Dynamic library loading** — new `tw.core.dom.loadScript(title, url, {integrity, global})` returns a promise, wires `onerror`, dedups by title (no duplicate `<script>` on soft reload) and supports Subresource Integrity; `tw.lib.require(name, loader)` memoises a shared load across plugins. The syntax-highlight plugin now uses these instead of nested `script.loaded` callbacks reading `window.hljs`.
 
 ## 15 Jun 2026 (v0.26.0)
 
