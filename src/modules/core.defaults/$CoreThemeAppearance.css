@@ -165,6 +165,7 @@ div.tiddler div.modified {
 div.tiddler div.text {
   scrollbar-color: var(--col4) transparent;
   scrollbar-width: thin;
+  overflow-wrap: anywhere;
 }
 
 div.tiddler div.text p {
@@ -489,6 +490,9 @@ pre > code {
 
 table {
   border-collapse: collapse;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 th,

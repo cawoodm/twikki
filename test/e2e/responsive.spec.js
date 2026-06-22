@@ -28,6 +28,23 @@ test.describe('Phone (≤600px)', () => {
     expect(['auto', 'scroll']).toContain(overflowX);
   });
 
+  test('long URLs wrap instead of forcing horizontal page scroll', async ({page}) => {
+    await bootApp(page);
+    await page.evaluate(() => {
+      const url = 'https://example.com/' + 'x'.repeat(400);
+      tw.run.addTiddlerHard({title: 'LongUrl', text: url, type: 'markdown', tags: [], created: new Date(), updated: new Date()});
+      tw.run.showTiddler('LongUrl');
+    });
+    const wrap = await page.evaluate(() => {
+      const el = document.querySelector('.tiddler[data-tiddler-title="LongUrl"] .text');
+      return getComputedStyle(el).overflowWrap;
+    });
+    expect(['anywhere', 'break-word']).toContain(wrap);
+    // The document must not scroll horizontally.
+    const overflows = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+    expect(overflows).toBe(false);
+  });
+
   test('drawer scrim appears when open and closes the drawer on tap', async ({page}) => {
     await bootApp(page);
     await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
