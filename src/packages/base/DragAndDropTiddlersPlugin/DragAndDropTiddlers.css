@@ -32,8 +32,12 @@
   font-family: monospace;
 }
 
-.tiddler > .title[draggable='true'],
-#tab-strip .tab[draggable='true'] {
+.tiddler > .title[draggable='true'] {
   cursor: pointer;
   touch-action: none; /* let the drag own the gesture instead of page scroll */
+}
+
+#tab-strip .tab[draggable='true'] {
+  cursor: pointer;
+  touch-action: pan-x; /* keep the strip horizontally scrollable on touch (Task 4) while reserving vertical/pinch for drag */
 }
