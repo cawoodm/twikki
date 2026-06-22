@@ -45,7 +45,7 @@ a:not([class]) {
 }
 
 #sidebar > #header {
-  padding: 12px 14px 6px;
+  padding: calc(12px + env(safe-area-inset-top, 0)) 14px 6px;
 }
 
 #site-title h1 {
@@ -95,6 +95,8 @@ a:not([class]) {
   background-color: var(--colbg3);
   border-bottom: 1px solid var(--col4);
   min-height: 38px;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-right: env(safe-area-inset-right, 0);
 }
 
 #menu-toggle {
