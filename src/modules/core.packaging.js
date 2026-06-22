@@ -109,8 +109,13 @@
 
     list.forEach(t => {
       if (selectedTitles && !selectedTitles.has(t.title)) return; // deselected in the import dialog
-      t.updated = new Date(t.updated);
-      t.created = new Date(t.created);
+      // created falls back to the stable `updated` (not the wall clock) so a
+      // default tiddler that ships no `created` resolves to the same value on
+      // every client — otherwise each boot/import invents a fresh `created` and
+      // the sync churns it. Computed before `updated` is reparsed so it reads the
+      // original value. See core.tiddlers.js (addTiddler) for the same pattern.
+      t.created = new Date(t.created || t.updated || new Date());
+      t.updated = new Date(t.updated || new Date());
       let issues = tw.util.tiddlerValidation(t);
       if (issues.length) return tw.ui.notify(`Tiddler '${t.title}' is invalid: ` + issues.join('<br>'));
       if (filter && !filter.test(t.title)) return dp('Skipping import of tiddler', t.title);
