@@ -21,4 +21,15 @@ test.describe('Phone (≤600px)', () => {
     expect(r.position).toBe('fixed');
     expect(r.width).toBeGreaterThan(r.vw - 2); // spans (essentially) the full viewport, > 280px
   });
+
+  test('drawer scrim appears when open and closes the drawer on tap', async ({page}) => {
+    await bootApp(page);
+    await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
+    const scrim = page.locator('#sidebar-scrim');
+    await expect(scrim).toBeVisible();
+    await scrim.click({position: {x: 350, y: 5}}); // tap the exposed strip (right of the ~280px drawer)
+    await expect.poll(() =>
+      page.evaluate(() => document.getElementById('sidebar').classList.contains('open')),
+    ).toBe(false);
+  });
 });

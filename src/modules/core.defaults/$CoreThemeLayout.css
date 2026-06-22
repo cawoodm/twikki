@@ -91,6 +91,10 @@
   flex: 0 0 auto;
 }
 
+#sidebar-scrim {
+  display: none;
+}
+
 /* Tabbed story: show only the active note. Gated behind `.tabbed`
    (added by the tabs plugin) so this is a no-op when the plugin is
    absent — notes then simply stack as before. */
@@ -183,6 +187,17 @@
 
   #sidebar.open {
     transform: translateX(0);
+  }
+
+  /* Dimming backdrop behind the open drawer; tap to close (inline onclick).
+     The global rule (below) keeps it hidden; only the open drawer reveals it,
+     and only on phones (this rule lives inside the ≤600px block). */
+  #sidebar.open ~ #sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 15; /* above content, below the drawer (#sidebar is z-index:20) */
+    background: rgba(0, 0, 0, 0.4);
   }
 
   #menu-toggle {
