@@ -68,4 +68,27 @@ test.describe('Touch device', () => {
     expect(m.fs).toBeGreaterThanOrEqual(16);
     expect(m.h).toBeGreaterThanOrEqual(44);
   });
+
+  test('tab-close button is visible without hover on touch', async ({page}) => {
+    await bootApp(page);
+    // Switch to tabs mode (default layout is river; tabs mode is required for the strip).
+    await page.evaluate(() => {
+      const s = tw.run.getTiddler('$GeneralSettings');
+      tw.run.updateTiddlerHard('$GeneralSettings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
+      tw.events.send('tiddler.modified', '$GeneralSettings');
+    });
+    // Open two tiddlers so the tab strip renders closable tabs.
+    await page.evaluate(() => {
+      tw.run.addTiddlerHard({title: 'TabA', text: 'a', type: 'markdown', tags: [], created: new Date(), updated: new Date()});
+      tw.run.addTiddlerHard({title: 'TabB', text: 'b', type: 'markdown', tags: [], created: new Date(), updated: new Date()});
+      tw.run.showTiddler('TabA');
+      tw.run.showTiddler('TabB');
+    });
+    // Target a non-active tab: the active tab's close is always shown via .tab.active rule;
+    // the bug is that inactive tabs' close buttons are invisible without hover on touch.
+    const close = page.locator('.tab:not(.active) .tab-close').first();
+    await expect(close).toBeVisible();
+    const opacity = await close.evaluate(el => parseFloat(getComputedStyle(el).opacity));
+    expect(opacity).toBeGreaterThan(0);
+  });
 });
