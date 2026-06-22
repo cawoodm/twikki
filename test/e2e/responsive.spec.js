@@ -45,6 +45,16 @@ test.describe('Phone (≤600px)', () => {
     expect(overflows).toBe(false);
   });
 
+  test('settings field rows collapse to a single column on phones', async ({page}) => {
+    await bootApp(page);
+    await page.evaluate(() => tw.events.send('tiddler.show', '$GeneralSettings'));
+    const field = page.locator('.settings-field').first();
+    await expect(field).toBeVisible();
+    const cols = await field.evaluate(el => getComputedStyle(el).gridTemplateColumns);
+    // Single column → one track value (no space-separated second track).
+    expect(cols.trim().split(/\s+/).length).toBe(1);
+  });
+
   test('drawer scrim appears when open and closes the drawer on tap', async ({page}) => {
     await bootApp(page);
     await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
