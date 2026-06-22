@@ -35,4 +35,5 @@
 .tiddler > .title[draggable='true'],
 #tab-strip .tab[draggable='true'] {
   cursor: pointer;
+  touch-action: none; /* let the drag own the gesture instead of page scroll */
 }

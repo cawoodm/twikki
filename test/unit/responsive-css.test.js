@@ -48,3 +48,8 @@ test('plugin command/picker modals stay viewport-bounded (vw), never a fixed wid
   // Picker is a small dropdown (min-width:180px) — assert it never sets a wide fixed width.
   assert.doesNotMatch(pick, /width:\s*[5-9]\d{2}px/, 'Picker must not use a 500px+ fixed width');
 });
+
+test('drag handles set touch-action so dragging does not fight page scroll', () => {
+  const css = read('packages/base/DragAndDropTiddlersPlugin/DragAndDropTiddlers.css');
+  assert.match(css, /touch-action:/, 'draggable elements need an explicit touch-action');
+});
