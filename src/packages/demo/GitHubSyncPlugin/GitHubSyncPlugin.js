@@ -7,12 +7,17 @@
   const DEFAULT_COMMIT_PREFIX = 'TWikki sync';
   const MAX_PUSH_ATTEMPTS = 3; // retries when the branch tip moves under us (422)
   const PULL_CONCURRENCY = 12; // parallel blob fetches on pull (bounded to stay polite to the API)
-  const DEFAULT_CONFLICT_WINDOW_MS = 60_000; // timestamps within this are "too close to call" → ask the user (0 disables)
+  const DEFAULT_CONFLICT_WINDOW_MS = 3_000; // timestamps within 3s are possibly due to clock skew
 
   // Never pushed, and preserved locally across a pull (the repo has no authoritative
-  // copy): $NoSynch/$NoBackup tiddlers, and $GeneralSettings — it holds the PAT, and
-  // committing a token trips GitHub secret scanning (token gets revoked).
-  const isLocalOnly = t => t.title === '$GeneralSettings' || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
+  // copy):
+  //   - $GeneralSettings — holds the PAT; committing a token trips GitHub secret
+  //     scanning (the token gets revoked).
+  //   - $NoSynch / $NoBackup tagged tiddlers — explicit opt-out.
+  //   - doNotSave tiddlers — app-provided shadow/package defaults the local store
+  //     itself doesn't persist (core.store tiddlersToSave); they're regenerated
+  //     from the app on every client, so syncing them only churns the repo.
+  const isLocalOnly = t => t.title === '$GeneralSettings' || t.doNotSave === true || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
 
   const sync = {
     synch() {
@@ -261,7 +266,8 @@
       const r = remoteBy.get(title);
       if (!l) place(r);
       else if (!r) place(l);
-      else if (sameOutcome(l, r)) place(r); // identical result — prefer remote so nothing is re-pushed
+      else if (sameOutcome(l, r))
+        place(r); // identical result — prefer remote so nothing is re-pushed
       else if (windowMs > 0 && Math.abs(updatedMs(l.rec) - updatedMs(r.rec)) <= windowMs) {
         conflicts.push({title, local: l.rec, remote: r.rec, localDead: l.dead, remoteDead: r.dead});
       } else place(pickNewer(l, r));
@@ -734,6 +740,7 @@ dialog.ghsync-conflicts{background:#1c1f24;color:#e6e8eb}
   }
 
   return {
+    isLocalOnly, // exposed for unit testing
     mergePull, // exposed for unit testing; the platform reads only meta/init/start
     mapLimit, // exposed for unit testing
     partitionPull, // exposed for unit testing
