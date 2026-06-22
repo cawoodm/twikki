@@ -490,9 +490,14 @@ pre > code {
 
 table {
   border-collapse: collapse;
-  display: block;
   max-width: 100%;
-  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 
 th,
