@@ -186,4 +186,14 @@
     display: inline-flex;
     align-items: center;
   }
+
+  /* Search results escape the drawer: full-width fixed bottom-sheet so they
+     are never capped at the sidebar width (was position:absolute inside the
+     ~280px drawer). dvh keeps it correct under dynamic mobile toolbars. */
+  #search-results {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100vw;
+    max-height: 70dvh;
+  }
 }
