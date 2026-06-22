@@ -33,3 +33,18 @@ test('safe-area insets are honoured on header/sidebar/footer chrome', () => {
     'at least one chrome element must pad with env(safe-area-inset-*)',
   );
 });
+
+test('index.html carries PWA status-bar metas for standalone mode', () => {
+  const html = read('index.html');
+  assert.match(html, /name="theme-color"/, 'needs a theme-color meta');
+  assert.match(html, /name="apple-mobile-web-app-capable"/, 'needs apple-mobile-web-app-capable');
+  assert.match(html, /name="apple-mobile-web-app-status-bar-style"/, 'needs apple status-bar-style');
+});
+
+test('plugin command/picker modals stay viewport-bounded (vw), never a fixed wide px', () => {
+  const cmd = read('packages/base/CommandPalettePlugin/CommandPalette.css');
+  const pick = read('packages/base/PickerPlugin/Picker.css');
+  assert.match(cmd, /\d+vw/, 'CommandPalette width must be vw-bounded');
+  // Picker is a small dropdown (min-width:180px) — assert it never sets a wide fixed width.
+  assert.doesNotMatch(pick, /width:\s*[5-9]\d{2}px/, 'Picker must not use a 500px+ fixed width');
+});
