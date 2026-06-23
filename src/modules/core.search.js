@@ -71,6 +71,22 @@
     list.forEach(t => {
       displayTiddlerLink(t, target);
     });
+    if (targetId === 'search-results') positionDrawerResults();
+  }
+
+  // On phones the drawer is only ~220px wide, so the in-drawer dropdown would be
+  // unreadably narrow. CSS makes #search-results a full-width (100vw) fixed
+  // overlay on ≤600px; here we anchor its top just below the search input (the
+  // input's Y depends on the drawer header height, so it can't be a CSS const).
+  function positionDrawerResults() {
+    const results = tw.core.dom.$('search-results');
+    const input = tw.core.dom.$('search');
+    if (!results || !input) return;
+    if (window.matchMedia('(max-width: 600px)').matches) {
+      results.style.top = Math.round(input.getBoundingClientRect().bottom) + 'px';
+    } else if (results.style.top) {
+      results.style.top = ''; // desktop: revert to the CSS dropdown (top:100%)
+    }
   }
   function displayTiddlerLink({title, type}, target) {
     // TODO: Apply tw.templates.TiddlerSearchResult

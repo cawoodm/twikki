@@ -261,8 +261,16 @@
     overflow-y: auto;
   }
 
-  /* The drawer search results drop directly below the search input (the base
-     `position:absolute; top:100%` rule). The full-width mobile search lives in
-     the top-bar (#topbar-search) instead, so the in-drawer dropdown no longer
-     needs the fixed bottom-sheet that pinned it to the viewport bottom. */
+  /* The in-drawer dropdown would be capped at the ~220px drawer width and
+     unreadable, so on phones the drawer search results overlay full-width
+     (100vw) just below the input. `top` is set in JS (core.search.js) to the
+     input's position, since the drawer header height varies. */
+  #search-results {
+    position: fixed;
+    left: 0;
+    right: auto;
+    width: 100vw;
+    max-height: 70dvh;
+    z-index: 25; /* above the drawer (20) and its scrim (15) */
+  }
 }

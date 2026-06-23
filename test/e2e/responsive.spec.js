@@ -13,14 +13,16 @@ test.describe('Phone (≤600px)', () => {
     await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
     await page.locator('#search').pressSequentially('OverlayProbe'); // keyup fires the search
     await expect(page.locator('#search-results .tiddler-list').first()).toBeVisible();
-    const gap = await page.evaluate(() => {
+    const r = await page.evaluate(() => {
       const input = document.getElementById('search').getBoundingClientRect();
       const res = document.getElementById('search-results').getBoundingClientRect();
-      return res.top - input.bottom;
+      return {gap: res.top - input.bottom, width: res.width, vw: window.innerWidth};
     });
-    // Results sit just under the input, not flung to the bottom of the screen.
-    expect(gap).toBeGreaterThanOrEqual(0);
-    expect(gap).toBeLessThan(20);
+    // Just under the input (not flung to the bottom) AND full-width (not capped
+    // at the ~220px drawer, which was unreadable).
+    expect(r.gap).toBeGreaterThanOrEqual(0);
+    expect(r.gap).toBeLessThan(20);
+    expect(r.width).toBeGreaterThan(r.vw - 2);
   });
 
   test('tab strip scrolls horizontally instead of hiding overflowing tabs', async ({page}) => {
