@@ -70,6 +70,15 @@
   flex: 0 0 auto;
   display: flex;
   align-items: stretch;
+  position: relative; /* anchor for the mobile #topbar-search-results overlay */
+}
+
+/* Top-bar search is mobile-only chrome — hidden on desktop, where the
+   sidebar/drawer search box is used instead. */
+#topbar-search-toggle,
+#topbar-search,
+#topbar-search-results {
+  display: none;
 }
 
 #tab-strip {
@@ -214,6 +223,42 @@
   #menu-toggle {
     display: inline-flex;
     align-items: center;
+  }
+
+  /* Top-bar search: the 🔍 icon shows; tapping it morphs the bar into a
+     search field (#main-topbar gets `.searching`), hiding the tabs + icon. */
+  #topbar-search-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  #main-topbar.searching #tab-strip,
+  #main-topbar.searching #topbar-search-toggle {
+    display: none;
+  }
+
+  #main-topbar.searching #topbar-search {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  #topbar-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Results drop below the bar, full-width; JS toggles display (block/none). */
+  #topbar-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 18; /* above content, below the drawer (20) and its scrim (15)… */
+    max-height: 70dvh;
+    overflow-y: auto;
   }
 
   /* Search results escape the drawer: full-width fixed bottom-sheet so they

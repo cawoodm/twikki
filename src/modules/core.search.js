@@ -208,6 +208,46 @@
     tw.core.dom.$('search-results').style.display = 'none';
     tw.core.dom.$('search-results').addEventListener('click', publishSearchClick);
     document.addEventListener('click', onDocumentClick);
+    wireTopbarSearch();
+  }
+
+  // Mobile top-bar search: the 🔍 icon morphs #main-topbar into a search field.
+  // Renders into #topbar-search-results (its own container) rather than the
+  // drawer's #search-results, which is translated off-screen when the drawer is
+  // closed. All optional — desktop hides this chrome via CSS.
+  function wireTopbarSearch() {
+    const toggle = tw.core.dom.$('topbar-search-toggle');
+    const input = tw.core.dom.$('topbar-search-input');
+    const close = tw.core.dom.$('topbar-search-close');
+    const results = tw.core.dom.$('topbar-search-results');
+    if (!toggle || !input || !results) return;
+    results.style.display = 'none';
+    toggle.addEventListener('click', () => {
+      document.getElementById('main-topbar')?.classList.add('searching');
+      input.focus();
+    });
+    close?.addEventListener('click', closeTopbarSearch);
+    input.addEventListener('keyup', topbarSearchNow);
+    // A result click navigates via the global data-msg handler; also collapse the bar.
+    results.addEventListener('click', e => {
+      if (e.target.closest('[data-msg="tiddler.show"]')) closeTopbarSearch();
+    });
+  }
+  function topbarSearchNow() {
+    const input = tw.core.dom.$('topbar-search-input');
+    searchShowResults(search(input.value, tw.tiddlers.all), 'topbar-search-results');
+    // searchShowResults clears the inline display; force visible (CSS default is none).
+    tw.core.dom.$('topbar-search-results').style.display = 'block';
+  }
+  function closeTopbarSearch() {
+    document.getElementById('main-topbar')?.classList.remove('searching');
+    const input = tw.core.dom.$('topbar-search-input');
+    if (input) input.value = '';
+    const results = tw.core.dom.$('topbar-search-results');
+    if (results) {
+      results.innerHTML = '';
+      results.style.display = 'none';
+    }
   }
 
   // Event-triggered search (e.g. #msg:search:$tag:$Shadow) renders results without

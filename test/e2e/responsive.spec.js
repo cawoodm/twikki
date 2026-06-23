@@ -1,5 +1,5 @@
 import {devices, expect, test} from '@playwright/test';
-import {bootApp, createTiddler} from './helpers.js';
+import {bootApp, createTiddler, visibleTitles} from './helpers.js';
 
 const PHONE = {width: 390, height: 844}; // iPhone 12/13/14 logical size
 
@@ -64,6 +64,39 @@ test.describe('Phone (≤600px)', () => {
     await expect.poll(() =>
       page.evaluate(() => document.getElementById('sidebar').classList.contains('open')),
     ).toBe(false);
+  });
+
+  test('top-bar search icon morphs the bar into a full-width search with results', async ({page}) => {
+    await bootApp(page);
+    await page.evaluate(() => {
+      ['Markdown Guide', 'About'].forEach(t =>
+        tw.run.addTiddlerHard({title: t, text: '# ' + t, type: 'markdown', tags: [], created: new Date(), updated: new Date()}));
+    });
+    const toggle = page.locator('#topbar-search-toggle');
+    const input = page.locator('#topbar-search-input');
+    await expect(toggle).toBeVisible();
+    await expect(input).toBeHidden();
+
+    // Tap 🔍 → the bar morphs: input shows, tabs/icon hide.
+    await toggle.click();
+    await expect(input).toBeVisible();
+    await expect(page.locator('#topbar-search-close')).toBeVisible();
+
+    // Type → results render full-width into the top-bar's own container.
+    await input.pressSequentially('Guide');
+    await expect(page.locator('#topbar-search-results .tiddler-list[data-msg]').first()).toBeVisible();
+    const r = await page.evaluate(() => {
+      const el = document.getElementById('topbar-search-results');
+      return {disp: getComputedStyle(el).display, width: el.getBoundingClientRect().width, vw: window.innerWidth};
+    });
+    expect(r.disp).toBe('block');
+    expect(r.width).toBeGreaterThan(r.vw - 2);
+
+    // ✕ collapses the bar and clears the query/results.
+    await page.locator('#topbar-search-close').click();
+    await expect(input).toBeHidden();
+    await expect(page.locator('#topbar-search-results')).toBeHidden();
+    expect(await page.evaluate(() => document.getElementById('topbar-search-input').value)).toBe('');
   });
 });
 
