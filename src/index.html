@@ -5,30 +5,42 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="theme-color" content="#6db193" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
   </head>
   <body>
-    <h2>Error</h2>
-    <p>Looks like Twikki didn't load, try one of the following:</p>
-    <ul>
-      <li><a href="?reload">Reload</a>: Will load the latest modules</li>
-      <li><a href="?safemode">Safe mode</a>: Skips all extension packages and non-base plugins</li>
-      <li><a href="?trace">Trace</a>: Shows more accurate stack traces in the console</li>
-      <li><a href="?debug&logfilter=.">Debug</a>: Shows debug notifications and full detailed logs in the console</li>
-    </ul>
-    <script>
-      // Optionally set to override:
-      // window.MODULE_URL = 'https://yourserver.com';
-    </script>
-    <script src="platform/twikki.platform.js"></script>
-    <script>
-      window.addEventListener('load', async () => {
-        // window.addEventListener('twikki.boot.progress', e => console.log(e.detail));
-        await window.twikki.init();
-        await window.twikki.start();
-      });
-    </script>
+    <div class="no-boot" style="font-family: Verdana, Geneva, Tahoma, sans-serif; color: maroon">
+      Loading Twikki...
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <details>
+        <summary>🪁</summary>
+        <p>Looks like Twikki didn't load, try one of the following:</p>
+        <ul>
+          <li><a href="?reload">Reload</a>: Will load the latest modules</li>
+          <li><a href="?safemode">Safe mode</a>: Skips all extension packages and non-base plugins</li>
+          <li><a href="?trace">Trace</a>: Shows more accurate stack traces in the console</li>
+          <li><a href="?debug&logfilter=.">Debug</a>: Shows debug notifications and full detailed logs in the console</li>
+        </ul>
+      </details>
+      <script>
+        // Optionally set to override:
+        // window.MODULE_URL = 'https://yourserver.com';
+      </script>
+      <script src="platform/twikki.platform.js"></script>
+      <script>
+        window.addEventListener('load', async () => {
+          // window.addEventListener('twikki.boot.progress', e => console.log(e.detail));
+          await window.twikki.init();
+          await window.twikki.start();
+        });
+      </script>
+    </div>
   </body>
 </html>
