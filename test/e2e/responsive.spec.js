@@ -6,20 +6,21 @@ const PHONE = {width: 390, height: 844}; // iPhone 12/13/14 logical size
 test.describe('Phone (≤600px)', () => {
   test.use({viewport: PHONE});
 
-  test('search results render as a full-width fixed overlay, not capped at the drawer width', async ({page}) => {
+  test('drawer search results drop directly below the input (not pinned to the viewport bottom)', async ({page}) => {
     await bootApp(page);
     await createTiddler(page, {title: 'OverlayProbe', text: 'find me overlay'});
     // Open the drawer so the search input is on-screen, then query.
     await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
-    await page.fill('#search', 'OverlayProbe');
+    await page.locator('#search').pressSequentially('OverlayProbe'); // keyup fires the search
     await expect(page.locator('#search-results .tiddler-list').first()).toBeVisible();
-    const r = await page.evaluate(() => {
-      const el = document.getElementById('search-results');
-      const cs = getComputedStyle(el);
-      return {position: cs.position, width: el.getBoundingClientRect().width, vw: window.innerWidth};
+    const gap = await page.evaluate(() => {
+      const input = document.getElementById('search').getBoundingClientRect();
+      const res = document.getElementById('search-results').getBoundingClientRect();
+      return res.top - input.bottom;
     });
-    expect(r.position).toBe('fixed');
-    expect(r.width).toBeGreaterThan(r.vw - 2); // spans (essentially) the full viewport, > 280px
+    // Results sit just under the input, not flung to the bottom of the screen.
+    expect(gap).toBeGreaterThanOrEqual(0);
+    expect(gap).toBeLessThan(20);
   });
 
   test('tab strip scrolls horizontally instead of hiding overflowing tabs', async ({page}) => {
@@ -150,5 +151,24 @@ test.describe('Touch device', () => {
     await expect(close).toBeVisible();
     const opacity = await close.evaluate(el => parseFloat(getComputedStyle(el).opacity));
     expect(opacity).toBeGreaterThan(0);
+  });
+
+  test('tapping a tab-close closes a tab whose title contains spaces', async ({page}) => {
+    await bootApp(page);
+    // Switch to tabs mode (default layout is river; tabs mode is required for the strip).
+    await page.evaluate(() => {
+      const s = tw.run.getTiddler('$GeneralSettings');
+      tw.run.updateTiddlerHard('$GeneralSettings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
+      tw.events.send('tiddler.modified', '$GeneralSettings');
+    });
+    await page.evaluate(() => {
+      tw.run.addTiddlerHard({title: 'Spaced Tab Note', text: 'a', type: 'markdown', tags: [], created: new Date(), updated: new Date()});
+      tw.run.showTiddler('Spaced Tab Note');
+    });
+    const close = page.locator('.tab[data-tab="Spaced Tab Note"] .tab-close');
+    await expect(close).toBeVisible();
+    await close.click();
+    await expect(page.locator('.tab[data-tab="Spaced Tab Note"]')).toHaveCount(0);
+    expect(await visibleTitles(page)).not.toContain('Spaced Tab Note');
   });
 });

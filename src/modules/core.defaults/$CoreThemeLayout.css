@@ -261,13 +261,8 @@
     overflow-y: auto;
   }
 
-  /* Search results escape the drawer: full-width fixed bottom-sheet so they
-     are never capped at the sidebar width (was position:absolute inside the
-     ~280px drawer). dvh keeps it correct under dynamic mobile toolbars. */
-  #search-results {
-    position: fixed;
-    inset: auto 0 0 0;
-    width: 100vw;
-    max-height: 70dvh;
-  }
+  /* The drawer search results drop directly below the search input (the base
+     `position:absolute; top:100%` rule). The full-width mobile search lives in
+     the top-bar (#topbar-search) instead, so the in-drawer dropdown no longer
+     needs the fixed bottom-sheet that pinned it to the viewport bottom. */
 }
