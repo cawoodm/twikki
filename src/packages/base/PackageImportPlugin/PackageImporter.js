@@ -125,7 +125,7 @@
   return {
     meta,
     init() {
-      tw.events.override('package.reload.url', onImportRequested);
+      tw.events.override('package.reload.url', onImportRequested, meta.name);
     },
     unload() {
       document.getElementById(DIALOG_ID)?.remove();

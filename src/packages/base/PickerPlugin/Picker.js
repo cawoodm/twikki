@@ -31,6 +31,8 @@
       if (event) tw.events.send(event, value);
       return;
     }
+    // A click on the menu chrome itself (scrollbar, padding) is not "outside".
+    if (e.target.closest('.picker-menu')) return;
     closeAll(); // click outside any picker
   }
 
@@ -102,12 +104,19 @@
     if (e.key === 'Escape') closeAll();
   }
 
+  // Close on page scroll (the fixed menu is pinned to its trigger and would
+  // detach) — but not when the scroll happens inside the menu's own list.
+  function onScroll(e) {
+    if (e.target?.closest?.('.picker-menu')) return;
+    closeAll();
+  }
+
   return {
     meta,
     init() {
       tw.core.dom.on(document, 'click', onClick, 'Picker');
       tw.core.dom.on(document, 'keydown', onEscape, 'Picker');
-      tw.core.dom.on(window, 'scroll', closeAll, 'Picker', true);
+      tw.core.dom.on(window, 'scroll', onScroll, 'Picker', true);
       tw.core.dom.on(window, 'resize', closeAll, 'Picker');
     },
     unload() {
