@@ -31,7 +31,9 @@ test('boot progress: DOM events fire live, in order, from init through ready', a
   expect(phases).toContain('modules-loaded');
   expect(phases).toContain('modules-run');
   expect(phases).toContain('package');
-  expect(events.filter(e => e.phase === 'plugins').map(e => e.step)).toEqual(['load', 'init', 'start']);
+  // Four-phase plugin lifecycle (unload → load → init → start). The 'unload'
+  // tick fires unconditionally; on a fresh boot unloadPlugins() is a no-op.
+  expect(events.filter(e => e.phase === 'plugins').map(e => e.step)).toEqual(['unload', 'load', 'init', 'start']);
   expect(phases[phases.length - 1]).toBe('ready');
 
   // Ordering: fetches before compat, compat before any eval, evals before
