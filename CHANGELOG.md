@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+- **Installable & offline (PWA)** — TWikki now ships a service worker and web app manifest. After one online visit it installs to your home screen / app launcher and boots with no network: the app shell and the compiled data layer (modules and packages) are precached. Updates are applied automatically in the background.
+
 ### Bugs/Technical
 
 - **Offline-tolerant package loading** — when a (force-loaded) package can't be fetched because the browser is offline and a copy was already loaded on a previous online boot, Twikki now keeps the cached copy and shows a quiet info notice instead of a scary error. Genuine online fetch failures (and offline boots with nothing cached) still surface the error as before.

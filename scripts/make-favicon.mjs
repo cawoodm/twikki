@@ -134,7 +134,17 @@ const images = sizes.map(size => ({size, png: encodePNG(renderRGBA(size), size)}
 const ico = buildICO(images);
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, '..', 'public', 'favicon.ico');
-mkdirSync(dirname(out), {recursive: true});
+const publicDir = join(here, '..', 'public');
+mkdirSync(publicDir, {recursive: true});
+
+const out = join(publicDir, 'favicon.ico');
 writeFileSync(out, ico);
 console.log(`Wrote ${out} (${ico.length} bytes, sizes: ${sizes.join('/')})`);
+
+// PWA install icons — reuse the same renderer/encoder as the favicon.
+for (const size of [192, 512]) {
+  const png = encodePNG(renderRGBA(size), size);
+  const pngOut = join(publicDir, `pwa-${size}x${size}.png`);
+  writeFileSync(pngOut, png);
+  console.log(`Wrote ${pngOut} (${png.length} bytes, ${size}x${size})`);
+}
