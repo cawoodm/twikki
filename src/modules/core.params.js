@@ -16,7 +16,7 @@
   // Meta
   const name = 'core.params';
   const version = '0.24.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const platform = '0.28.0';
 
   // Constants
   const reDoubleQuoted = /^["](.+)["]$/g;
@@ -24,7 +24,7 @@
   const reEvalExpression = /^\$\{([^}]+)\}$/g;
 
   // Exports
-  const exports = {parseParams, evalParam};
+  const exports = {parseParams, evalParam, enc};
 
   const run = () => {};
 
@@ -123,5 +123,9 @@
   // '1' => true
   function strIsNumber(str) {
     return !isNaN(str) && !isNaN(parseFloat(str));
+  }
+
+  function enc(param) {
+    return `---enc:${tw.core.common.encoder(JSON.stringify(param))}`;
   }
 });

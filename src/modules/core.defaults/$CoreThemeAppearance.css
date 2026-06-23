@@ -45,7 +45,7 @@ a:not([class]) {
 }
 
 #sidebar > #header {
-  padding: 12px 14px 6px;
+  padding: calc(12px + env(safe-area-inset-top, 0)) 14px 6px;
 }
 
 #site-title h1 {
@@ -95,6 +95,8 @@ a:not([class]) {
   background-color: var(--colbg3);
   border-bottom: 1px solid var(--col4);
   min-height: 38px;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-right: env(safe-area-inset-right, 0);
 }
 
 #menu-toggle {
@@ -163,6 +165,7 @@ div.tiddler div.modified {
 div.tiddler div.text {
   scrollbar-color: var(--col4) transparent;
   scrollbar-width: thin;
+  overflow-wrap: anywhere;
 }
 
 div.tiddler div.text p {
@@ -277,7 +280,8 @@ select:focus {
   padding: 8px 10px;
 }
 
-#search-results {
+#search-results,
+#topbar-search-results {
   padding: 8px;
   background: var(--colbg2);
   border: 1px solid var(--col4);
@@ -285,20 +289,24 @@ select:focus {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
-#search-results .tiddler-list {
+#search-results .tiddler-list,
+#topbar-search-results .tiddler-list {
   padding: 4px 8px;
   border-radius: var(--rad1);
 }
 
-#search-results .tiddler-list:hover {
+#search-results .tiddler-list:hover,
+#topbar-search-results .tiddler-list:hover {
   background-color: var(--colbg3);
 }
 
-#search-results .tiddler-list[data-msg] {
+#search-results .tiddler-list[data-msg],
+#topbar-search-results .tiddler-list[data-msg] {
   cursor: pointer;
 }
 
-#search-results a {
+#search-results a,
+#topbar-search-results a {
   color: var(--colfg);
 }
 
@@ -487,6 +495,14 @@ pre > code {
 
 table {
   border-collapse: collapse;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 
 th,
@@ -506,5 +522,25 @@ span.error {
   background-color: var(--col-error);
   padding: 0 4px;
   border-radius: 3px;
+}
+
+/* ============================================================
+   Touch ergonomics — coarse pointers get larger hit targets and
+   16px inputs (smaller would trigger iOS focus-zoom).
+   ============================================================ */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  button,
+  button.icon,
+  #menu-toggle,
+  .picker-trigger {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 

@@ -67,3 +67,10 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+@media (max-width: 600px) {
+  .csv {
+    display: block;
+    overflow-x: auto;
+  }
+}

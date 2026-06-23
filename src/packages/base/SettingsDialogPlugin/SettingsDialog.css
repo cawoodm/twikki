@@ -90,3 +90,9 @@ input.settings-field-input[type="checkbox"] {
   padding: 0.4rem 0.6rem;
   margin-bottom: 0.5rem;
 }
+
+@media (max-width: 600px) {
+  .settings-field {
+    grid-template-columns: 1fr;
+  }
+}

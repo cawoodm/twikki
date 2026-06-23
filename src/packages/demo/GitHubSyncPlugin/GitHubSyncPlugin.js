@@ -60,7 +60,6 @@
     },
     // Commit only the tiddlers whose content differs from the repo (plus deletions).
     async doPush() {
-      dp('ghrepo', 'doPush');
       const cfg = readConfig();
       if (!cfg) return;
 
@@ -106,7 +105,6 @@
 
     // Replace the local workspace from the repo (local-only tiddlers are preserved).
     async doPull() {
-      dp('ghrepo', 'doPush');
       const cfg = readConfig();
       if (!cfg) return;
       try {

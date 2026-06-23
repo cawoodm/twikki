@@ -6,7 +6,8 @@
   align-items: center;
   gap: 8px;
   flex: 0 1 auto;
-  min-width: 96px; /* keep ≥3 chars + ellipsis legible (matches MIN_TAB in this plugin) */
+  min-width: 96px;
+  /* keep ≥3 chars + ellipsis legible (matches MIN_TAB in this plugin) */
   max-width: 200px;
   padding: 8px 12px;
   background-color: var(--tab-bg);
@@ -24,7 +25,8 @@
 
 .tab .tab-label {
   flex: 1 1 auto;
-  min-width: 0; /* allow the label to shrink and ellipsize inside the flex tab */
+  min-width: 0;
+  /* allow the label to shrink and ellipsize inside the flex tab */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -83,11 +85,17 @@
   align-items: center;
 }
 
-/* Hide the scrollbar on the strip itself (we use overflow-x: hidden in layout). */
 #tab-strip {
   scrollbar-width: none;
 }
 
 #tab-strip::-webkit-scrollbar {
   display: none;
+}
+
+/* On touch there is no hover to reveal the close affordance — keep it visible. */
+@media (hover: none) {
+  .tab .tab-close {
+    opacity: 0.7;
+  }
 }

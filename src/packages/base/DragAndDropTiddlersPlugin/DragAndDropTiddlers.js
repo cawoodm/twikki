@@ -15,11 +15,10 @@
 
   // -- Source side -----------------------------------------------------------
 
-  // Resolve the dragged tiddler's title from either a main-tiddler .title bar
-  // (sits inside .tiddler[data-tiddler-title]) or a TabsPlugin tab (.tab[data-tab]).
+  // Resolve the dragged tiddler's title from a main-tiddler .title bar
+  // (sits inside .tiddler[data-tiddler-title]). Tabs are intentionally NOT
+  // draggable — dragging a tab competed with tapping its close (✕) on touch.
   function resolveDragTitle(target) {
-    const tab = target.closest('#tab-strip .tab[data-tab]');
-    if (tab) return tab.dataset.tab;
     const titleBar = target.closest('.tiddler > .title');
     if (!titleBar) return null;
     return titleBar.parentElement?.dataset.tiddlerTitle || null;
@@ -49,25 +48,6 @@
   // will initiate a drag from it. Idempotent.
   function decorateTiddlerTitle({newElement}) {
     newElement?.querySelector(':scope > .title')?.setAttribute('draggable', 'true');
-  }
-
-  // TabsPlugin rewrites #tab-strip.innerHTML wholesale on every flush, so we
-  // can't just decorate once: re-apply on every mutation.
-  function decorateTabs() {
-    document.querySelectorAll('#tab-strip .tab[data-tab]').forEach(el => el.setAttribute('draggable', 'true'));
-  }
-  let tabObserver = null;
-  function startTabStripObserver() {
-    if (tabObserver) return;
-    const strip = document.getElementById('tab-strip');
-    if (!strip) return;
-    tabObserver = new MutationObserver(decorateTabs);
-    tabObserver.observe(strip, {childList: true});
-    decorateTabs();
-  }
-  function stopTabStripObserver() {
-    tabObserver?.disconnect();
-    tabObserver = null;
   }
 
   // -- Target side -----------------------------------------------------------
@@ -199,20 +179,14 @@
           importBundle(data);
         });
       }
-      // Decoration: main tiddler titles are re-emitted on every render; tabs
-      // need a MutationObserver because TabsPlugin replaces innerHTML wholesale.
+      // Decoration: main tiddler titles are re-emitted on every render.
       tw.events.subscribe('tiddler.element.created', decorateTiddlerTitle, HANDLER_KEY);
-      tw.events.subscribe('ui.loaded', startTabStripObserver, HANDLER_KEY);
-      tw.events.subscribe('ui.reloaded', startTabStripObserver, HANDLER_KEY);
     },
     start() {
       tw.core.dom.on(document, 'dragstart', onDragStart, HANDLER_KEY);
       tw.core.dom.on(document, 'dragend', onDragEnd, HANDLER_KEY);
       tw.core.dom.on(document, 'dragover', onDragOver, HANDLER_KEY);
       tw.core.dom.on(document, 'drop', onDrop, HANDLER_KEY);
-    },
-    unload() {
-      stopTabStripObserver();
     },
   };
 })();
