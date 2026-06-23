@@ -1,8 +1,8 @@
 (function () {
   const meta = {
     name: 'Tabs',
-    version: '1.0.0',
-    platform: '0.27.0',
+    version: '1.1.0',
+    platform: '0.28.0',
     description: 'Tabbed open-tiddlers view with keyboard navigation.',
   };
 
@@ -175,7 +175,7 @@
           title => `
       <div class="tab${title === active ? ' active' : ''}" data-tab="${attr(title)}" title="${attr(title)}">
         <span class="tab-label">${esc(label(title))}</span>
-        <button class="tab-close icon" data-msg="tiddler.close" data-params="${attr(title)}" title="Close">✕</button>
+        <button class="tab-close icon" data-msg="tiddler.close" data-params="${tw.core.params.enc(title)}" title="Close">✕</button>
       </div>`,
         )
         .join('') +
