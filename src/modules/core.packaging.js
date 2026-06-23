@@ -26,6 +26,24 @@
     loadList,
   };
 
+  /* BEGIN offlineFallback helper
+   * Pure decision used when a package fetch fails. Given whether the browser is
+   * online and whether a cached copy of this package already lives in the store
+   * (its tiddlers were loaded on a previous, online boot), decide how to react:
+   *   - 'use-cache'  : offline AND we have a cached copy → keep the cached
+   *                    tiddlers, notify informationally, do NOT re-throw. This is
+   *                    what makes a force-loaded package offline-tolerant.
+   *   - 'fail'       : online (a genuine network/HTTP error) OR offline with no
+   *                    cached copy to fall back on → surface the error as before.
+   * Kept free of closure refs (only its args) so it can be unit-tested by
+   * sentinel extraction, mirroring the buildUrl helper in the platform.
+   */
+  function offlineFallback({online, hadCachedCopy}) {
+    if (!online && hadCachedCopy) return 'use-cache';
+    return 'fail';
+  }
+  /* END offlineFallback helper */
+
   // The import button macro and command palette entry (moved here from the old
   // $PackageWidgets.js). Both dispatch `package.reload.url`, which this plugin
   // now owns, so they open the dialog. Idempotent — safe to re-run on reload.
@@ -69,6 +87,17 @@
       let obj = await httpGetJSON(url, name, {});
       return {name, url, tiddlers: Array.isArray(obj.tiddlers) ? obj.tiddlers : []};
     } catch (e) {
+      // Offline tolerance: if the network is down (or the fetch threw) and a
+      // copy of this package was already merged into the store on a previous
+      // online boot, keep using that cached copy rather than surfacing a scary
+      // error. Returns a {cached:true} marker so loadPackageFromURL leaves the
+      // existing tiddlers untouched. See the offlineFallback helper above.
+      const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+      const hadCachedCopy = !!(name && tw.tiddlers?.all?.some(t => t.package === name));
+      if (offlineFallback({online, hadCachedCopy}) === 'use-cache') {
+        tw.ui.notify(`Offline: using cached copy of package '${name}'`, 'I');
+        return {name, url, cached: true, tiddlers: null};
+      }
       // TODO: Replace notify with throw new Error()
       tw.ui.notify(`Failed to load tiddler package '${name}' from ${url} (see console log)`, 'E', e.stack);
       return null;
@@ -79,6 +108,9 @@
   async function loadPackageFromURL({url, name = '', filter = '', overWrite = false, doNotSave = false, noOverWrite = false}) {
     let pck = await fetchPackage({url, name});
     if (!pck) return 0; // fetchPackage already notified
+    // Offline fallback: the fetch failed but a cached copy is already in the
+    // store. Leave those tiddlers in place (no merge, no prune) and report 0.
+    if (pck.cached) return 0;
     return loadList(pck.tiddlers, {name, overWrite, filter, doNotSave, noOverWrite}); // tw.events.send('package.loaded');
   }
 

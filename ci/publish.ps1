@@ -15,6 +15,11 @@ function main() {
   Copy-Item src/platform/*.js dist/platform/
   Copy-Item src/modules/*.js dist/modules/
 
+  # Generate the service worker LAST, over the fully-assembled dist/, so the
+  # precache covers the complete shell (platform + modules) and data layer.
+  npx workbox-cli generateSW workbox-config.cjs
+  if ($LASTEXITCODE -ne 0) {throw "workbox generateSW failed!"}
+
   $ver = Get-Content .\package.json | ConvertFrom-Json | Select-Object -ExpandProperty version
   Push-Location ../cawoodm.github.io/twikki/
   try {

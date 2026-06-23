@@ -6,7 +6,7 @@
 // force-save UX as renderTWikki errors.
 tw.extensions.registerValidator({
   name: 'template-html',
-  match: t => t.tags?.includes('$Template'),
+  match: tw.core.tiddlers.tiddlerIsATemplate,
   validate: t => {
     tw.core.dom.htmlToNode(t.text);
   },

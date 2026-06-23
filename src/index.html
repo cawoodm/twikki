@@ -8,6 +8,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    <link rel="manifest" href="./manifest.webmanifest" />
   </head>
   <body>
     <div class="no-boot" style="font-family: Verdana, Geneva, Tahoma, sans-serif; color: maroon">
@@ -39,6 +40,12 @@
           // window.addEventListener('twikki.boot.progress', e => console.log(e.detail));
           await window.twikki.init();
           await window.twikki.start();
+          // Register the service worker for offline support. Generated into the
+          // published build by workbox-cli (see ci/publish.ps1); absent under
+          // `npm run dev`, where the fetch simply 404s and registration is skipped.
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+          }
         });
       </script>
     </div>

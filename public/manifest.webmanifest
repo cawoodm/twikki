@@ -1,0 +1,16 @@
+{
+  "name": "TWikki",
+  "short_name": "TWikki",
+  "description": "A personal, offline-first wiki for your notes.",
+  "id": "/twikki/",
+  "start_url": "/twikki/",
+  "scope": "/twikki/",
+  "display": "standalone",
+  "theme_color": "#6db193",
+  "background_color": "#ffffff",
+  "icons": [
+    {"src": "pwa-192x192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "pwa-512x512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "pwa-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
