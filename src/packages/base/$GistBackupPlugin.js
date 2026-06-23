@@ -12,6 +12,13 @@
  * oversized tiddlers will be rejected by the API.
  */
 (function () {
+  const meta = {
+    name: 'GistBackup',
+    version: '1.0.0',
+    platform: '0.27.0',
+    description: 'Back up tiddlers to a private GitHub Gist.',
+  };
+
   const META_FILENAME = '_twikki.meta.json';
   const FORMAT = 'twikki-gist-v1';
   const DEFAULT_DESCRIPTION = 'TWikki backup';
@@ -204,12 +211,7 @@
   }
 
   return {
-    meta: {
-      name: 'GistBackup',
-      version: '1.0.0',
-      platform: '0.27.0',
-      description: 'Back up tiddlers to a private GitHub Gist.',
-    },
+    meta,
     init() {
       // Expose the two button macros. `backup.save` / `backup.restore` are not
       // macros (they return promises, not HTML) — they are wired via
