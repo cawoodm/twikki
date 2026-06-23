@@ -10,8 +10,10 @@ only writes after the user confirms.
 
 Drag sources:
 
-- the `.title` bar of any open tiddler in `#visible-tiddlers`,
-- any tab in `#tab-strip` (TabsPlugin).
+- the `.title` bar of any open tiddler in `#visible-tiddlers`.
+
+Tabs in `#tab-strip` are intentionally **not** draggable: tab dragging competed with
+tapping a tab's close (✕) button on touch devices.
 
 The same import handler is also registered with `$DropZonePlugin` for two file globs:
 
