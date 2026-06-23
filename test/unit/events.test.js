@@ -96,3 +96,43 @@ test('events.filter: subscriber returning empty string DOES set value (only unde
   events.subscribe('f', function append(v) { return v + '-after'; });
   assert.equal(events.filter('f', 'before'), '-after');
 });
+
+test('events.subscribe: triple identical subscribe registers only one handler', () => {
+  const events = freshEvents();
+  function handler(v) { return v; }
+  events.subscribe('dup', handler, 'Owner');
+  events.subscribe('dup', handler, 'Owner');
+  events.subscribe('dup', handler, 'Owner');
+  assert.equal(events.handlers().filter(h => h.event === 'dup').length, 1);
+});
+
+test('events.override: two overrides of one event leave one live handler and no tombstones', () => {
+  const events = freshEvents();
+  events.override('md', function first(t) { return `1:${t}`; });
+  events.override('md', function second(t) { return `2:${t}`; });
+  const all = events.handlers();
+  const live = all.filter(h => h.event === 'md');
+  assert.equal(live.length, 1);
+  // No tombstones: every entry still carries an event field.
+  assert.ok(all.every(h => h.event !== undefined));
+  // The surviving handler is the second (latest) override.
+  assert.equal(live[0].handler('x'), '2:x');
+});
+
+test('events.override: with an owner can be torn down via unsubscribeByOwner', () => {
+  const events = freshEvents();
+  events.override('md', function render(t) { return t; }, 'MyPlugin');
+  assert.equal(events.handlers().filter(h => h.event === 'md').length, 1);
+  assert.equal(events.unsubscribeByOwner('MyPlugin'), 1);
+  assert.equal(events.handlers().filter(h => h.event === 'md').length, 0);
+});
+
+test('events.handlers: mutating the returned array does not affect internals', () => {
+  const events = freshEvents();
+  events.subscribe('e', function h() {}, 'Owner');
+  const snapshot = events.handlers();
+  snapshot.length = 0;
+  snapshot.push({event: 'bogus', handler: () => {}, owner: 'x'});
+  assert.equal(events.handlers().filter(h => h.event === 'e').length, 1);
+  assert.equal(events.handlers().filter(h => h.event === 'bogus').length, 0);
+});

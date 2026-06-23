@@ -88,17 +88,19 @@
           console.warn(`No owner provided in events.subscribe(${event})!`);
           if (window.devMode) throw new Error(`No owner provided in events.subscribe(${event})!`);
         }
-        // Prevent same handler function for same event
-        if (handlers.find(h => h.event === event && h.handler.name === owner)) return dp('Ignoring duplicate event handler', event, owner);
+        // Prevent registering the exact same handler for the same event/owner
+        if (handlers.find(h => h.event === event && h.owner === owner && h.handler === handler)) return dp('Ignoring duplicate event handler', event, owner);
         dp('subscribe', event, owner);
         handlers.push({event, handler, owner});
       },
-      override(event, handler) {
+      override(event, handler, owner) {
         if (typeof handler === 'string') handler = eval(handler);
-        // Remove existing handlers
-        handlers.filter(h => h.event === event).forEach(h => delete h.event);
+        // Remove existing handlers in place (no leftover tombstones)
+        for (let i = handlers.length - 1; i >= 0; i--) {
+          if (handlers[i].event === event) handlers.splice(i, 1);
+        }
         // Add new handler
-        this.subscribe(event, handler);
+        this.subscribe(event, handler, owner);
       },
       // Remove every handler whose owner matches — used by the platform's
       // unloadPlugins() step to tear down a plugin's subscriptions in one
@@ -117,7 +119,7 @@
         return removed;
       },
       handlers() {
-        return handlers;
+        return [...handlers];
       },
       clear() {
         dp('clear');
