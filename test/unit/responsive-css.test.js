@@ -1,7 +1,7 @@
-import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {test} from 'node:test';
 
 const SRC = join(import.meta.dirname, '..', '..', 'src');
 const read = rel => readFileSync(join(SRC, rel), 'utf8');
@@ -27,18 +27,14 @@ test('viewport meta opts into the safe-area with viewport-fit=cover', () => {
 test('safe-area insets are honoured on header/sidebar/footer chrome', () => {
   const layout = read('modules/core.defaults/$CoreThemeLayout.css');
   const appearance = read('modules/core.defaults/$CoreThemeAppearance.css');
-  assert.match(
-    layout + appearance,
-    /env\(safe-area-inset-/,
-    'at least one chrome element must pad with env(safe-area-inset-*)',
-  );
+  assert.match(layout + appearance, /env\(safe-area-inset-/, 'at least one chrome element must pad with env(safe-area-inset-*)');
 });
 
 test('index.html carries PWA status-bar metas for standalone mode', () => {
   const html = read('index.html');
   assert.match(html, /name="theme-color"/, 'needs a theme-color meta');
-  assert.match(html, /name="apple-mobile-web-app-capable"/, 'needs apple-mobile-web-app-capable');
-  assert.match(html, /name="apple-mobile-web-app-status-bar-style"/, 'needs apple status-bar-style');
+  assert.match(html, /name="mobile-web-app-capable"/, 'needs mobile-web-app-capable');
+  assert.match(html, /name="mobile-web-app-status-bar-style"/, 'needs apple status-bar-style');
 });
 
 test('plugin command/picker modals stay viewport-bounded (vw), never a fixed wide px', () => {
