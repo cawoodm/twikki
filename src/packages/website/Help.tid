@@ -55,5 +55,5 @@ A quick guide to getting things done in TWikki. See [[Welcome]], [[FAQ]] and [[F
 * [[Concepts]] — types of tiddlers and how behaviour is decided
 * [[Tags]] — every special `$` system tag
 * [[Workspaces]] — running isolated stores side-by-side
-* [[Plugins]] and [Packages](#$CorePackagesHelp) — extending TWikki
+* [[Plugins]] and [[Packages]] — extending TWikki
 * [[Features]] — a tour of everything TWikki can do

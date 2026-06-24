@@ -10,7 +10,7 @@
     "test:e2e": "npm run compile && playwright test",
     "preview": "pwsh ci/publish.ps1 -Preview",
     "publish": "pwsh ci/publish.ps1",
-    "docker": "node -e \"const v=require('./package.json').version, {execSync}=require('child_process'), run=c=>execSync(c,{stdio:'inherit'}); run('docker build -t twikki:'+v+' -t twikki:latest .'); try{run('docker rm -f twikki')}catch(e){} run('docker run -d --restart unless-stopped -p 8081:80 --name twikki twikki:latest')\"",
+    "docker": "pwsh ci/docker.ps1",
     "test:e2e:ui": "playwright test --ui",
     "compile": "node vite-plugin-tiddler-compile.js",
     "watch": "npm-watch",
