@@ -15,7 +15,7 @@
 (function () {
   // Meta
   const name = 'core.params';
-  const version = '0.24.0';
+  const version = '0.25.0';
   const platform = '0.28.0';
 
   // Constants

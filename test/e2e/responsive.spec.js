@@ -6,11 +6,11 @@ const PHONE = {width: 390, height: 844}; // iPhone 12/13/14 logical size
 test.describe('Phone (≤600px)', () => {
   test.use({viewport: PHONE});
 
-  test('drawer search results drop directly below the input (not pinned to the viewport bottom)', async ({page}) => {
+  test('top-bar search results drop directly below the input (not pinned to the viewport bottom)', async ({page}) => {
     await bootApp(page);
     await createTiddler(page, {title: 'OverlayProbe', text: 'find me overlay'});
-    // Open the drawer so the search input is on-screen, then query.
-    await page.evaluate(() => document.getElementById('sidebar').classList.add('open'));
+    // Tap 🔍 to reveal the relocated single search box, then query.
+    await page.locator('#topbar-search-toggle').click();
     await page.locator('#search').pressSequentially('OverlayProbe'); // keyup fires the search
     await expect(page.locator('#search-results .tiddler-list').first()).toBeVisible();
     const r = await page.evaluate(() => {
@@ -76,20 +76,23 @@ test.describe('Phone (≤600px)', () => {
         tw.run.addTiddlerHard({title: t, text: '# ' + t, type: 'markdown', tags: [], created: new Date(), updated: new Date()}));
     });
     const toggle = page.locator('#topbar-search-toggle');
-    const input = page.locator('#topbar-search-input');
+    const input = page.locator('#search'); // the single search box, relocated into the bar
     await expect(toggle).toBeVisible();
-    await expect(input).toBeHidden();
+    await expect(input).toBeHidden(); // hidden in the bar until 🔍
 
-    // Tap 🔍 → the bar morphs: input shows, tabs/icon hide.
+    // Tap 🔍 → the bar morphs: the search field shows, tabs/icon hide.
     await toggle.click();
     await expect(input).toBeVisible();
     await expect(page.locator('#topbar-search-close')).toBeVisible();
 
-    // Type → results render full-width into the top-bar's own container.
+    // Focus alone shows the FULL list (same as the sidebar search) before typing.
+    await expect(page.locator('#search-results .tiddler-list[data-msg]').first()).toBeVisible();
+
+    // Type → the list filters; results render full-width.
     await input.pressSequentially('Guide');
-    await expect(page.locator('#topbar-search-results .tiddler-list[data-msg]').first()).toBeVisible();
+    await expect(page.locator('#search-results .tiddler-list[data-msg]').first()).toBeVisible();
     const r = await page.evaluate(() => {
-      const el = document.getElementById('topbar-search-results');
+      const el = document.getElementById('search-results');
       return {disp: getComputedStyle(el).display, width: el.getBoundingClientRect().width, vw: window.innerWidth};
     });
     expect(r.disp).toBe('block');
@@ -98,8 +101,8 @@ test.describe('Phone (≤600px)', () => {
     // ✕ collapses the bar and clears the query/results.
     await page.locator('#topbar-search-close').click();
     await expect(input).toBeHidden();
-    await expect(page.locator('#topbar-search-results')).toBeHidden();
-    expect(await page.evaluate(() => document.getElementById('topbar-search-input').value)).toBe('');
+    await expect(page.locator('#search-results')).toBeHidden();
+    expect(await page.evaluate(() => document.getElementById('search').value)).toBe('');
   });
 });
 

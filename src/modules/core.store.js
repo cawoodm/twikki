@@ -14,8 +14,8 @@
  */
 (function (tw) {
   const name = 'core.store';
-  const version = '0.1.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.2.0';
+  const platform = '0.28.0'; // built for platform ^0.28.0
 
   tw.store = {
     get(key) {

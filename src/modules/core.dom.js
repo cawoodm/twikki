@@ -8,8 +8,8 @@
  */
 (function (tw) {
   const name = 'core.dom';
-  const version = '0.27.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.28.0';
+  const platform = '0.28.0'; // built for platform ^0.28.0
   const exports = {};
 
   // Exports

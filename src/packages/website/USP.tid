@@ -49,7 +49,7 @@ This makes the system easy to read, debug, and extend without learning a bespoke
 A theme is just a tiddler listing the stylesheets to apply. The theme manager concatenates those stylesheets and injects them via `adoptedStyleSheets`, so editing a stylesheet in the active theme updates the page live. Themes are ordinary data you can ship, import, and version like anything else. See [THEMES.md](THEMES.md).
 
 ### Single-file plugins and themes via sections
-A tiddler can be split into named **sections** addressed as `Parent::Section`. This means an entire plugin — or a theme plus its stylesheets — can live in a *single* multipart tiddler instead of being scattered across many. See the [CHANGELOG](../CHANGELOG.md) and the in-app `ExamplePlugin`.
+A tiddler can be split into named **sections** addressed as `Parent::Section`. This means an entire plugin — or a theme plus its stylesheets — can live in a *single* multipart tiddler instead of being scattered across many. See the [CHANGELOG](https://github.com/cawoodm/twikki/blob/main/CHANGELOG.md) and the in-app `ExamplePlugin`.
 
 ### Packages over URLs
 A package is simply a JSON list of tiddlers (`{"tiddlers": [...]}`), usually loaded from a URL. Core and extension packages are declared in the `$CorePackages` / `$ExtensionPackages` tiddlers and fetched on start; any package can be imported on demand with the `<<packages.import>>` widget. Distribution is just "host a JSON file somewhere."
@@ -68,4 +68,4 @@ Query-string switches make the platform transparent when something breaks: `?tra
 
 ---
 
-See the [CHANGELOG](../CHANGELOG.md) for what's new, and [MODULES.md](MODULES.md) / [THEMES.md](THEMES.md) / [COMPILER.md](COMPILER.md) for deeper technical docs.
+See the [CHANGELOG](https://github.com/cawoodm/twikki/blob/main/CHANGELOG.md) for what's new, and [MODULES.md](MODULES.md) / [THEMES.md](THEMES.md) / [COMPILER.md](COMPILER.md) for deeper technical docs.

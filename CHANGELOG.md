@@ -1,14 +1,20 @@
 # CHANGELOG
 
-## Unreleased
+## 24 Jun 2026 (v0.28.0)
 
 ### Features
 
-- **Installable & offline (PWA)** — TWikki now ships a service worker and web app manifest. After one online visit it installs to your home screen / app launcher and boots with no network: the app shell and the compiled data layer (modules and packages) are precached. Updates are applied automatically in the background.
+- **Offline** — TWikki now runs offline after installation with no network
+- **Mobile** — Responsive design to make TWikki usable on phones and tablets
+- **GitHub Link** — The `$GithubSynchLinkPlugin` in the demo package adds a quick link to view the GitHub copy of your tiddler.
 
 ### Bugs/Technical
 
-- **Offline-tolerant package loading** — when a (force-loaded) package can't be fetched because the browser is offline and a copy was already loaded on a previous online boot, Twikki now keeps the cached copy and shows a quiet info notice instead of a scary error. Genuine online fetch failures (and offline boots with nothing cached) still surface the error as before.
+- **Tabs with spaces close correctly** — closing a tab whose title contains spaces now works.
+- **GitHub sync skips `doNotSave` tiddlers** — transient/non-persisted tiddlers are no longer pushed to the Gist.
+- **Saner created dates** — packaging and the store no longer assign bogus creation dates to tiddlers.
+- **Picker scroll fix** — the picker pill list now scrolls correctly when it overflows.
+- **Template validation fix** — `$TemplateValidator` correctly detects whether a tiddler is a template.
 
 ## 20 Jun 2026 (v0.27.0)
 

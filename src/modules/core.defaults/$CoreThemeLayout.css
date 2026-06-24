@@ -70,14 +70,13 @@
   flex: 0 0 auto;
   display: flex;
   align-items: stretch;
-  position: relative; /* anchor for the mobile #topbar-search-results overlay */
+  position: relative; /* positioning context for the relocated mobile search */
 }
 
-/* Top-bar search is mobile-only chrome — hidden on desktop, where the
-   sidebar/drawer search box is used instead. */
+/* Top-bar search toggle/close are mobile-only chrome — hidden on desktop, where
+   the single #explorer-search box lives in the sidebar. */
 #topbar-search-toggle,
-#topbar-search,
-#topbar-search-results {
+#topbar-search-close {
   display: none;
 }
 
@@ -225,11 +224,17 @@
     align-items: center;
   }
 
-  /* Top-bar search: the 🔍 icon shows; tapping it morphs the bar into a
-     search field (#main-topbar gets `.searching`), hiding the tabs + icon. */
+  /* Top-bar search: the 🔍 icon shows; tapping it morphs the bar into a search
+     field (#main-topbar gets `.searching`), hiding the tabs + icon. The single
+     #explorer-search box is relocated into #main-topbar here (core.search.js)
+     and shown only while `.searching`. */
   #topbar-search-toggle {
     display: inline-flex;
     align-items: center;
+  }
+
+  #main-topbar > #explorer-search {
+    display: none;
   }
 
   #main-topbar.searching #tab-strip,
@@ -237,7 +242,7 @@
     display: none;
   }
 
-  #main-topbar.searching #topbar-search {
+  #main-topbar.searching > #explorer-search {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
@@ -245,20 +250,14 @@
     padding: 0 6px;
   }
 
-  #topbar-search-input {
-    flex: 1 1 auto;
-    min-width: 0;
+  #main-topbar.searching > #topbar-search-close {
+    display: inline-flex;
+    align-items: center;
   }
 
-  /* Results drop below the bar, full-width; JS toggles display (block/none). */
-  #topbar-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 18; /* above content, below the drawer (20) and its scrim (15)… */
-    max-height: 70dvh;
-    overflow-y: auto;
+  #main-topbar.searching #search {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   /* The in-drawer dropdown would be capped at the ~220px drawer width and

@@ -1,4 +1,6 @@
-[CmdletBinding()]param()
+[CmdletBinding()]param(
+  [switch]$Preview = $false
+)
 function main() {
   # We don't need vite since we aren't packaging our code
   # We embed a pre-published copy of boot.js
@@ -25,9 +27,16 @@ function main() {
   try {
     git pull
     if ($LASTEXITCODE -ne 0) {throw "GIT PULL Failed!"}
-    Remove-Item -Recurse -Force * -Verbose
-    Copy-Item ../../twikki/dist/* -Recurse ./ -Verbose
-    #Read-Host "Commit & Push?"
+    Remove-Item -Recurse -Force *
+    Copy-Item ../../twikki/dist/* -Recurse ./
+    if ($Preview) {
+      # Preview with a STATIC server, not `vite serve` (a dev server that injects
+      # @vite/client and transforms assets — which pollutes the SW precache and
+      # breaks offline). Serve the parent so the app is reachable at /twikki/,
+      # mirroring GitHub Pages. Open http://localhost:8088/twikki/
+      npx --yes http-server .. -p 8088 -c-1
+      Read-Host "Commit & Push?"
+    }
     git add .
     git commit -a -m "twikki-$ver-$(Get-Date -f yyyyMMddhhmm)"
     git push

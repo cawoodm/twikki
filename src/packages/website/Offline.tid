@@ -1,0 +1,62 @@
+tags: Help
+
+## Offline & Install
+
+TWikki is **offline-first**. After one online visit it keeps working with no internet — your notes are local, and the app itself is cached on your device. You can also **install** it as an app so it gets its own window and launcher icon.
+
+### Install
+
+When you open TWikki in a supported browser you'll see an *Install* / *Add to home screen* prompt (the address-bar install icon on desktop, the browser menu on mobile). Installing gives TWikki its own window, icon and launcher entry, and lets it launch straight into offline mode. You don't have to install to work offline — a normal browser tab works too — but installing makes it feel like a native app.
+
+## How offline works
+
+Two independent layers cover everything TWikki needs to boot and run with no network:
+
+- **Your data** — notes never touch a server. They live in your browser's `localStorage`, or in IndexedDB if you enable the `IndexedDBStoragePlugin`. See [[Workspaces]] and [[Saves]].
+- **The app shell + code** — a [service worker](https://developer.mozilla.org/docs/Web/API/Service_Worker_API) precaches `index.html`, the platform, the core [[Modules]] and the compiled [[Packages]] on first visit. On every later load the browser serves them from that cache, so a reload with no network boots the full app — not an error page.
+
+Because both layers are local, an offline TWikki can create, edit, search, save and navigate exactly like an online one.
+
+### First visit still needs a connection
+
+The very first load fetches the shell, modules and packages over the network so they can be cached. After that one online visit you're good to go offline. (A truly air-gapped first run — `file://`, no server ever — isn't supported yet.)
+
+### Requirements
+
+- A **secure context** — `https://` or `localhost`. The published site (github.io) qualifies; note this if you self-host.
+- The service worker only runs in the **built/deployed** app, not the `npm run dev` server — dev intentionally skips caching so you always see fresh sources.
+
+### Self-hosting & Docker
+
+TWikki always runs under the `/twikki/` base path (the published site lives at `/twikki/`, and the Docker image serves there too, redirecting from the root). The Docker image bakes the service worker in at build time, so a self-hosted container is offline-capable out of the box — no extra configuration. Remember the secure-context rule above: serve it over `https://` (or reach it via `localhost`) for the service worker to register.
+
+## How updates work
+
+There are two caches and they refresh in different ways — this matters when you want the newest version.
+
+### App shell (service worker)
+
+When a new build is deployed, the service worker downloads it **in the background** and takes over automatically on your next visit — no action needed. You always end up on the latest shell without a manual refresh.
+
+### Modules
+
+[[Modules]] are fetched once and cached separately in `localStorage` (they're the shared "OS" across all your workspaces). They are **not** re-downloaded on every boot. To force-refresh them, add a query parameter to the URL:
+
+- `?reload` — re-download the modules.
+- `?update` — re-download and re-check compatibility.
+
+Each module is versioned and declares the platform release it was built for; on boot TWikki checks compatibility before anything runs and, if a freshly downloaded module doesn't match, halts and asks you to **Update** or **Keep current versions**. Full details — including the semver/​compatibility rules — are on the [[Modules]] page.
+
+## Offline-tolerant package loading
+
+Some [[Packages]] are set to reload on every boot. If you're **offline** and a forced package fetch fails, TWikki keeps the copy it cached on a previous online boot and shows a quiet info notice instead of a scary error — so a flaky or absent connection never breaks your wiki. A genuine fetch failure while **online** (or an offline boot with nothing cached) still surfaces the error as before.
+
+## What still needs a connection
+
+A few features talk to remote services and only work online:
+
+- **Synchronization & backup** — Gist sync and backup push/pull to GitHub. See [[Synchronization]].
+- **Package & theme import** from a URL.
+- **Syntax highlighting** currently loads highlight.js from a CDN, so highlighted code blocks may be unstyled offline (the rest of the page renders fine).
+
+These degrade rather than corrupt anything — when you're back online they work normally again.

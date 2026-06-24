@@ -280,8 +280,7 @@ select:focus {
   padding: 8px 10px;
 }
 
-#search-results,
-#topbar-search-results {
+#search-results {
   padding: 8px;
   background: var(--colbg2);
   border: 1px solid var(--col4);
@@ -289,24 +288,20 @@ select:focus {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
-#search-results .tiddler-list,
-#topbar-search-results .tiddler-list {
+#search-results .tiddler-list {
   padding: 4px 8px;
   border-radius: var(--rad1);
 }
 
-#search-results .tiddler-list:hover,
-#topbar-search-results .tiddler-list:hover {
+#search-results .tiddler-list:hover {
   background-color: var(--colbg3);
 }
 
-#search-results .tiddler-list[data-msg],
-#topbar-search-results .tiddler-list[data-msg] {
+#search-results .tiddler-list[data-msg] {
   cursor: pointer;
 }
 
-#search-results a,
-#topbar-search-results a {
+#search-results a {
   color: var(--colfg);
 }
 

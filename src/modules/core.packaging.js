@@ -8,8 +8,8 @@
  */
 (function (tw) {
   const name = 'core.packaging';
-  const version = '0.27.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.28.0';
+  const platform = '0.28.0'; // built for platform ^0.28.0
 
   // Tags that represent local user state rather than package content. When a
   // forced package load overwrites an existing tiddler, these are carried over

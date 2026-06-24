@@ -9,8 +9,8 @@
  */
 (function (tw) {
   const name = 'core.search';
-  const version = '0.24.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.26.0';
+  const platform = '0.28.0'; // built for platform ^0.28.0
 
   // Exports
   const exports = {
@@ -225,45 +225,65 @@
     tw.core.dom.$('search-results').addEventListener('click', publishSearchClick);
     document.addEventListener('click', onDocumentClick);
     wireTopbarSearch();
+    relocateSearch();
   }
 
   // Mobile top-bar search: the 🔍 icon morphs #main-topbar into a search field.
-  // Renders into #topbar-search-results (its own container) rather than the
-  // drawer's #search-results, which is translated off-screen when the drawer is
-  // closed. All optional — desktop hides this chrome via CSS.
+  // There is only ONE search box (#explorer-search, containing #search +
+  // #search-results); relocateSearch() moves it into the top bar on phones and
+  // back into the sidebar on wider screens. Tapping 🔍 drives the `.searching`
+  // class and shows the full list. We call searchFocus() directly rather than
+  // relying on .focus() to fire it: mobile browsers (notably iOS Safari) often
+  // ignore programmatic focus on a just-revealed element, so the list would
+  // never appear. .focus() is still attempted to raise the keyboard where allowed.
   function wireTopbarSearch() {
     const toggle = tw.core.dom.$('topbar-search-toggle');
-    const input = tw.core.dom.$('topbar-search-input');
     const close = tw.core.dom.$('topbar-search-close');
-    const results = tw.core.dom.$('topbar-search-results');
-    if (!toggle || !input || !results) return;
-    results.style.display = 'none';
+    if (!toggle) return;
     toggle.addEventListener('click', () => {
       document.getElementById('main-topbar')?.classList.add('searching');
-      input.focus();
+      tw.core.dom.$('search')?.focus();
+      searchFocus(); // show the full list even if the browser dropped the focus
     });
     close?.addEventListener('click', closeTopbarSearch);
-    input.addEventListener('keyup', topbarSearchNow);
     // A result click navigates via the global data-msg handler; also collapse the bar.
-    results.addEventListener('click', e => {
+    tw.core.dom.$('search-results')?.addEventListener('click', e => {
       if (e.target.closest('[data-msg="tiddler.show"]')) closeTopbarSearch();
     });
   }
-  function topbarSearchNow() {
-    const input = tw.core.dom.$('topbar-search-input');
-    searchShowResults(search(input.value, tw.tiddlers.all), 'topbar-search-results');
-    // searchShowResults clears the inline display; force visible (CSS default is none).
-    tw.core.dom.$('topbar-search-results').style.display = 'block';
-  }
   function closeTopbarSearch() {
     document.getElementById('main-topbar')?.classList.remove('searching');
-    const input = tw.core.dom.$('topbar-search-input');
+    const input = tw.core.dom.$('search');
     if (input) input.value = '';
-    const results = tw.core.dom.$('topbar-search-results');
+    const results = tw.core.dom.$('search-results');
     if (results) {
       results.innerHTML = '';
       results.style.display = 'none';
     }
+  }
+
+  // Move the single #explorer-search box between the sidebar (its desktop/tablet
+  // home, before #explorer) and the top bar (on phones, before the ✕ button) so
+  // it escapes the drawer, which is translated off-screen. Listeners bound to
+  // #search survive the reparent. Driven by the ≤600px media query.
+  function relocateSearch() {
+    const box = tw.core.dom.$('explorer-search');
+    const sidebar = tw.core.dom.$('sidebar');
+    const explorerNav = tw.core.dom.$('explorer');
+    const topbar = tw.core.dom.$('main-topbar');
+    const close = tw.core.dom.$('topbar-search-close');
+    if (!box || !sidebar || !topbar) return;
+    const mq = window.matchMedia('(max-width: 600px)');
+    const place = () => {
+      if (mq.matches) {
+        topbar.insertBefore(box, close || null);
+      } else {
+        closeTopbarSearch(); // leaving phone width: drop the .searching state
+        sidebar.insertBefore(box, explorerNav || null);
+      }
+    };
+    place();
+    mq.addEventListener('change', place);
   }
 
   // Event-triggered search (e.g. #msg:search:$tag:$Shadow) renders results without
@@ -274,6 +294,9 @@
     if (!results || results.style.display === 'none') return;
     if (event.target.closest('#search-results')) return;
     if (event.target.closest('#search')) return;
+    // The 🔍 toggle opens the search (focusing #search shows the list); without
+    // this its click would bubble here and immediately hide what it just opened.
+    if (event.target.closest('#topbar-search-toggle')) return;
     results.style.display = 'none';
   }
 

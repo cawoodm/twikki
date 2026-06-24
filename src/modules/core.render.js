@@ -11,8 +11,8 @@
  */
 (function (tw) {
   const name = 'core.render';
-  const version = '0.1.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.1.1';
+  const platform = '0.28.0'; // built for platform ^0.28.0
 
   // A reference is a title, optionally followed by ::Section, so links/inclusions
   // can address into a tiddler: [[Title::Section]] / {{Title::Section}}. ':' is
@@ -58,8 +58,11 @@
   // contributions that already-loaded plugins put on the registry).
   tw.extend = tw.extend || {tiddlerDetails: {}};
 
-  // Legacy aliases
-  tw.lib = {markdown: renderMarkdown};
+  // Legacy aliases. Merge (don't replace) so contributions other modules put
+  // on the registry survive regardless of load order — e.g. core.dom's
+  // tw.lib.require, which loads before this module.
+  tw.lib = tw.lib || {};
+  tw.lib.markdown = renderMarkdown;
   window.markdown = renderMarkdown;
 
   return {name, version, platform, exports};

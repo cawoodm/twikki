@@ -7,8 +7,8 @@
  */
 (function (tw) {
   const name = 'core.common';
-  const version = '0.25.0';
-  const platform = '0.27.0'; // built for platform ^0.27.0
+  const version = '0.26.0';
+  const platform = '0.28.0'; // built for platform ^0.28.0
 
   // Exports
   const exports = {

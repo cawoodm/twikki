@@ -2,6 +2,21 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Canonicalize to a trailing slash so the SW scope, manifest and relative
+      // URLs all resolve under the app's base dir (e.g. /twikki/) regardless of
+      // how the host serves the directory. Mirrors the directory-detection rule
+      // in buildUrl() (twikki.platform.js): a last path segment with no '.' is a
+      // directory, not a file. Must run before the platform script and SW
+      // registration. location.replace keeps the history clean.
+      (function () {
+        var p = location.pathname;
+        var last = p.substring(p.lastIndexOf('/') + 1);
+        if (last && last.indexOf('.') === -1 && !p.endsWith('/')) {
+          location.replace(p + '/' + location.search + location.hash);
+        }
+      })();
+    </script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="theme-color" content="#6db193" />
