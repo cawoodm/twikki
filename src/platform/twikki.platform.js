@@ -80,7 +80,7 @@ import coreDefaults from '../generated/core.defaults.json';
   function buildUrl(path, base) {
     if (/^https?:\/\//.test(path)) return path;
     if (!base) {
-      base = tw.storage.get('/moduleUrl') || window.MODULE_URL;
+      base = tw.storage.get('/baseUrl') || window.BASE_URL;
       if (!base) {
         // Derive the base from window.location.href. The URL spec treats the
         // last path segment as a FILE unless the URL ends with '/', so when
@@ -155,7 +155,6 @@ import coreDefaults from '../generated/core.defaults.json';
 
       if (!runModules()) return;
 
-      dp(`*** TWikki v${VERSION} platform started`);
       document.title = tw.core.render.renderTiddler('$SiteTitle');
 
       tw.events.send('ui.loading');
@@ -181,54 +180,23 @@ import coreDefaults from '../generated/core.defaults.json';
   }
 
   function collectModules() {
-    // baseUrl is still resolved here — package loading (loadCorePackages /
-    // loadExtensionPackages) and the `package.load.url` command resolve URLs
-    // against it.
     baseUrl = tw.core.buildUrl('./');
-
-    // One-time migration: older builds cached each module's source under
-    // /modules/* (plus /modules.version) in localStorage. Nothing reads them
-    // now — every core module is bundled — so drop them to reclaim quota.
-    // (?clear doesn't touch them; this does.)
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('/modules'))
-      .forEach(k => localStorage.removeItem(k));
-
-    // Everything is bundled by Vite: code modules via the ESM imports up top,
-    // the shadow tiddlers via the core.defaults.json import. Nothing is fetched
-    // at boot, so a core module can't drift from the platform that ships it.
     tw.modules = CORE_MODULES.map(m => (m.factory ? {name: m.name, factory: m.factory} : {name: m.name, tiddlers: m.tiddlers}));
   }
 
   function runModules() {
-    const errMsgs = [];
     dp(`${tw.modules.length} modules loaded. Running modules...`);
     tw.modules
       .filter(pck => pck.meta?.run)
       .forEach(pck => {
         dp(`Running module '${pck.name}'...`);
-        if (!qs.trace) {
-          // Normally we try/catch modules to provide user-friendly feedback...
-          try {
-            pck.meta.run();
-          } catch (e) {
-            errMsgs.push({name: pck.name, message: e.message});
-            console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
-            return;
-          }
-        } else {
-          // ...however, developers want to know where exactly the error occurred
-          //   and this is only possible when we let the original event bubble up unhandled!!
-          pck.meta.run();
-        }
+        pck.meta.run();
       });
     dp('Modules run');
-    if (handleModuleErrors(errMsgs)) return;
     return true;
   }
 
   function loadModules() {
-    const errMsgs = [];
     tw.modules.forEach(pck => {
       if (pck.factory) {
         dp('Loading code module', pck.name);
@@ -253,7 +221,6 @@ import coreDefaults from '../generated/core.defaults.json';
     });
     tw.shadowTiddlers = Array.from(tw.tiddlers.all);
     Object.freeze(tw.shadowTiddlers);
-    if (handleModuleErrors(errMsgs)) return;
     return true;
   }
 
@@ -269,7 +236,6 @@ import coreDefaults from '../generated/core.defaults.json';
     return {
       logFilter: new RegExp(qs.logfilter || '.', 'i'),
       debugMode: qs.debug,
-      trace: qs.trace,
       breakPoint: qs.breakpoint,
       break(name) {
         // eslint-disable-next-line no-debugger
@@ -340,33 +306,6 @@ import coreDefaults from '../generated/core.defaults.json';
       console.error('twikki.boot.js failed:', e);
       alert(`Pre-boot script failed:\n\n${e.message}\n\nProceeding without it.`);
     }
-  }
-
-  // Renders the boot-halt page when one or more modules failed to eval or run.
-  // Returns `true` when it took the error path so the caller's `if (handleModuleErrors(errMsgs)) return;`
-  // actually halts further work in start() — otherwise downstream code would try to use
-  // the missing module exports, push more errors onto the same array, and re-enter this
-  // function, each document.write appending another <h1> (the bug this guards against).
-  // Idempotent via a sticky flag in case a caller forgets the early return.
-  function handleModuleErrors(errMsgs) {
-    if (errMsgs.length === 0) return false;
-    if (handleModuleErrors.handled) return true;
-    handleModuleErrors.handled = true;
-    const names = errMsgs.map(e => e.name.replace(/^\//, '').replace(/\.js$/, ''));
-    const heading = names.length === 1 ? `Module '${names[0]}' failed to load` : `${names.length} modules failed to load: ${names.join(', ')}`;
-    document.write(`<h1>${heading}</h1>`);
-    errMsgs.forEach(e => {
-      const name = e.name.replace(/^\//, '');
-      document.write(`<p class="error"><b>${name}</b>: ${e.message}</p>`);
-    });
-    let traceUrl = document.location.href;
-    traceUrl = traceUrl.match(/\?/) ? traceUrl + '&trace' : traceUrl + '?trace';
-    document.write('<p class="error">Tips:');
-    document.write('<ul>');
-    document.write(`<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`);
-    document.write('<li>Tip: Try <a href="?safemode">?safemode</a> to skip extension packages');
-    document.write('</ul>');
-    return true;
   }
 
   /* Boot lifecycle */

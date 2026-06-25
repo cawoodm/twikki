@@ -198,7 +198,7 @@
     delete t.doNotSave;
     tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
     // This url is global (read by the platform before any workspace exists)
-    if (path === 'urls.moduleUrl') tw.store.global.set('/moduleUrl', parsed.urls?.moduleUrl);
+    if (path === 'urls.baseUrl') tw.store.global.set('/baseUrl', parsed.urls?.baseUrl);
     tw.events.send('save.auto');
   }
 

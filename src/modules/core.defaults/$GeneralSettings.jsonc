@@ -29,8 +29,8 @@
     "mode~": "How open notes are displayed: tabs (one note at a time) or river (all stacked) (option:tabs,river)"
   },
   "urls": {
-    "moduleUrl": "https://cawoodm.github.io/twikki",
-    "moduleUrl~": "Base URL the platform loads its core modules and packages from (string)",
+    "baseUrl": "https://cawoodm.github.io/twikki",
+    "baseUrl~": "Base URL the platform loads its core modules and packages from (string)",
     "themeUrl": "https://gist.githubusercontent.com/cawoodm/c43037e0370393ef2928848fee64e95d/raw/themes.json",
     "themeUrl~": "URL of the themes manifest JSON imported by the Theme Importer (string)"
   },
