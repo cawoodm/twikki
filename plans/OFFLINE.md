@@ -8,7 +8,7 @@ How TWikki loads and runs with no internet, and installs as a PWA. This document
 
 **Already offline-friendly (pre-existing)**
 - Storage is local — `localStorage` plus the IndexedDB plugin. No server round-trips for data.
-- Core modules are fetched same-origin (`<base>/modules/*`); the **service worker precache** is the only cache (no `localStorage` module cache — see Step 3). Offline, the SW serves them.
+- Core modules (code + shadow tiddlers) are **bundled into the app by Vite** — not fetched. Only packages (`$CorePackages`/`$ExtensionPackages`) are fetched same-origin; the **service worker precache** serves them offline.
 - Package URLs in `$CorePackages`/`$ExtensionPackages` are relative, resolving same-origin via `buildUrl`.
 
 **What broke offline before this branch**
@@ -16,16 +16,16 @@ How TWikki loads and runs with no internet, and installs as a PWA. This document
 2. Packages are fetched with `force` every boot. *(now served from the SW precache offline; plus Step 4's cached fallback)*
 3. One CDN runtime dep fails offline: **highlight.js** (cdnjs). *(still open — Step 5)*
 4. Network features (GitHub/Gist sync & backup, theme/package import) throw instead of degrading. *(still open — Step 6)*
-5. First-ever visit still needs network (modules/packages are fetched at boot, not inlined). *(still open — optional Step 7)*
+5. First-ever visit still needs network (packages are fetched at boot; core code + shadow tiddlers are now bundled into the JS). *(still open — optional Step 7)*
 
 ---
 
 ## What this branch adds (Steps 1 & 2)
 
-The production deploy now runs **`vite build`** (`ci/publish.ps1`): the platform statically imports the core modules, so Vite bundles the whole shell into `dist/index.html` + a hashed `dist/assets/*.js`. (This replaced the old manual copy-assembly, which existed only because the platform used to `eval` fetched module strings that Vite couldn't see.) The compile plugin still emits the **data layer** — `public/packages/*.json` and `public/modules/core.defaults.json` — which Vite copies into `dist/` for same-origin fetch. The service worker is generated **last** by **`workbox-cli` over the built `dist/`**, so the precache covers the hashed bundle and the data layer.
+The production deploy now runs **`vite build`** (`ci/publish.ps1`): the platform statically imports the core modules, so Vite bundles the whole shell into `dist/index.html` + a hashed `dist/assets/*.js`. (This replaced the old manual copy-assembly, which existed only because the platform used to `eval` fetched module strings that Vite couldn't see.) The shadow tiddlers (`core.defaults.json`) are compiled to `src/generated/` and **bundled into the JS**; only the **package data layer** (`public/packages/*.json`) is emitted for same-origin fetch and copied into `dist/`. The service worker is generated **last** by **`workbox-cli` over the built `dist/`**, so the precache covers the hashed bundle and the package data.
 
 **`workbox-config.cjs`** (new, repo root) — `generateSW` config (`.cjs` because `package.json` is `"type": "module"`):
-- `globDirectory: 'dist'`, `globPatterns: ['**/*.{html,js,css,json,ico,png,svg,webmanifest}']` — precaches the **hashed shell bundle** (`assets/*.js`, `index.html`) **and the data layer** (`modules/core.defaults.json`, `packages/*.json`, icons), so `$CorePackages`' `force` fetches resolve from cache offline.
+- `globDirectory: 'dist'`, `globPatterns: ['**/*.{html,js,css,json,ico,png,svg,webmanifest}']` — precaches the **hashed shell bundle** (`assets/*.js`, `index.html`) **and the package data** (`packages/*.json`, icons), so `$CorePackages`' `force` fetches resolve from cache offline.
 - `navigateFallback: '/twikki/index.html'` — offline reload of any in-app route serves the cached shell.
 - `inlineWorkboxRuntime: true` (one self-contained `sw.js`), `maximumFileSizeToCacheInBytes: 5 MB`, `cleanupOutdatedCaches`/`skipWaiting`/`clientsClaim: true` (autoUpdate-style takeover).
 
@@ -46,7 +46,7 @@ Build exactly as `publish.ps1` does, then serve `dist/`:
 ```bash
 npm install
 node scripts/make-favicon.mjs                   # favicon.ico + pwa-192/pwa-512 PNGs
-npx vite build --base=/twikki --emptyOutDir      # bundles the shell + copies the data layer into dist/
+npx vite build --base=/twikki --emptyOutDir      # bundles the shell (+ shadow tiddlers) and copies packages into dist/
 npx workbox-cli generateSW workbox-config.cjs    # → dist/sw.js (precaches the hashed bundle + data)
 ```
 

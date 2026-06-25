@@ -18,7 +18,9 @@ export default defineConfig({
   plugins: [
     tiddlerCompile([
       {sourceRoot: resolve('src/packages'), outputDir: resolve('public/packages')},
-      {sourceRoot: resolve('src/modules'), outputDir: resolve('public/modules')},
+      // core.defaults is the only module subdir; emit it where the platform can
+      // `import` it (so Vite bundles the shadow tiddlers instead of fetching them).
+      {sourceRoot: resolve('src/modules'), outputDir: resolve('src/generated')},
     ]),
     {
       name: 'reload',

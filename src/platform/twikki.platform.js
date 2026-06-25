@@ -1,26 +1,30 @@
 import coreCommon from '../modules/core.common.js';
-import coreEvents from '../modules/core.js';
-import coreSections from '../modules/core.sections.js';
-import coreParams from '../modules/core.params.js';
-import coreTemplater from '../modules/core.templater.js';
 import coreDom from '../modules/core.dom.js';
-import coreStore from '../modules/core.store.js';
-import coreTiddlers from '../modules/core.tiddlers.js';
-import coreRender from '../modules/core.render.js';
+import coreEvents from '../modules/core.js';
 import coreNotifications from '../modules/core.notifications.js';
+import corePackaging from '../modules/core.packaging.js';
+import coreParams from '../modules/core.params.js';
+import coreRender from '../modules/core.render.js';
+import coreSearch from '../modules/core.search.js';
+import coreSections from '../modules/core.sections.js';
+import coreStore from '../modules/core.store.js';
+import coreTemplater from '../modules/core.templater.js';
+import coreTiddlers from '../modules/core.tiddlers.js';
 import coreUi from '../modules/core.ui.js';
 import coreWorkspaces from '../modules/core.workspaces.js';
-import corePackaging from '../modules/core.packaging.js';
-import coreSearch from '../modules/core.search.js';
+// Shadow-tiddler data, compiled from src/modules/core.defaults/ to
+// src/generated/ by the tiddler-compile plugin and bundled by Vite (so it is
+// part of the build, not a runtime fetch).
+import coreDefaults from '../generated/core.defaults.json';
 
 (function () {
   const NAME = 'twikki';
   const VERSION = '0.28.0';
 
-  // Core modules in dependency order. Code modules are bundled (the ESM imports
-  // above) and contribute a `factory(tw)` that returns the module's meta; the
-  // shadow-tiddler DATA module (core.defaults.json, `list:true`) is fetched
-  // same-origin and merged as tiddlers. Replaces the old fetched URL array.
+  // Core modules in dependency order, all bundled by Vite. Code modules (the
+  // ESM imports above) contribute a `factory(tw)` returning the module's meta;
+  // the shadow-tiddler DATA module contributes a `tiddlers` array (the imported
+  // core.defaults.json) merged into the store. Nothing here is fetched at boot.
   const CORE_MODULES = [
     {name: '/core.common.js', factory: coreCommon},
     {name: '/core.js', factory: coreEvents},
@@ -31,7 +35,7 @@ import coreSearch from '../modules/core.search.js';
     {name: '/core.store.js', factory: coreStore},
     {name: '/core.tiddlers.js', factory: coreTiddlers},
     {name: '/core.render.js', factory: coreRender},
-    {name: '/core.defaults.json', list: true},
+    {name: '/core.defaults.json', tiddlers: coreDefaults.tiddlers},
     {name: '/core.notifications.js', factory: coreNotifications},
     {name: '/core.ui.js', factory: coreUi},
     {name: '/core.workspaces.js', factory: coreWorkspaces},
@@ -41,13 +45,13 @@ import coreSearch from '../modules/core.search.js';
 
   overrides();
 
-  // The platform is the minimal kernel that runs BEFORE any module loads: it
-  // fetches, validates (compat gate), evals and caches the core modules, holds
-  // bootstrap state, orchestrates the boot lifecycle (init → start → onPageLoad
-  // → reload), hosts the plugin lifecycle, owns the controlled eval boundary
-  // (executeText) and the raw localStorage primitive (tw.storage). Everything
-  // tiddler-, render-, store- or UI-shaped lives in the core modules
-  // (src/modules/core.*.js) — see plans/platform-rework.md.
+  // The platform is the minimal kernel: it runs each bundled core module's
+  // factory (CORE_MODULES above), holds bootstrap state, orchestrates the boot
+  // lifecycle (init → start → onPageLoad → reload), hosts the plugin lifecycle,
+  // owns the controlled eval boundary for plugins (executeText) and the raw
+  // localStorage primitive (tw.storage). Everything tiddler-, render-, store-
+  // or UI-shaped lives in the core modules (src/modules/core.*.js) — see
+  // plans/platform-rework.md.
 
   let qs;
   let baseUrl;
@@ -69,7 +73,7 @@ import coreSearch from '../modules/core.search.js';
   // missing/extra slashes, deep pathnames, percent-encoding, `..` segments.
   // `path` may already be fully qualified (`http(s)://…`) → returned verbatim.
   // `base` may be omitted; in that case we fall through the same chain
-  // fetchModules uses to determine the platform's own baseUrl. Exposed on
+  // collectModules uses to determine the platform's own baseUrl. Exposed on
   // `tw.core` from init() so plugins can call it as `tw.core.buildUrl(...)`.
   /* BEGIN buildUrl helper — extracted by test/unit/build-url.test.js. Keep pure
      (no closure refs beyond `tw`, `window`); tests stub those globally. */
@@ -128,7 +132,7 @@ import coreSearch from '../modules/core.search.js';
       dp(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      await collectModules();
+      collectModules();
       dp(`*** TWikki v${VERSION} platform intialized`);
     },
 
@@ -176,38 +180,24 @@ import coreSearch from '../modules/core.search.js';
     tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
   }
 
-  async function collectModules() {
-    // Single source of truth for resolving the platform's base — same chain
-    // tw.core.buildUrl uses when called without an explicit base.
+  function collectModules() {
+    // baseUrl is still resolved here — package loading (loadCorePackages /
+    // loadExtensionPackages) and the `package.load.url` command resolve URLs
+    // against it.
     baseUrl = tw.core.buildUrl('./');
 
     // One-time migration: older builds cached each module's source under
-    // /modules/* (plus /modules.version) in localStorage. Those are no longer
-    // read — code modules are bundled now — so drop them to reclaim quota.
+    // /modules/* (plus /modules.version) in localStorage. Nothing reads them
+    // now — every core module is bundled — so drop them to reclaim quota.
     // (?clear doesn't touch them; this does.)
     Object.keys(localStorage)
       .filter(k => k.startsWith('/modules'))
       .forEach(k => localStorage.removeItem(k));
 
-    // Code modules are bundled (the ESM imports up top) — nothing to download,
-    // so they can't drift from the platform that imports them (no version gate).
-    // Only the shadow-tiddler DATA module (core.defaults.json) is fetched
-    // same-origin; offline the service-worker precache serves it.
-    try {
-      tw.modules = await Promise.all(
-        CORE_MODULES.map(async m => {
-          if (!m.list) return {name: m.name, factory: m.factory};
-          const res = await fetchModule(baseUrl, m.name);
-          return {name: m.name, res};
-        }),
-      );
-    } catch (e) {
-      // A network error fetching core.defaults.json with no precache yet (e.g. a
-      // first-ever visit while offline). There is nothing to fall back to.
-      console.error('Core data download failed', e);
-      tw.tmp.bootAborted = true;
-      haltNoModules(e);
-    }
+    // Everything is bundled by Vite: code modules via the ESM imports up top,
+    // the shadow tiddlers via the core.defaults.json import. Nothing is fetched
+    // at boot, so a core module can't drift from the platform that ships it.
+    tw.modules = CORE_MODULES.map(m => (m.factory ? {name: m.name, factory: m.factory} : {name: m.name, tiddlers: m.tiddlers}));
   }
 
   function runModules() {
@@ -242,34 +232,21 @@ import coreSearch from '../modules/core.search.js';
     tw.modules.forEach(pck => {
       if (pck.factory) {
         dp('Loading code module', pck.name);
-        if (!qs.trace) {
-          // Normally we try/catch modules to provide user-friendly feedback...
-          try {
-            pck.meta = pck.factory(tw);
-          } catch (e) {
-            errMsgs.push({name: pck.name, message: e.message});
-            console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
-            return;
-          }
-        } else {
-          // ...however, developers want to know where exactly the error occurred
-          //   and this is only possible when we let the original event bubble up unhandled!!
-          pck.meta = pck.factory(tw);
-        }
+        pck.meta = pck.factory(tw);
         if (pck.meta.exports) {
           const sub = pck.meta.name.split('.')[1];
           tw.core[sub] = {};
           Object.assign(tw.core[sub], pck.meta.exports);
         }
         dp(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
-      } else if (pck.res?.type === 'list') {
+      } else if (pck.tiddlers) {
         dp('Loading shadow tiddlers', pck.name);
-        pck.res.tiddlers.forEach(t => {
+        pck.tiddlers.forEach(t => {
           t.doNotSave = true; // Don't save unless edited
           t.isRawShadow = true; // TODO: What does this mean exactly?
         });
-        tw.tiddlers.all = tw.tiddlers.all.concat(pck.res.tiddlers);
-        dp(`Loaded ${pck.res.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
+        tw.tiddlers.all = tw.tiddlers.all.concat(pck.tiddlers);
+        dp(`Loaded ${pck.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
       } else {
         console.warn(`Skipping unknown module '${pck.name}'!`);
       }
@@ -390,19 +367,6 @@ import coreSearch from '../modules/core.search.js';
     document.write('<li>Tip: Try <a href="?safemode">?safemode</a> to skip extension packages');
     document.write('</ul>');
     return true;
-  }
-
-  // Boot can't proceed because the core modules themselves could not be loaded
-  // (a network error with no service-worker precache yet — e.g. a first-ever
-  // visit while offline). Plain halt message; nothing here depends on a core
-  // module or theme CSS.
-  function haltNoModules(e) {
-    document.body.innerHTML =
-      '<div style="max-width:640px;margin:3rem auto;font:14px/1.5 system-ui,sans-serif">' +
-      `<h1>TWikki v${VERSION} cannot load</h1>` +
-      '<p>Core modules could not be downloaded and no offline copy is available yet:</p>' +
-      `<p class="error">${e.message}</p>` +
-      '<p>Reconnect and reload — once loaded, TWikki runs offline.</p></div>';
   }
 
   /* Boot lifecycle */
@@ -784,7 +748,6 @@ import coreSearch from '../modules/core.search.js';
   }
   /* END semver helper */
 
-
   // Classify a plugin's compat with the running platform from its returned meta object.
   //   'ok'     — platform field present and caretSatisfies(required, VERSION).
   //   'warn'   — same major, running older than built-for.
@@ -812,33 +775,6 @@ import coreSearch from '../modules/core.search.js';
     };
   }
 
-  async function fetchModule(baseUrl, moduleName) {
-    if (!baseUrl) throw new Error('NO_MODULE_URL: Unable to determine URL to load module from!');
-    // moduleName already starts with '/', so 'modules' + moduleName → 'modules/core.tiddlers.js'
-    let moduleUrl = tw.core.buildUrl('modules' + moduleName, baseUrl);
-    let res = {};
-    dp(`Downloading module from '${moduleUrl}'...`);
-    let result = {name: moduleName};
-    try {
-      result = await fetch(moduleUrl);
-    } catch {}
-    if (!result.ok) throw new Error(`Unable to download module from '${moduleUrl}' HTTP status: ${result.status}`);
-    if (result.headers.get('Content-Type')?.match(/\/javascript/)) {
-      res.code = await result.text();
-      res.type = 'code';
-    } else if (result.headers.get('Content-Type')?.match(/application\/json/)) {
-      try {
-        dp(`Reading moduled list '${moduleName}'...`);
-        res = JSON.parse(await result.text());
-        res.type = 'list';
-      } catch (e) {
-        console.error(e.stack);
-        res.error = e;
-      }
-      if (res.error) throw new Error(`INVALID_MODULE_JSON '${moduleName}' ${res.error.message}`);
-    } else throw new Error(`MODULE_FORMAT_UNKNOWN: ${moduleUrl} is not served as JS/JSON`);
-    return res;
-  }
   function overrides() {
     // Overrides
     RegExp.any = function () {

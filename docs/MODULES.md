@@ -38,11 +38,11 @@ has been eval'd):
 * `core.search`: Search functions
 
 
-### Updating modules
+### Loading & updating modules
 
-Core modules ship **with the platform build** — they are part of the app shell, not independently-installed packages. Caching and updates are owned by the **service worker** (see [OFFLINE.md](../plans/OFFLINE.md)): the Workbox precache is revisioned per build, so a new deploy delivers new modules, and the SW updates on the standard PWA lifecycle (silently on the next load, or behind an "update available" prompt). There is **no** separate `localStorage` module cache and **no** `?reload`/`?update` — a plain reload re-fetches from the network (the SW serves the precache offline). To wipe local *data* use `?clear`.
+Core modules are **bundled into the platform by Vite**, not fetched at runtime. The platform statically `import`s each code module (`src/modules/core.*.js`, now `export default function (tw) {…}` factories) and the shadow-tiddler data (`src/generated/core.defaults.json`, compiled from `src/modules/core.defaults/`). `collectModules()` just assembles `tw.modules` from those imports — **nothing is downloaded at boot** and there is no `localStorage` module cache, no `?reload`/`?update`, and no compatibility gate. The only same-origin fetches left are the **packages** (`$CorePackages`/`$ExtensionPackages`), which are the per-workspace, user-extensible layer.
 
-`fetchModule(baseUrl, name)` is the single fetch path: it downloads each module from `<baseUrl>/modules/<name>` and classifies the response as a **code** module (`res.code`) or a **list** module (`res.tiddlers`, e.g. `core.defaults.json`). No persistence, no compatibility parsing. If the very first (online) load can't reach the network — before any precache exists — boot shows a plain "cannot load" halt; once loaded, TWikki runs offline.
+Updates are owned by the **service worker** (see [OFFLINE.md](../plans/OFFLINE.md)): a new `vite build` produces a new hashed bundle, the Workbox precache is revisioned, and the SW updates on the standard PWA lifecycle (silently on next load, or behind an "update available" prompt). To wipe local *data* use `?clear`.
 
 ### Versioning
 

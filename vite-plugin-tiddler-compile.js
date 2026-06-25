@@ -272,6 +272,6 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   const root = process.cwd();
   compileAll([
     {sourceRoot: join(root, 'src/packages'), outputDir: join(root, 'public/packages')},
-    {sourceRoot: join(root, 'src/modules'), outputDir: join(root, 'public/modules')},
+    {sourceRoot: join(root, 'src/modules'), outputDir: join(root, 'src/generated')},
   ]);
 }
