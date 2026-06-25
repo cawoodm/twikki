@@ -15,12 +15,12 @@
   };
 
   function favoriteToggle(title) {
-    const t = tw.call('getTiddler', title);
+    const t = tw.run.getTiddler(title);
     if (!t) throw new Error(`Unknown tiddler '${title}'!`);
     // if (t.tags.includes('$NoEdit')) return tw.ui.notify('Tiddler is readonly!', 'E');
     if (t.doNotSave) tw.ui.notify('Tiddler will not be saved!', 'W');
-    tw.call('tiddlerToggleTag', t.title, 'Favorite');
-    let btn = tw.call('getTiddlerElement', title)?.querySelector('button[title=favorite]');
+    tw.run.tiddlerToggleTag(t.title, 'Favorite');
+    let btn = tw.run.getTiddlerElement(title)?.querySelector('button[title=favorite]');
     // dp(t.tags.includes('Favorite'), btn);
     if (btn) {
       if (!t.tags.includes('Favorite')) btn.className += ' yellow';

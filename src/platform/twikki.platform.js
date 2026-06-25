@@ -173,7 +173,6 @@ import coreDefaults from '../generated/core.defaults.json';
     // Mainly for backward compatability and shorthand
     tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
     Object.assign(tw.ui, tw.core.ui);
-    tw.call = call;
     // (tw.commands, tw.extensions and the core macros are installed by core.ui at eval.)
     tw.plugins = [];
     tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
@@ -642,21 +641,6 @@ import coreDefaults from '../generated/core.defaults.json';
     }
   }
 
-  // tw.call('fn', ...args) — resolve a platform/core function by name. The
-  // functions used to live in this closure; they now live on the module
-  // registries, so the lookup walks them (eval stays as a last resort for the
-  // few true platform-closure functions).
-  function call(functionName, ...args) {
-    const fn =
-      tw.run[functionName] ||
-      tw.core.tiddlers?.[functionName] ||
-      tw.core.render?.[functionName] ||
-      tw.core.store?.[functionName] ||
-      tw.core.ui?.[functionName] ||
-      tw.util?.[functionName] ||
-      eval(functionName);
-    return fn(...args);
-  }
 
   /* END TWikki */
 

@@ -1,7 +1,8 @@
 // Guards for the platform decomposition (plans/platform-rework.md):
 //  - every shipped plugin still loads/inits/starts cleanly against the new
-//    module layout (a broken tw.call or missing tw.run entry shows up here),
-//  - tw.call still resolves names that used to live in the platform closure,
+//    module layout (a missing tw.run / tw.core entry shows up here),
+//  - core functions that moved out of the platform closure are reachable on
+//    the registries (tw.run / tw.core.*),
 //  - ?safemode: extension packages are skipped but the base package (and its
 //    plugins) still load; TWikki can create, edit, validate, save and navigate.
 
@@ -341,13 +342,13 @@ test('CsvRenderer registers "csv" type in the new-tiddler picker datalist', asyn
   expect(options.some(o => o.value === 'markdown')).toBe(true);
 });
 
-test('tw.call resolves functions that moved out of the platform closure', async ({page}) => {
+test('core functions that moved out of the platform closure are reachable on the registries', async ({page}) => {
   await bootApp(page);
   const results = await page.evaluate(() => ({
-    tiddlerExists: tw.call('tiddlerExists', '$MainLayout'),
-    getTiddler: tw.call('getTiddler', '$MainLayout')?.title,
-    renderTWikki: typeof tw.call('renderTWikki', {text: 'plain', title: 'x'}),
-    getJSONObject: typeof tw.call('getJSONObject', '$GeneralSettings'),
+    tiddlerExists: tw.core.tiddlers.tiddlerExists('$MainLayout'),
+    getTiddler: tw.run.getTiddler('$MainLayout')?.title,
+    renderTWikki: typeof tw.core.render.renderTWikki({text: 'plain', title: 'x'}),
+    getJSONObject: typeof tw.run.getJSONObject('$GeneralSettings'),
   }));
   expect(results.tiddlerExists).toBe(true);
   expect(results.getTiddler).toBe('$MainLayout');

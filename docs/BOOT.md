@@ -49,7 +49,7 @@ window.load
        │    tw.shadowTiddlers = frozen snapshot of tw.tiddlers.all
        │
        ├─ legacyAliases()                                twikki.platform.js:109
-       │    tw.ui = {notify, …}  ·  tw.call  ·  tw.plugins = []  ·  tw.plugin(name)
+       │    tw.ui = {notify, …}  ·  tw.plugins = []  ·  tw.plugin(name)
        │
        ├─ tw.core.store.loadStore()                      core.store.js:109
        │    reads /ws/<workspace>/ keys from localStorage
