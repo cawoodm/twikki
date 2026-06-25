@@ -8,7 +8,7 @@
  * Merges the tiddler action API into `tw.run` and the legacy predicate
  * aliases into `tw.util` at eval time.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.tiddlers';
   const version = '0.1.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
@@ -507,4 +507,4 @@
   function runCoreTiddlers() {
     tw.tiddlers.all.filter(isCoreTiddler).forEach(runTiddlerCode);
   }
-});
+}

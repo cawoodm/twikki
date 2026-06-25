@@ -60,6 +60,7 @@ function freshDom(globals) {
   // IIFE is a clean expression we can `return`.
   const code = readFileSync(join(root, 'src/modules/core.dom.js'), 'utf8')
     .replace(/^\s*\/\*\*[\s\S]*?\*\/\s*/, '')
+    .replace(/^export default\s+/, '')
     .replace(/;\s*$/, '');
   const tw = {events: {send() {}}};
   // Provide document/window into the module's scope via a Function wrapper so

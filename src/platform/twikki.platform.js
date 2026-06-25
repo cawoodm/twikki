@@ -1,6 +1,43 @@
+import coreCommon from '../modules/core.common.js';
+import coreEvents from '../modules/core.js';
+import coreSections from '../modules/core.sections.js';
+import coreParams from '../modules/core.params.js';
+import coreTemplater from '../modules/core.templater.js';
+import coreDom from '../modules/core.dom.js';
+import coreStore from '../modules/core.store.js';
+import coreTiddlers from '../modules/core.tiddlers.js';
+import coreRender from '../modules/core.render.js';
+import coreNotifications from '../modules/core.notifications.js';
+import coreUi from '../modules/core.ui.js';
+import coreWorkspaces from '../modules/core.workspaces.js';
+import corePackaging from '../modules/core.packaging.js';
+import coreSearch from '../modules/core.search.js';
+
 (function () {
   const NAME = 'twikki';
   const VERSION = '0.28.0';
+
+  // Core modules in dependency order. Code modules are bundled (the ESM imports
+  // above) and contribute a `factory(tw)` that returns the module's meta; the
+  // shadow-tiddler DATA module (core.defaults.json, `list:true`) is fetched
+  // same-origin and merged as tiddlers. Replaces the old fetched URL array.
+  const CORE_MODULES = [
+    {name: '/core.common.js', factory: coreCommon},
+    {name: '/core.js', factory: coreEvents},
+    {name: '/core.sections.js', factory: coreSections},
+    {name: '/core.params.js', factory: coreParams},
+    {name: '/core.templater.js', factory: coreTemplater},
+    {name: '/core.dom.js', factory: coreDom},
+    {name: '/core.store.js', factory: coreStore},
+    {name: '/core.tiddlers.js', factory: coreTiddlers},
+    {name: '/core.render.js', factory: coreRender},
+    {name: '/core.defaults.json', list: true},
+    {name: '/core.notifications.js', factory: coreNotifications},
+    {name: '/core.ui.js', factory: coreUi},
+    {name: '/core.workspaces.js', factory: coreWorkspaces},
+    {name: '/core.packaging.js', factory: corePackaging},
+    {name: '/core.search.js', factory: coreSearch},
+  ];
 
   overrides();
 
@@ -25,20 +62,6 @@
   function write(key, value) {
     if (key[0] !== '/') key = '/' + key;
     return localStorage.setItem(key, value);
-  }
-
-  // Boot-progress emit. Dispatched as a native window CustomEvent so a
-  // listener wired before this script (in index.html) sees every tick LIVE —
-  // what a splashscreen needs. This is the sole channel; there is no buffer
-  // and no bus event, since neither would deliver in real time anyway (early
-  // ticks fire before any module exists).
-  //
-  //   <script>
-  //     window.addEventListener('twikki.boot.progress', e => render(e.detail));
-  //   </script>
-  //   <script src="platform/twikki.platform.js"></script>
-  function bootProgress(evt) {
-    window.dispatchEvent(new CustomEvent('twikki.boot.progress', {detail: evt}));
   }
 
   // Resolve `path` against `base` using the browser's URL parser (same algorithm
@@ -105,7 +128,7 @@
       dp(`TWikki (v${VERSION}) starting...`);
       document.title = `TWikki v${VERSION}`;
 
-      await fetchModules();
+      await collectModules();
       dp(`*** TWikki v${VERSION} platform intialized`);
     },
 
@@ -138,7 +161,6 @@
       // TODO: Load registered scripts/css here like our highlighter core, css and languages
       reload();
       if (location.hash) tw.core.ui.handleHashLink(location.hash);
-      bootProgress({phase: 'ready'});
 
       dp(`*** TWikki v${VERSION} ui ready`);
     },
@@ -154,62 +176,35 @@
     tw.plugin = name => tw.plugins.find(p => p.meta?.name === name);
   }
 
-  async function fetchModules() {
+  async function collectModules() {
     // Single source of truth for resolving the platform's base — same chain
     // tw.core.buildUrl uses when called without an explicit base.
     baseUrl = tw.core.buildUrl('./');
 
     // One-time migration: older builds cached each module's source under
     // /modules/* (plus /modules.version) in localStorage. Those are no longer
-    // read — the service-worker precache owns module caching now — so drop them
-    // to reclaim quota. (?clear doesn't touch them; this does.)
+    // read — code modules are bundled now — so drop them to reclaim quota.
+    // (?clear doesn't touch them; this does.)
     Object.keys(localStorage)
       .filter(k => k.startsWith('/modules'))
       .forEach(k => localStorage.removeItem(k));
 
-    dp('Looking for local TWikki.Core modules...');
-
-    // Ordered by logical dependency. (Most cross-module references are runtime
-    // tw.run.*/tw.events calls resolved after every module eval'd, so eval order
-    // is looser than the call graph — but ordering by dependency stays robust.)
-    let modulesToLoad = [
-      '/core.common.js', // pure utilities (hash, base64 encoder/decoder, notEmpty) — FIRST, no deps
-      '/core.js', // tw.events bus; uses tw.core.common.decoder
-      '/core.sections.js', // section-reference grammar + text slicing, no deps
-      '/core.params.js', // macro/widget arg parsing, no deps
-      '/core.templater.js', // pure mustache engine, no deps
-      '/core.dom.js', // DOM helpers
-      '/core.store.js', // owns tw.store (workspace-scoped) + tiddler persistence
-      '/core.tiddlers.js', // tiddler store + CRUD; merges the tiddler API into tw.run
-      '/core.render.js', // TWikki render pipeline + loadTemplates
-      '/core.defaults.json', // shadow tiddlers: $MainLayout, $TiddlerDisplay, $CorePackages, themes
-      '/core.notifications.js', // tw.ui.notify
-      '/core.ui.js', // event wiring, nav, basic edit round-trip
-      '/core.workspaces.js', // active-workspace management (→ core.store for scoping)
-      '/core.packaging.js', // HTTP import/merge of {tiddlers:[]} bundles
-      '/core.search.js', // search
-    ];
-    bootProgress({phase: 'init', total: modulesToLoad.length});
-
-    // Core modules ship with the platform build: online they load from the
-    // network (HTTP cache), offline the service-worker precache serves them, and
-    // each new build revises that precache. There is no separate localStorage
-    // module cache and no version gate — a core module bundled with the platform
-    // can't be out of step with it. (Plugins arrive as editable tiddlers/packages
-    // and keep their own compat gate — see checkPluginCompat.)
+    // Code modules are bundled (the ESM imports up top) — nothing to download,
+    // so they can't drift from the platform that imports them (no version gate).
+    // Only the shadow-tiddler DATA module (core.defaults.json) is fetched
+    // same-origin; offline the service-worker precache serves it.
     try {
-      const results = await Promise.all(
-        modulesToLoad.map(async (name, index) => {
-          const res = await fetchModule(baseUrl, name);
-          bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
-          return res;
+      tw.modules = await Promise.all(
+        CORE_MODULES.map(async m => {
+          if (!m.list) return {name: m.name, factory: m.factory};
+          const res = await fetchModule(baseUrl, m.name);
+          return {name: m.name, res};
         }),
       );
-      tw.modules = modulesToLoad.map((name, i) => ({name, res: results[i]}));
     } catch (e) {
-      // The only failure left is a real network error with no precache yet (e.g.
-      // a first-ever visit while offline). There is nothing to fall back to.
-      console.error('Core module download failed', e);
+      // A network error fetching core.defaults.json with no precache yet (e.g. a
+      // first-ever visit while offline). There is nothing to fall back to.
+      console.error('Core data download failed', e);
       tw.tmp.bootAborted = true;
       haltNoModules(e);
     }
@@ -239,20 +234,18 @@
       });
     dp('Modules run');
     if (handleModuleErrors(errMsgs)) return;
-    bootProgress({phase: 'modules-run'});
     return true;
   }
 
   function loadModules() {
     const errMsgs = [];
-    tw.modules.forEach((pck, index) => {
-      bootProgress({phase: 'eval', name: pck.name, index, total: tw.modules.length});
-      if (pck.res.type === 'code') {
+    tw.modules.forEach(pck => {
+      if (pck.factory) {
         dp('Loading code module', pck.name);
         if (!qs.trace) {
           // Normally we try/catch modules to provide user-friendly feedback...
           try {
-            pck.meta = (1, eval)(pck.res.code)(tw);
+            pck.meta = pck.factory(tw);
           } catch (e) {
             errMsgs.push({name: pck.name, message: e.message});
             console.error(`Module '${pck.name}' failed: ${e.message}`, e.stack);
@@ -261,16 +254,16 @@
         } else {
           // ...however, developers want to know where exactly the error occurred
           //   and this is only possible when we let the original event bubble up unhandled!!
-          pck.meta = (1, eval)(pck.res.code)(tw);
+          pck.meta = pck.factory(tw);
         }
         if (pck.meta.exports) {
-          let p = pck.meta.name.split('.');
-          eval('tw.core.' + p[1] + '={};');
-          Object.assign(eval('tw.' + pck.meta.name), pck.meta.exports);
+          const sub = pck.meta.name.split('.')[1];
+          tw.core[sub] = {};
+          Object.assign(tw.core[sub], pck.meta.exports);
         }
         dp(`Loaded ${pck.meta.name} (v${pck.meta.version})`);
-      } else if (pck.res.type === 'list') {
-        dp('Loading moduled list ', pck.name); // What is a moduled list? Example?
+      } else if (pck.res?.type === 'list') {
+        dp('Loading shadow tiddlers', pck.name);
         pck.res.tiddlers.forEach(t => {
           t.doNotSave = true; // Don't save unless edited
           t.isRawShadow = true; // TODO: What does this mean exactly?
@@ -278,13 +271,12 @@
         tw.tiddlers.all = tw.tiddlers.all.concat(pck.res.tiddlers);
         dp(`Loaded ${pck.res.tiddlers.length} core/shadow tiddlers from ${pck.name})`);
       } else {
-        console.warn(`Skipping unknown module type '${pck.res.type}' in module '${pck.name}'!`);
+        console.warn(`Skipping unknown module '${pck.name}'!`);
       }
     });
     tw.shadowTiddlers = Array.from(tw.tiddlers.all);
     Object.freeze(tw.shadowTiddlers);
     if (handleModuleErrors(errMsgs)) return;
-    bootProgress({phase: 'modules-loaded'});
     return true;
   }
 
@@ -441,15 +433,11 @@
     //   init   — every plugin is loaded before any init() runs, so init() can check deps via tw.plugin().
     //   start  — every plugin is initialised before any start() runs.
     // Then runScripts() evals $Script tiddlers (no return expected) — code that doesn't need a lifecycle.
-    bootProgress({phase: 'plugins', step: 'unload'});
     unloadPlugins();
-    bootProgress({phase: 'plugins', step: 'load'});
     loadPlugins();
     checkPluginDependencies();
     sortPluginsByDependencies();
-    bootProgress({phase: 'plugins', step: 'init'});
     initPlugins();
-    bootProgress({phase: 'plugins', step: 'start'});
     startPlugins();
     runScripts();
     tw.core.render.loadTemplates(); // Must load templates here or we can use no macros in the templates
@@ -498,7 +486,6 @@
         noOverWrite,
         doNotSave,
       });
-      bootProgress({phase: 'package', name, count});
       // If name === 'core' AND tw.tiddlers.all.find(t => t.package === 'core') panic or open $CorePackages for edit as it's screwed!
       tw.ui.notify(`${count} tiddlers imported from package ${name}`, 'D');
     }

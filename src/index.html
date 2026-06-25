@@ -48,10 +48,9 @@
         // Optionally set to override:
         // window.MODULE_URL = 'https://yourserver.com';
       </script>
-      <script src="platform/twikki.platform.js"></script>
-      <script>
+      <script type="module" src="platform/twikki.platform.js"></script>
+      <script type="module">
         window.addEventListener('load', async () => {
-          // window.addEventListener('twikki.boot.progress', e => console.log(e.detail));
           await window.twikki.init();
           await window.twikki.start();
           // Register the service worker for offline support. Generated into the

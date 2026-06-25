@@ -5,7 +5,7 @@
  * base64 `encoder`/`decoder` pair used for `---enc:` message payloads.
  * Loads FIRST (no load-time dependencies) so every other module can rely on it.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.common';
   const version = '0.26.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -74,4 +74,4 @@
   function notEmpty(v) {
     return !!v;
   }
-});
+}

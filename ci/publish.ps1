@@ -2,23 +2,19 @@
   [switch]$Preview = $false
 )
 function main() {
-  # We don't need vite since we aren't packaging our code
-  # We embed a pre-published copy of boot.js
-  #vite build --base=/twikki --emptyOutDir
   cd $PSScriptRoot
   cd ..
-  
-  Remove-Item dist/* -Recurse -Force
-  mkdir dist/platform/ | Out-Null
 
-  Copy-Item public/* dist/ -Recurse
-  Copy-Item src/index.html dist/
-  Copy-Item src/packages/*.js dist/packages/
-  Copy-Item src/platform/*.js dist/platform/
-  Copy-Item src/modules/*.js dist/modules/
+  # Bundle the shell with Vite: the platform statically imports the core modules,
+  # so Vite produces dist/index.html + a hashed dist/assets/*.js with everything
+  # baked in. The compile plugin (buildStart) regenerates public/packages/*.json
+  # and public/modules/core.defaults.json, which Vite copies into dist/ as the
+  # fetched data layer (packages + shadow tiddlers).
+  npx vite build --base=/twikki --emptyOutDir
+  if ($LASTEXITCODE -ne 0) {throw "vite build failed!"}
 
-  # Generate the service worker LAST, over the fully-assembled dist/, so the
-  # precache covers the complete shell (platform + modules) and data layer.
+  # Generate the service worker LAST, over the fully-built dist/, so the precache
+  # covers the hashed shell bundle and the data layer.
   npx workbox-cli generateSW workbox-config.cjs
   if ($LASTEXITCODE -ne 0) {throw "workbox generateSW failed!"}
 

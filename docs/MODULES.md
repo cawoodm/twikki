@@ -19,7 +19,7 @@ references are runtime `tw.run.*`/`tw.events` calls, resolved after every module
 has been eval'd):
 
 * `core.common`: Pure, DOM-free utilities (hashing, sorting, html escaping, `notEmpty`, base64 encoder/decoder) — loads **first**, no dependencies
-* `core.js`: `tw.events` — the pub/sub event bus; replays buffered boot-progress events onto the bus
+* `core.js`: `tw.events` — the pub/sub event bus
 * `core.sections`: Section-reference grammar + text slicing — strictly `(text, sectionName)`; anything taking a *title* lives in `core.tiddlers`
 * `core.params`: Parameter parsing for widgets and macros
 * `core.templater`: Tiny mustache-style template engine (pure library)

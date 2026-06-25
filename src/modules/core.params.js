@@ -12,7 +12,7 @@
  *     => WidgetO({foo: "1 a", bar: 2})
  *   <<WidgetP ["a b", 2]>> => WidgetP("a b", 2) (arrays spread as positional parameters)
  */
-(function () {
+export default function () {
   // Meta
   const name = 'core.params';
   const version = '0.25.0';
@@ -128,4 +128,4 @@
   function enc(param) {
     return `---enc:${tw.core.common.encoder(JSON.stringify(param))}`;
   }
-});
+}

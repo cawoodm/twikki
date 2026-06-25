@@ -151,8 +151,6 @@ window.load
 | `reboot.hard`      | request a full `window.location.reload()`                                              | —                           |
 | `ui.reload`        | request a soft re-run of `reload()`                                                    | —                           |
 
-A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at each milestone (`init`, `fetch`, `eval`, `modules-loaded`, `modules-run`, `package`, `plugins`, `ready`). It is the channel the splash UI subscribes to before the bus exists — see [src/index.html](../src/index.html) for a `console.log` example.
-
 ## What the URL query params do at boot
 
 | Param                 | Effect                                                                                                                                                                                                                                               |

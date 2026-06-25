@@ -9,7 +9,7 @@
  * (`tiddler-include`, `macro`). Consumes core.templater and core.params;
  * resolves tiddler text through core.tiddlers.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.render';
   const version = '0.1.1';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -400,4 +400,4 @@
       .map(p => `<p>${tw.core.common.escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
       .join('');
   }
-});
+}

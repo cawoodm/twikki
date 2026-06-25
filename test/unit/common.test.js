@@ -14,7 +14,9 @@ const root = join(__dirname, '..', '..');
 function freshCommon() {
   const tw = {run: {}};
   const code = readFileSync(join(root, 'src/modules/core.common.js'), 'utf8');
-  const meta = (0, eval)(code)(tw);
+  // ES module now (`export default function (tw) {…}`): strip the export and
+  // eval the factory expression.
+  const meta = (0, eval)('(' + code.replace('export default ', '') + ')')(tw);
   return {tw, meta};
 }
 

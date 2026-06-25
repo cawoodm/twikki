@@ -6,7 +6,7 @@
  * `data-stylesheet` and enable/disableStyleSheet toggle via `media="not all"`
  * so the cascade is honoured regardless of CDN load timing.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.dom';
   const version = '0.28.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -152,4 +152,4 @@
   function nearestElement(el, selector) {
     return el.parentElement?.closest(selector);
   }
-});
+}

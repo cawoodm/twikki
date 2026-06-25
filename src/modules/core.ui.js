@@ -17,7 +17,7 @@
  *     so a tiddler can always be created, edited, validated and saved with
  *     ZERO plugins loaded (the no-plugin invariant).
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.ui';
   const version = '0.25.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
@@ -576,4 +576,4 @@
   function randstr() {
     return Math.random().toString(36).replace('0.', '');
   }
-});
+}
