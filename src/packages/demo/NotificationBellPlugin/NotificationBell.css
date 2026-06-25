@@ -1,0 +1,121 @@
+/* Notification bell: a topbar icon with a red count bubble, and a fixed-
+   positioned popup (positioned in JS) listing collected ui.notify messages. */
+.notify-bell {
+  position: relative;
+}
+
+.notify-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--col-error);
+  color: var(--col-on-accent);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.notify-badge[hidden] {
+  display: none;
+}
+
+.notify-popup {
+  position: fixed;
+  z-index: 50;
+  width: 320px;
+  max-width: 90vw;
+  background-color: var(--colbg2);
+  color: var(--colfg);
+  border: 1px solid var(--col4);
+  border-radius: var(--rad1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.notify-popup[hidden] {
+  display: none;
+}
+
+/* The list scrolls; the Clear-all footer stays pinned below it. */
+.notify-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.notify-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--col4);
+}
+
+.notify-item:last-child {
+  border-bottom: none;
+}
+
+.notify-glyph {
+  flex: none;
+}
+
+.notify-msg {
+  flex: 1;
+  word-break: break-word;
+}
+
+.notify-time {
+  flex: none;
+  color: var(--col1);
+  font-size: 0.75rem;
+}
+
+/* A faint ✕ glyph — unobtrusive until you hover the row or the mark itself. */
+.notify-remove {
+  flex: none;
+  color: var(--col1);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  opacity: 0.3;
+  transition: opacity 0.15s linear, color 0.15s linear;
+}
+
+.notify-item:hover .notify-remove {
+  opacity: 0.7;
+}
+
+.notify-remove:hover {
+  opacity: 1;
+  color: var(--col-error);
+}
+
+.notify-empty {
+  padding: 16px 12px;
+  color: var(--col1);
+  font-style: italic;
+  text-align: center;
+}
+
+.notify-clear {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-top: 1px solid var(--col4);
+  background-color: var(--colbg3);
+  color: var(--colfg);
+  cursor: pointer;
+  font: inherit;
+}
+
+.notify-clear:hover {
+  background-color: var(--col4);
+}
