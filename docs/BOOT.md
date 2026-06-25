@@ -19,7 +19,7 @@ The whole sequence lives in [src/platform/twikki.platform.js](../src/platform/tw
 window.load
   │
   ├─ twikki.init()                                       twikki.platform.js:47
-  │    parse URL params (?safemode, ?reload, ?update, ?trace, ?debug, ?logfilter, ?breakpoint)
+  │    parse URL params (?safemode, ?clear, ?trace, ?debug, ?logfilter, ?breakpoint)
   │    set up tw.core / tw.modules / tw.tmp / tw.tiddlers / tw.run / tw.logging
   │
   │    await runBootScript()                             twikki.platform.js:370
@@ -29,11 +29,11 @@ window.load
   │    if (!tw.storage) tw.storage = initLocalStorage()  ── default backing when no boot script set one
   │
   │    await fetchModules()                              twikki.platform.js:119
+  │       sweep legacy /modules/* localStorage keys (no longer used)
   │       fetch each core module's source from <baseUrl>/modules/<name>
-  │       statically parse `const platform` from each module's source
-  │       checkModuleCompat → ok / warn / block
-  │       [any block or fresh warn]  → showCompatDialog, set tw.tmp.bootAborted, return
-  │       [else]                      → storeCoreModule for each freshly-fetched module
+  │         (online: network/HTTP cache; offline: service-worker precache)
+  │       no localStorage module cache, no version gate — modules ship with the build
+  │       on a network error with no precache yet → haltNoModules(), set tw.tmp.bootAborted
   │
   └─ twikki.start()                                      twikki.platform.js:74
        │    bail early if tw.tmp.bootAborted
@@ -151,14 +151,13 @@ window.load
 | `reboot.hard`      | request a full `window.location.reload()`                                              | —                           |
 | `ui.reload`        | request a soft re-run of `reload()`                                                    | —                           |
 
-A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at each milestone (`init`, `fetch`, `compat`, `eval`, `modules-loaded`, `modules-run`, `package`, `plugins`, `ready`). It is the channel the splash UI subscribes to before the bus exists — see [src/index.html](../src/index.html) for a `console.log` example.
+A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at each milestone (`init`, `fetch`, `eval`, `modules-loaded`, `modules-run`, `package`, `plugins`, `ready`). It is the channel the splash UI subscribes to before the bus exists — see [src/index.html](../src/index.html) for a `console.log` example.
 
 ## What the URL query params do at boot
 
 | Param                 | Effect                                                                                                                                                                                                                                               |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `?safemode`           | Skip `loadExtensionPackages()`. The core modules and the **base** package (its plugins, listed in `$CorePackages`) still load; only the **extension** packages (`$ExtensionPackages`) are skipped. Useful when an extension package breaks the boot. |
-| `?reload` / `?update` | Force-refetch the core modules from the network instead of using the localStorage cache.                                                                                                                                                             |
 | `?trace`              | Strip the `try/catch` around module eval, plugin lifecycle, and `$Script` exec so original stack traces bubble up unhandled.                                                                                                                         |
 | `?debug`              | Activates debug toast notifications                                                                                                                                                                                                                  |
 | `?logfilter=<regex>`  | Restrict `dp()` output to messages matching the regex. "." shows everything                                                                                                                                                                          |
@@ -167,7 +166,7 @@ A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at e
 
 ## Failure modes
 
-- **Compat block during `fetchModules()`** → `showCompatDialog`, boot aborts. The cached set still works; the user can downgrade the source URL or click _Keep current versions_.
+- **Core modules can't be fetched** (network error with no service-worker precache yet, e.g. first-ever visit offline) → `haltNoModules()` shows a plain "cannot load" message and boot aborts. Once loaded, the precache lets TWikki boot offline. There is no module version gate: core modules ship with the build, so they can't be out of step with the platform.
 - **Module eval throws** (`loadModules` / `runModules`) → error collected in `errMsgs`; boot aborts via `handleModuleErrors` which writes a tip page (`document.write`) suggesting `?trace`. `handleModuleErrors` returns `true` when it has aborted, so the calling function bails early.
 - **Plugin load / init / start throws** → caught per-plugin and recorded on the plugin's `entry.error`; the user is notified (`tw.ui.notify`) and asked whether to disable the plugin via `$CodeDisabled`. The rest of the boot continues — **plugin failures are isolated, module failures are fatal**.
 - **`$Script` tiddler throws** → same treatment as plugin errors (notify + offer `$CodeDisabled`).
@@ -176,6 +175,6 @@ A separate `twikki.boot.progress` DOM CustomEvent is dispatched on `window` at e
 ## Related
 
 - [BootScript.md](./BootScript.md) — the pre-boot `/twikki.boot.js` hook that runs inside `init()` before `tw.storage` exists; the contract and a worked IndexedDB-backed storage example.
-- [MODULES.md](./MODULES.md) — what each core module is, the compatibility gate, the cache, the static-parse compat reader.
+- [MODULES.md](./MODULES.md) — what each core module is and how they ship with the build (service-worker-cached, no version gate).
 - [PACKAGES.md](./PACKAGES.md) — `$CorePackages` / `$ExtensionPackages` lists, package JSON shape, how URLs resolve.
 - [PLUGINS.md](./PLUGINS.md) — the `{meta, init?, start?}` contract, `$Plugin` vs `$Script`, the plugin registry (`tw.plugins[]`), `<<pluginMeta>>` macro.

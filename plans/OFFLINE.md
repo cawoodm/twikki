@@ -8,7 +8,7 @@ How TWikki loads and runs with no internet, and installs as a PWA. This document
 
 **Already offline-friendly (pre-existing)**
 - Storage is local — `localStorage` plus the IndexedDB plugin. No server round-trips for data.
-- Core modules are fetched same-origin (`<base>/modules/*`) and cached in `localStorage` (`/modules/<name>`) after first boot; re-used cache-first unless `?reload`/`?update` (see `fetchCoreModule` in `src/platform/twikki.platform.js`).
+- Core modules are fetched same-origin (`<base>/modules/*`); the **service worker precache** is the only cache (no `localStorage` module cache — see Step 3). Offline, the SW serves them.
 - Package URLs in `$CorePackages`/`$ExtensionPackages` are relative, resolving same-origin via `buildUrl`.
 
 **What broke offline before this branch**
@@ -60,15 +60,13 @@ Then serve `dist/` over http(s), open DevTools → Application → Service Worke
 
 ## Remaining work
 
-### 3. SW update lifecycle vs the module cache *(the subtle one)*
+### 3. SW update lifecycle vs the module cache — **RESOLVED (by elimination)**
 
-Two cache layers must invalidate **together**: the Workbox precache (Cache API, revisioned per build) and the platform's `localStorage` `/modules/<name>` cache (read cache-first unless `?reload`/`?update`). Today a freshly-activated SW can coexist with stale localStorage modules.
+This was the dual-cache hazard: the Workbox precache (Cache API, revisioned per build) plus a second `localStorage` `/modules/<name>` cache read cache-first. They could drift — a freshly-activated SW coexisting with stale localStorage modules (observed in practice: a cached `core.ui` `0.24.0` halting a `0.28.0` boot).
 
-Required changes:
-- **Align the three version sources first**: platform `VERSION` (`src/platform/twikki.platform.js`, hardcoded `'0.27.0'`), `$TWikkiVersion.tid` (`0.27.1`), and `package.json` (`0.27.1`).
-- **Build-time version stamp**: inject the build version (Vite `define`, or a generated tiddler) so the platform knows which build it is running.
-- **Platform boot reconciliation** (`twikki.platform.js`): store the build stamp alongside the cached module set; on boot, if it differs from the running build, take the existing `?reload` code path — re-fetching modules, which now come fresh from the new precache. One coherent invalidation.
-- **Prompt-style update (optional)**: the current `sw.js` uses `skipWaiting`/`clientsClaim` (silent takeover). For an "update available — reload" banner instead, drop those two flags (so the new SW waits), listen for `registration.waiting` / `updatefound` in `index.html`, and have the banner action `postMessage({type:'SKIP_WAITING'})` to the waiting worker (with a matching `skipWaiting()` message handler in a custom `sw.js` template) and then trigger the platform reload above.
+Rather than reconcile two caches, the `localStorage` module cache was **removed** (`src/platform/twikki.platform.js`): `fetchModules` now always `fetch()`es each core module same-origin, so the **service worker is the single cache** and a new build's precache is the single update. The bespoke version-compat gate (`checkModuleCompat`) and the on-demand compat dialog (`twikki.compat-dialog.js`) went with it — core modules ship with the platform build and can't be out of step. A one-time boot sweep drops legacy `/modules/*` keys, and `?reload`/`?update` are gone (a plain reload re-fetches). Plugins keep their own soft compat gate.
+
+- **Prompt-style update (still optional)**: the current `sw.js` uses `skipWaiting`/`clientsClaim` (silent takeover). For an "update available — reload" banner instead, drop those two flags (so the new SW waits), listen for `registration.waiting` / `updatefound` in `index.html`, and have the banner action `postMessage({type:'SKIP_WAITING'})` to the waiting worker (with a matching `skipWaiting()` handler in a custom `sw.js` template).
 
 ### 4. Offline-tolerant package reload — **DONE (merged in this branch)**
 

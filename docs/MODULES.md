@@ -38,48 +38,14 @@ has been eval'd):
 * `core.search`: Search functions
 
 
-### Updates
-Update logic is managed in `loadCoreModule(moduleName)`.
-Modules are cached in localStorage and re-downloaded when:
-* `?update` / `?reload` is passed in the URL (needed during development when module sources change without a version bump).
+### Updating modules
 
-### Versioning & compatibility
+Core modules ship **with the platform build** — they are part of the app shell, not independently-installed packages. Caching and updates are owned by the **service worker** (see [OFFLINE.md](../plans/OFFLINE.md)): the Workbox precache is revisioned per build, so a new deploy delivers new modules, and the SW updates on the standard PWA lifecycle (silently on the next load, or behind an "update available" prompt). There is **no** separate `localStorage` module cache and **no** `?reload`/`?update` — a plain reload re-fetches from the network (the SW serves the precache offline). To wipe local *data* use `?clear`.
 
-![Aurora](./screenshots/module-update.png)
+`fetchModule(baseUrl, name)` is the single fetch path: it downloads each module from `<baseUrl>/modules/<name>` and classifies the response as a **code** module (`res.code`) or a **list** module (`res.tiddlers`, e.g. `core.defaults.json`). No persistence, no compatibility parsing. If the very first (online) load can't reach the network — before any precache exists — boot shows a plain "cannot load" halt; once loaded, TWikki runs offline.
 
-Every core code module declares two **independent** version fields near the top of its source, as plain `const` literals (the platform reads them statically — see below):
+### Versioning
 
-```js
-const name = 'core.ui';
-const version = '0.0.1';   // the module's OWN version
-const platform = '0.24.0'; // the platform release this module was built for
-```
+Each core module still declares a `const version` (its own API version, semver) and may declare a `const platform`, and returns them in its meta — but these are now **documentation only**. Because a module is bundled with the platform that imports it, it can never be out of step, so there is **no boot-time compatibility gate for core modules** (the old `checkModuleCompat` + on-demand compat dialog are gone). Plugins are different: they arrive as editable tiddlers/packages and keep their own **soft** compat gate — see `checkPluginCompat` and [PLUGINS.md](./PLUGINS.md).
 
-and returns both in its meta object: `return {name, version, platform, exports, run};`.
-
-- **`version`** — the module's own API/behaviour, following semver: bump the **major** for a breaking API change (a method renamed or removed), the **minor** for a new feature, the **patch** for a bugfix. (While a module is in `0.x` the usual pre-1.0 caveat applies — the API is not yet declared stable — but the major/minor/patch *intent* above is what we follow.)
-- **`platform`** — which platform release the module targets. Compatibility uses **caret / "min + same major"** semantics, identical to npm's `^`: a module built for `0.24.0` runs on platform `>= 0.24.0` *within the same major* (`0.24.x`, `0.99.x`, …) but **not** on an older platform (`0.23.x`) or a breaking one (`1.0.0`). The pure helper (`semver`/`semverCompare`/`caretSatisfies`) lives in `twikki.platform.js` between `/* BEGIN semver helper */` sentinels and is unit-tested by [test/unit/semver.test.js](../test/unit/semver.test.js).
-
-**Two tiers of incompatibility.** `checkModuleCompat` classifies each module as one of:
-
-- **ok** — compatible (`caretSatisfies` holds).
-- **warn** — incompatible but the **same major** (built for a newer minor/patch), *or* no `platform` field at all. This is **overridable**: the user may install/keep it anyway.
-- **block** — a **different major**: a breaking gap that **cannot** be overridden. (A failed download is also a block.)
-
-**The compatibility gate.** During `init()`, before any module is `eval`'d, the platform **statically parses** each module's `const platform = '...'` from its source string (it can't run the module first — `eval` triggers the module's side effects) and classifies it against the running `VERSION`. The boot halts and opens the dialog when there is **any block**, or **any freshly-fetched warn** (a warning the user hasn't decided on yet — a warn module already in the cache booted before, so it boots again silently with a console warning). The list module (`core.defaults.json`) carries no code/version and is **exempt** (ok).
-
-**The dialog** lives in [src/platform/twikki.compat-dialog.js](../src/platform/twikki.compat-dialog.js) and is **loaded on demand** (script injection) only when the boot halts — if its script cannot load, the platform falls back to a plain halt message with the `?reload`/`?update` recovery links. It is self-contained — plain DOM + inline styles on a native `<dialog>`, since it runs before `tw.ui`/theme stylesheets exist. It lists every module's version / built-for / status (✗ block rows red, ⚠ warn rows amber) and offers:
-
-- **Update & reload** — store the shown modules and reload. Enabled unless something is a **block**, so a same-major ⚠ warning can be force-installed but a ✗ major mismatch cannot.
-- **Keep current versions** — discard the update and reload using the already-installed (cached) modules. Offered only when a usable, non-blocking cached set exists.
-- **Re-check** — repoint the **Source base URL** (persisted to the `/base.url` localStorage key) and re-fetch + re-validate before deciding.
-
-Every loose `src/modules/*.js` is checked for the two fields by [test/unit/module-compat.test.js](../test/unit/module-compat.test.js).
-
-### Fetching & caching
-Two functions split the concern (so an incompatible download never clobbers the installed copy):
-
-- **`fetchCoreModule(name)`** → `{res, fetched}` — returns the usable **cached** copy as-is (`fetched:false`) unless `?reload`/`?update` forces the network; otherwise downloads it (`fetched:true`). It **never writes** to `localStorage`.
-- **`storeCoreModule(name, res)`** — the single write point (`/modules<name>`). Called only *after* the gate passes (persisting the freshly-fetched, validated set), or when the user clicks **Update** in the dialog.
-
-There is **no** separate platform-version stamp and **no** automatic re-fetch when the platform version changes — each cached module's own source already carries its `version`/`platform`, and the gate decides compatibility from that. Modules are therefore downloaded only on a first/empty cache, on `?reload`/`?update`, or when the user updates from the dialog. A cached module is considered usable when it carries a payload (`res.code` for code modules, `res.tiddlers` for the list module — the old `!res?.code` test wrongly re-downloaded list modules every boot).
+The `semver`/`semverCompare`/`caretSatisfies` helpers in `twikki.platform.js` (between the `/* BEGIN semver helper */` sentinels, unit-tested by [test/unit/semver.test.js](../test/unit/semver.test.js)) remain — they back the plugin compat gate.

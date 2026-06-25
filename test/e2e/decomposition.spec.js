@@ -422,26 +422,6 @@ test('module eval failure: one error page, names the failing module(s)', async (
   await expect(page.locator('p.error').first()).toContainText('core.dom.js');
 });
 
-test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({
-  page,
-}) => {
-  // Serve core.common.js claiming a different MAJOR platform → a hard 'block'.
-  await page.route('**/modules/core.common.js', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      /const platform = '[^']+'/,
-      "const platform = '9.9.9'",
-    );
-    await route.fulfill({response, body});
-  });
-  await page.goto('/?reload'); // force network so the tampered module is fetched
-  await expect(page.locator('#tw-compat-dialog')).toBeVisible({timeout: 15000});
-  await expect(page.locator('#tw-compat-dialog tbody tr').first()).toContainText('✗');
-  expect(await page.evaluate(() => tw.tmp.bootAborted)).toBe(true);
-  // The blocked row's checkbox can never be selected for install
-  await expect(page.locator('#tw-compat-dialog .tw-compat-pick').first()).toBeDisabled();
-});
-
 test.describe('?safemode (extension packages skipped, base plugins still load)', () => {
   test('boots with base plugins only and the full edit round-trip works', async ({page}) => {
     await page.goto('/?safemode&trace');

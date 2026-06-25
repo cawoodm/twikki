@@ -159,6 +159,14 @@
     // tw.core.buildUrl uses when called without an explicit base.
     baseUrl = tw.core.buildUrl('./');
 
+    // One-time migration: older builds cached each module's source under
+    // /modules/* (plus /modules.version) in localStorage. Those are no longer
+    // read — the service-worker precache owns module caching now — so drop them
+    // to reclaim quota. (?clear doesn't touch them; this does.)
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('/modules'))
+      .forEach(k => localStorage.removeItem(k));
+
     dp('Looking for local TWikki.Core modules...');
 
     // Ordered by logical dependency. (Most cross-module references are runtime
@@ -182,63 +190,29 @@
       '/core.search.js', // search
     ];
     bootProgress({phase: 'init', total: modulesToLoad.length});
-    let compatReports;
+
+    // Core modules ship with the platform build: online they load from the
+    // network (HTTP cache), offline the service-worker precache serves them, and
+    // each new build revises that precache. There is no separate localStorage
+    // module cache and no version gate — a core module bundled with the platform
+    // can't be out of step with it. (Plugins arrive as editable tiddlers/packages
+    // and keep their own compat gate — see checkPluginCompat.)
     try {
-      // Fetch each module (cache-or-network) WITHOUT persisting it — storing is deferred
-      // to storeCoreModule below, so an incompatible fetch never clobbers the installed
-      // (cached) copies the user may want to keep.
-      let fetchResults = await Promise.all(
+      const results = await Promise.all(
         modulesToLoad.map(async (name, index) => {
-          const r = await fetchCoreModule(name);
+          const res = await fetchModule(baseUrl, name);
           bootProgress({phase: 'fetch', name, index, total: modulesToLoad.length});
-          return r;
+          return res;
         }),
       );
-      tw.modules = modulesToLoad.map((p, i) => ({
-        name: p,
-        res: fetchResults[i].res,
-        fetched: fetchResults[i].fetched,
-      }));
-      compatReports = tw.modules.map(checkModuleCompat);
-      // Stash each report on its module so runtime UI (e.g. the <<modules>> widget) can
-      // show built-for platform + compatibility status without re-deriving it.
-      tw.modules.forEach((m, i) => {
-        m.compat = compatReports[i];
-      });
+      tw.modules = modulesToLoad.map((name, i) => ({name, res: results[i]}));
     } catch (e) {
-      // A download failed outright — a hard stop (block), surfaced in the same dialog.
-      // Give each module an `error` res so the dialog (which re-derives reports from the
-      // loaded set) classifies them as block too, and the user can re-check a new URL.
+      // The only failure left is a real network error with no precache yet (e.g.
+      // a first-ever visit while offline). There is nothing to fall back to.
       console.error('Core module download failed', e);
-      tw.modules = modulesToLoad.map(n => ({
-        name: n,
-        res: {type: 'error', error: e.message},
-        fetched: true,
-      }));
-      compatReports = tw.modules.map(checkModuleCompat);
-      tw.modules.forEach((m, i) => {
-        m.compat = compatReports[i];
-      });
-    }
-
-    // A 'block' (major-version gap or failed download) always halts the boot. A 'warn'
-    // (newer minor/patch of the same major, or no platform field) halts only for a
-    // FRESHLY-FETCHED module — a warning the user hasn't seen yet. A warn module already
-    // in the cache booted before (the user installed it), so it boots again silently.
-    const blocking = compatReports.filter(r => r.severity === 'block');
-    const freshWarn = tw.modules.filter((m, i) => m.fetched && compatReports[i].severity === 'warn');
-    bootProgress({phase: 'compat', blocking: blocking.length, warnings: freshWarn.length});
-    if (blocking.length || freshWarn.length) {
-      console.error('Core module compatibility — boot halted:', {blocking, freshWarn});
       tw.tmp.bootAborted = true;
-      showCompatDialog();
-      return;
+      haltNoModules(e);
     }
-    // Compatible (or only previously-installed warnings) — NOW persist anything freshly
-    // fetched, so the validated set becomes the installed set.
-    tw.modules.forEach(m => {
-      if (m.fetched) storeCoreModule(m.name, m.res);
-    });
   }
 
   function runModules() {
@@ -421,57 +395,22 @@
     document.write('<p class="error">Tips:');
     document.write('<ul>');
     document.write(`<li>Tip: Launch with <a href="${traceUrl}&debug">?trace&debug</a> to see source of error`);
-    document.write('<li>Tip: Try <a href="?update">?update</a> to try a reload of modules');
-    document.write('<li>Tip: Try <a href="?reload">?reload</a> to force a reload of modules');
+    document.write('<li>Tip: Try <a href="?safemode">?safemode</a> to skip extension packages');
     document.write('</ul>');
     return true;
   }
 
-  // Reload the page with ?reload/?update stripped, so the next boot reads the (just-stored
-  // or already-cached) modules instead of force-fetching again and re-opening this dialog.
-  function reloadWithoutForce() {
-    const url = new URL(location.href);
-    url.searchParams.delete('reload');
-    url.searchParams.delete('update');
-    location.href = url.toString();
-  }
-
-  // Boot halted on an incompatible/missing core module: load the rich compat
-  // dialog (platform/twikki.compat-dialog.js) ON DEMAND and hand it the boot
-  // context. The dialog is an enhancement — if its script cannot load (e.g. the
-  // same network failure that broke the modules), fall back to a plain halt
-  // message with the recovery query-param links. Nothing here depends on any
-  // core module or theme CSS.
-  function showCompatDialog() {
-    const ctx = {
-      tw,
-      VERSION,
-      baseUrl,
-      checkModuleCompat,
-      readObject,
-      isCachedModuleUsable,
-      storeCoreModule,
-      tryFetchModule,
-      reloadWithoutForce,
-    };
-    const fallback = () => {
-      const broken = tw.modules
-        .filter(m => m.compat?.severity === 'block' || m.compat?.severity === 'warn')
-        .map(m => `<li><code>${m.name}</code> — ${m.compat.reason || 'incompatible'}</li>`)
-        .join('');
-      document.body.innerHTML =
-        '<div style="max-width:640px;margin:3rem auto;font:14px/1.5 system-ui,sans-serif">' +
-        `<h1>TWikki v${VERSION} cannot boot</h1>` +
-        '<p>One or more core modules are incompatible or failed to download:</p>' +
-        `<ul>${broken}</ul>` +
-        '<p>Try <a href="?reload">?reload</a> to re-download the modules, or ' +
-        '<a href="?update">?update</a> to fetch updates.</p></div>';
-    };
-    const s = document.createElement('script');
-    s.src = 'platform/twikki.compat-dialog.js';
-    s.onload = () => (window.twikkiCompatDialog ? window.twikkiCompatDialog(ctx) : fallback());
-    s.onerror = fallback;
-    document.head.appendChild(s);
+  // Boot can't proceed because the core modules themselves could not be loaded
+  // (a network error with no service-worker precache yet — e.g. a first-ever
+  // visit while offline). Plain halt message; nothing here depends on a core
+  // module or theme CSS.
+  function haltNoModules(e) {
+    document.body.innerHTML =
+      '<div style="max-width:640px;margin:3rem auto;font:14px/1.5 system-ui,sans-serif">' +
+      `<h1>TWikki v${VERSION} cannot load</h1>` +
+      '<p>Core modules could not be downloaded and no offline copy is available yet:</p>' +
+      `<p class="error">${e.message}</p>` +
+      '<p>Reconnect and reload — once loaded, TWikki runs offline.</p></div>';
   }
 
   /* Boot lifecycle */
@@ -858,57 +797,6 @@
   }
   /* END semver helper */
 
-  // Statically read a code module's `const name/version/platform = '...'` declarations
-  // WITHOUT eval'ing it — eval runs the module's IIFE side effects, so compatibility
-  // must be decided from the source text before any module code runs.
-  function parseModuleMeta(code) {
-    const grab = re => code.match(re)?.[1] ?? null;
-    return {
-      name: grab(/const\s+name\s*=\s*'([^']+)'/),
-      version: grab(/const\s+version\s*=\s*'([^']+)'/),
-      platform: grab(/const\s+platform\s*=\s*'([^']+)'/),
-    };
-  }
-  // {name, version, required, compatible, severity, reason?, exempt?} for one loaded
-  // module. severity is one of:
-  //   'ok'    — compatible with the running platform.
-  //   'warn'  — incompatible but SAME major (built for a newer minor/patch) or no
-  //             platform field: the user may override and install anyway.
-  //   'block' — different major: a breaking platform gap that cannot be overridden.
-  // List modules (e.g. core.defaults.json) carry no code/version and are exempt ('ok').
-  function checkModuleCompat(pck) {
-    // A failed re-check fetch (see showCompatDialog) — a hard block, can't be installed.
-    if (pck.res?.type === 'error')
-      return {
-        name: pck.name,
-        compatible: false,
-        severity: 'block',
-        reason: 'fetch failed: ' + (pck.res.error || 'error'),
-      };
-    if (pck.res?.type !== 'code') return {name: pck.name, compatible: true, exempt: true, severity: 'ok'};
-    const meta = parseModuleMeta(pck.res.code);
-    const required = meta.platform;
-    const compatible = !!required && caretSatisfies(required, VERSION);
-    let severity = 'ok';
-    let reason;
-    if (compatible) {
-      severity = 'ok';
-    } else if (!required) {
-      severity = 'warn';
-      reason = 'no platform field declared';
-    } else {
-      const r = semver(required);
-      const p = semver(VERSION);
-      if (r && p && r.major !== p.major) {
-        severity = 'block';
-        reason = `needs platform ${r.major}.x, running ${VERSION}`;
-      } else {
-        severity = 'warn';
-        reason = `built for ${required}, running ${VERSION}`;
-      }
-    }
-    return {name: pck.name, version: meta.version, required, compatible, severity, reason};
-  }
 
   // Classify a plugin's compat with the running platform from its returned meta object.
   //   'ok'     — platform field present and caretSatisfies(required, VERSION).
@@ -937,35 +825,6 @@
     };
   }
 
-  // A cached module is usable if it carries a payload: code modules have `.code`,
-  // list modules have `.tiddlers`. (The old `!res?.code` test wrongly re-fetched list
-  // modules every boot because they never have `.code`.)
-  function isCachedModuleUsable(res) {
-    return !!(res && (res.code || res.tiddlers));
-  }
-  // Obtain a core module's payload, WITHOUT persisting it. Returns {res, fetched}: a usable
-  // cached copy is used as-is (fetched:false) unless ?reload/?update forces the network;
-  // otherwise it is downloaded (fetched:true). Persisting is a separate, deferred step
-  // (storeCoreModule) so an incompatible download never overwrites the installed copy.
-  async function fetchCoreModule(moduleName) {
-    const cached = readObject('/modules' + moduleName);
-    if (isCachedModuleUsable(cached) && !qs.reload && !qs.update) return {res: cached, fetched: false};
-    return {res: await fetchModule(baseUrl, moduleName), fetched: true};
-  }
-  // Persist a fetched module into the localStorage cache. Called only after the compat
-  // gate passes, or when the user explicitly installs ("forces") from the compat dialog.
-  function storeCoreModule(moduleName, res) {
-    writeObject('/modules' + moduleName, res);
-  }
-  // Non-throwing fetch from an arbitrary base URL, used by the compat dialog's re-check
-  // so one bad URL/module renders an error row instead of aborting the whole re-check.
-  async function tryFetchModule(moduleName, fromBaseUrl) {
-    try {
-      return {ok: true, res: await fetchModule(fromBaseUrl, moduleName)};
-    } catch (e) {
-      return {ok: false, error: e.message};
-    }
-  }
   async function fetchModule(baseUrl, moduleName) {
     if (!baseUrl) throw new Error('NO_MODULE_URL: Unable to determine URL to load module from!');
     // moduleName already starts with '/', so 'modules' + moduleName → 'modules/core.tiddlers.js'
@@ -992,14 +851,6 @@
       if (res.error) throw new Error(`INVALID_MODULE_JSON '${moduleName}' ${res.error.message}`);
     } else throw new Error(`MODULE_FORMAT_UNKNOWN: ${moduleUrl} is not served as JS/JSON`);
     return res;
-  }
-  function readObject(item) {
-    let json = read(item);
-    if (!json?.match(/^[\{\[]/)) return {};
-    return JSON.parse(json);
-  }
-  function writeObject(item, value) {
-    return write(item, JSON.stringify(value));
   }
   function overrides() {
     // Overrides

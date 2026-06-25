@@ -25,7 +25,6 @@ test('boot progress: DOM events fire live, in order, from init through ready', a
   // One fetch and one eval tick per core module (fetch ticks fire for cached copies too).
   expect(phases.filter(p => p === 'fetch')).toHaveLength(total);
   expect(phases.filter(p => p === 'eval')).toHaveLength(total);
-  expect(phases).toContain('compat');
   // loadModules() emits 'modules-loaded' after every module is eval'd;
   // runModules() emits 'modules-run' after every module's run() callback fires.
   expect(phases).toContain('modules-loaded');
@@ -36,12 +35,11 @@ test('boot progress: DOM events fire live, in order, from init through ready', a
   expect(events.filter(e => e.phase === 'plugins').map(e => e.step)).toEqual(['unload', 'load', 'init', 'start']);
   expect(phases[phases.length - 1]).toBe('ready');
 
-  // Ordering: fetches before compat, compat before any eval, evals before
-  // modules-loaded, modules-loaded before modules-run, modules-run before any package.
+  // Ordering: fetches before any eval, evals before modules-loaded,
+  // modules-loaded before modules-run, modules-run before any package.
   const lastFetch = Math.max(...phases.flatMap((p, i) => (p === 'fetch' ? [i] : [])));
   const lastEval = Math.max(...phases.flatMap((p, i) => (p === 'eval' ? [i] : [])));
-  expect(lastFetch).toBeLessThan(phases.indexOf('compat'));
-  expect(phases.indexOf('compat')).toBeLessThan(phases.indexOf('eval'));
+  expect(lastFetch).toBeLessThan(phases.indexOf('eval'));
   expect(lastEval).toBeLessThan(phases.indexOf('modules-loaded'));
   expect(phases.indexOf('modules-loaded')).toBeLessThan(phases.indexOf('modules-run'));
   expect(phases.indexOf('modules-run')).toBeLessThan(phases.indexOf('package'));
