@@ -11,7 +11,8 @@ tw.extensions.registerMacro(
     const rows = tw.modules.map(m => {
       const name = m.meta?.name || m.name.replace(/^\//, '').replace(/\.(js|json)$/, '');
       const version = m.meta?.version || '–';
-      return `| ${name} | ${version} | ${m.res.type} |`;
+      const type = m.name.split('.').pop(); // 'js' (code module) or 'json' (shadow-tiddler data)
+      return `| ${name} | ${version} | ${type} |`;
     });
     return [`Running platform: **v${platform}**`, '', '| Module | Version | Type |', '|---|---|---|', ...rows].join('\n');
   },
