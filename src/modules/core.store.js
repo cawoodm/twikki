@@ -12,7 +12,7 @@
  * saveVisible/loadStore and the `doNotSave` policy.
  * Modules and plugins use `tw.store` only — never `tw.storage`/`localStorage`.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.store';
   const version = '0.2.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -140,4 +140,4 @@
     if (msg.length) console.warn('tiddlerValidation', t.title, msg.join('; '));
     return msg.length === 0;
   }
-});
+}

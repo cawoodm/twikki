@@ -10,7 +10,7 @@ const root = join(__dirname, '..', '..');
 // Load the runtime module the way the platform does: eval the file (a
 // parenthesised factory function) and read its exports (see sections.test.js).
 const code = readFileSync(join(root, 'src/modules/core.params.js'), 'utf8');
-const {parseParams} = (0, eval)(code)().exports;
+const {parseParams} = (0, eval)('(' + code.replace('export default ', '') + ')')().exports;
 
 /* Positional parameters (docs/PARAMETERS.md + MyParamsTestPlugin.tid) */
 

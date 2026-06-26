@@ -23,7 +23,7 @@
  * Pure and DOM-free so it can be unit-tested by eval'ing this module with a stub
  * `tw` and reading `.exports` (mirrors how the runtime itself loads modules).
  */
-(function () {
+export default function () {
   // Meta
   const name = 'core.sections';
   const version = '0.24.0';
@@ -156,4 +156,4 @@
     while (end > start && lines[end - 1].trim() === '') end--;
     return lines.slice(start, end);
   }
-});
+}

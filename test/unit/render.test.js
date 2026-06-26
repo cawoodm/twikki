@@ -29,7 +29,7 @@ function loadRender() {
   };
   global.window = global.window || {};
   const code = readFileSync(join(root, 'src/modules/core.render.js'), 'utf8');
-  const meta = (0, eval)(code)(tw);
+  const meta = (0, eval)('(' + code.replace('export default ', '') + ')')(tw);
   return meta.exports;
 }
 

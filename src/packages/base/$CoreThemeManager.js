@@ -59,8 +59,8 @@
     // Mirror getThemeStyleSheets()'s fallback so the registry agrees with what
     // buildCss() actually concatenates when $Theme points to a missing tiddler.
     let theme = getCurrentThemeName();
-    if (!tw.call('tiddlerExists', theme)) theme = '$CoreThemeLight';
-    if (tw.call('tiddlerExists', theme)) {
+    if (!tw.core.tiddlers.tiddlerExists(theme)) theme = '$CoreThemeLight';
+    if (tw.core.tiddlers.tiddlerExists(theme)) {
       list.push(theme);
       list.push(...tw.run.getTiddlerList(theme));
     }
@@ -71,7 +71,7 @@
   wireUp('theme.switch', themeSwitch);
   function themeSwitch(theme) {
     if (!theme) return;
-    if (!tw.call('tiddlerExists', theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
+    if (!tw.core.tiddlers.tiddlerExists(theme)) return tw.ui.notify(`Unknown theme tiddler '${theme}'!`, 'E');
     // Swap relevance entries before $Theme is rewritten: drop the old theme tiddler
     // and its sheets, add the new ones. Base / user / $Theme / plugin entries stay.
     swapThemeRelevance(getCurrentThemeName(), theme);
@@ -167,7 +167,7 @@
     return (tw.tmp.themeRelevantTiddlers || []).includes(title);
   }
   function swapThemeRelevance(oldTheme, newTheme) {
-    if (oldTheme && tw.call('tiddlerExists', oldTheme)) {
+    if (oldTheme && tw.core.tiddlers.tiddlerExists(oldTheme)) {
       addToRelevance(oldTheme, false);
       tw.run.getTiddlerList(oldTheme).forEach(s => addToRelevance(s, false));
     }
@@ -182,7 +182,7 @@
   }
   function getThemeStyleSheets() {
     let theme = getCurrentThemeName();
-    if (!tw.call('tiddlerExists', theme)) {
+    if (!tw.core.tiddlers.tiddlerExists(theme)) {
       tw.ui.notify('Unable to determine theme name from $Theme tiddler! Falling back on $CoreThemeLight', 'W');
       theme = '$CoreThemeLight';
     }

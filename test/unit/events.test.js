@@ -15,7 +15,7 @@ function freshEvents() {
   const tw = {};
   const dp = () => {}; // suppress debug-print noise
   // The module wrapper is `(function (tw) { ... })` — invoke it as a value.
-  const factory = new Function('tw', 'dp', `return ${src.replace(/^\s*\/\*\*[\s\S]*?\*\/\s*/, '')}`);
+  const factory = new Function('tw', 'dp', `return ${src.replace(/^\s*\/\*\*[\s\S]*?\*\/\s*/, '').replace(/^export default\s+/, '')}`);
   const mod = factory(tw, dp);
   mod(tw); // call the IIFE explicitly with our stub
   tw.events.init();

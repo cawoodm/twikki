@@ -45,7 +45,7 @@
   async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
 
-    let settings = tw.call('getJSONObject', '$GeneralSettings');
+    let settings = tw.run.getJSONObject('$GeneralSettings');
     if (!settings || !settings.synch?.Gist?.accessToken) return tw.ui.notify('No Gist accessToken found in $GeneralSettings.synch.Gist!', 'W');
     const cfg = {
       accessToken: settings.synch.Gist.accessToken,

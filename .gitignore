@@ -135,6 +135,7 @@ tmp*
 # Since we publish these separately, no need to check them in
 public/packages
 public/modules
+src/generated
 dist/
 
 # Don't leak claude stuff

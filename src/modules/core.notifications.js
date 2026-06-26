@@ -6,7 +6,7 @@
  * plain console logging before the UI exists. Debug ('D') messages respect
  * `?debug`, and all messages respect the `?logfilter` regex.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.notifications';
   const version = '0.25.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
@@ -88,4 +88,4 @@
   function escapeHtml(unsafe) {
     return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
   }
-});
+}

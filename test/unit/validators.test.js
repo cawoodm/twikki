@@ -28,7 +28,9 @@ function loadTiddlersModule() {
     storage: {get: () => null, set: () => {}},
   };
   const code = readFileSync(join(root, 'src/modules/core.tiddlers.js'), 'utf8');
-  const meta = (0, eval)(code)(tw);
+  // core.tiddlers.js is now an ES module (`export default function (tw) {…}`);
+  // strip the export so we can eval the factory expression and call it.
+  const meta = (0, eval)('(' + code.replace('export default ', '') + ')')(tw);
   return {tw, meta};
 }
 

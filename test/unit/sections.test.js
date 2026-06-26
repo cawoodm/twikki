@@ -13,7 +13,7 @@ const root = join(__dirname, '..', '..');
 // free of ESM import/export (per the eval-based runtime module contract) while
 // still being unit-testable.
 const code = readFileSync(join(root, 'src/modules/core.sections.js'), 'utf8');
-const {parseSections, getSection, fenceToType} = (0, eval)(code)().exports;
+const {parseSections, getSection, fenceToType} = (0, eval)('(' + code.replace('export default ', '') + ')')().exports;
 
 test('fenceToType maps info-strings to tiddler types', () => {
   assert.equal(fenceToType('css'), 'css');

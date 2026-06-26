@@ -7,7 +7,7 @@
  * repoints `tw.workspace`; `workspace.load` hard-reboots so the UI reloads
  * from the new store. Falls back to 'default' if the saved name is unknown.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.workspaces';
   const version = '0.25.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
@@ -145,4 +145,4 @@
       // file:// or strict sandbox — fall through; the session anchor still works
     }
   }
-});
+}

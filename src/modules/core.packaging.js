@@ -6,7 +6,7 @@
  * `overWrite`/`filter` options, and confirm()s before overwriting a tiddler
  * the user has changed. `reloadPackageFromUrl` additionally reloads the UI.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.packaging';
   const version = '0.28.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -200,4 +200,4 @@
       throw new Error(`Failed to load package '${name}' with invalid JSON (see console log) from ${url}: ${e.message}`);
     }
   }
-});
+}

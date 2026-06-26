@@ -7,7 +7,7 @@
  * exported, so the sidebar Notes list hides the same tiddlers). Also wires
  * the search box UI and renders the clickable results dropdown.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.search';
   const version = '0.26.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -312,4 +312,4 @@
     const term = tw.core.dom.$('search').value || '';
     tw.events.send('search.result.clicked', {title, term});
   }
-});
+}

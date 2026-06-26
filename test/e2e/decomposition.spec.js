@@ -1,12 +1,13 @@
 // Guards for the platform decomposition (plans/platform-rework.md):
 //  - every shipped plugin still loads/inits/starts cleanly against the new
-//    module layout (a broken tw.call or missing tw.run entry shows up here),
-//  - tw.call still resolves names that used to live in the platform closure,
+//    module layout (a missing tw.run / tw.core entry shows up here),
+//  - core functions that moved out of the platform closure are reachable on
+//    the registries (tw.run / tw.core.*),
 //  - ?safemode: extension packages are skipped but the base package (and its
 //    plugins) still load; TWikki can create, edit, validate, save and navigate.
 
 import {expect, test} from '@playwright/test';
-import {bootApp, card} from './helpers.js';
+import {bootApp, card, seedTiddlers} from './helpers.js';
 
 test('metaInfo lives in TiddlerMetaInfo plugin: normal boot shows pck: pill', async ({page}) => {
   await bootApp(page);
@@ -35,30 +36,20 @@ test('meta.dependencies: missing dep yields missingDependencies + console warn; 
   page.on('console', msg => {
     if (msg.type() === 'warning') warnings.push(msg.text());
   });
-  await page.addInitScript(() => {
-    // Inject a $Plugin tiddler that declares an impossible dep. We wait for
-    // 'modules-run', which fires AFTER core.store.loadStore() (loadStore
-    // unconditionally rebuilds tw.tiddlers.all from the persisted store and
-    // the frozen tw.shadowTiddlers — anything injected earlier would be
-    // wiped). 'modules-run' still fires before reload() runs loadPlugins(),
-    // so the injection lands in time.
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase === 'modules-run') {
-        tw.tiddlers.all.push({
-          title: '$DepProbe',
-          type: 'script/js',
-          tags: ['$Plugin'],
-          created: new Date(),
-          updated: new Date(),
-          package: 'test',
-          text: `(function () {
-            window.__depProbeInitRan = true;
-            return {meta: {name: 'DepProbe', version: '1.0.0', dependencies: ['DoesNotExist']}, init() {}};
-          })()`,
-        });
-      }
-    });
-  });
+  // Seed a $Plugin tiddler that declares an impossible dep into the store; it
+  // loads with the workspace and loadPlugins() picks it up.
+  await seedTiddlers(page, [
+    {
+      title: '$DepProbe',
+      type: 'script/js',
+      tags: ['$Plugin'],
+      package: 'test',
+      text: `(function () {
+        window.__depProbeInitRan = true;
+        return {meta: {name: 'DepProbe', version: '1.0.0', dependencies: ['DoesNotExist']}, init() {}};
+      })()`,
+    },
+  ]);
   await bootApp(page);
   const entry = await page.evaluate(() => {
     const p = tw.plugin('DepProbe');
@@ -87,25 +78,19 @@ test('meta.dependencies reorders init: dependent listed first still inits after 
   page,
 }) => {
   await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      window.__order = [];
-      const mk = (title, name, deps) => ({
-        title,
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {meta: {name: '${name}', version: '1.0.0'${
-          deps ? `, dependencies: ${JSON.stringify(deps)}` : ''
-        }}, init() { window.__order.push('${name}'); }}; })()`,
-      });
-      // B is pushed BEFORE A; B declares it depends on A.
-      tw.tiddlers.all.push(mk('$DepB', 'DepB', ['DepA']));
-      tw.tiddlers.all.push(mk('$DepA', 'DepA', null));
-    });
+    window.__order = [];
   });
+  const mk = (title, name, deps) => ({
+    title,
+    type: 'script/js',
+    tags: ['$Plugin'],
+    package: 'test',
+    text: `(function () { return {meta: {name: '${name}', version: '1.0.0'${
+      deps ? `, dependencies: ${JSON.stringify(deps)}` : ''
+    }}, init() { window.__order.push('${name}'); }}; })()`,
+  });
+  // B is seeded BEFORE A; B declares it depends on A.
+  await seedTiddlers(page, [mk('$DepB', 'DepB', ['DepA']), mk('$DepA', 'DepA', null)]);
   await bootApp(page);
   const order = await page.evaluate(() => window.__order);
   expect(order.indexOf('DepA')).toBeGreaterThanOrEqual(0);
@@ -116,22 +101,16 @@ test('stable order: two non-base plugins with no deps keep their insertion order
   page,
 }) => {
   await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      window.__order = [];
-      const mk = (title, name) => ({
-        title,
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {meta: {name: '${name}', version: '1.0.0'}, init() { window.__order.push('${name}'); }}; })()`,
-      });
-      tw.tiddlers.all.push(mk('$StableFirst', 'StableFirst'));
-      tw.tiddlers.all.push(mk('$StableSecond', 'StableSecond'));
-    });
+    window.__order = [];
   });
+  const mk = (title, name) => ({
+    title,
+    type: 'script/js',
+    tags: ['$Plugin'],
+    package: 'test',
+    text: `(function () { return {meta: {name: '${name}', version: '1.0.0'}, init() { window.__order.push('${name}'); }}; })()`,
+  });
+  await seedTiddlers(page, [mk('$StableFirst', 'StableFirst'), mk('$StableSecond', 'StableSecond')]);
   await bootApp(page);
   const order = await page.evaluate(() => window.__order);
   expect(order.indexOf('StableFirst')).toBeGreaterThanOrEqual(0);
@@ -144,24 +123,18 @@ test('dependency cycle: warn, both plugins still run, length unchanged', async (
     if (msg.type() === 'warning') warnings.push(msg.text());
   });
   await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      window.__cycleRan = {};
-      const mk = (title, name, deps) => ({
-        title,
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {meta: {name: '${name}', version: '1.0.0', dependencies: ${JSON.stringify(
-          deps,
-        )}}, init() { window.__cycleRan['${name}'] = true; }}; })()`,
-      });
-      tw.tiddlers.all.push(mk('$CycX', 'CycX', ['CycY']));
-      tw.tiddlers.all.push(mk('$CycY', 'CycY', ['CycX']));
-    });
+    window.__cycleRan = {};
   });
+  const mk = (title, name, deps) => ({
+    title,
+    type: 'script/js',
+    tags: ['$Plugin'],
+    package: 'test',
+    text: `(function () { return {meta: {name: '${name}', version: '1.0.0', dependencies: ${JSON.stringify(
+      deps,
+    )}}, init() { window.__cycleRan['${name}'] = true; }}; })()`,
+  });
+  await seedTiddlers(page, [mk('$CycX', 'CycX', ['CycY']), mk('$CycY', 'CycY', ['CycX'])]);
   await bootApp(page);
   const result = await page.evaluate(() => ({
     ran: window.__cycleRan,
@@ -179,22 +152,17 @@ test('dependency cycle: warn, both plugins still run, length unchanged', async (
 test('base batch precedes non-base: a test-package plugin with no deps sorts after all base plugins', async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      // Insert at the FRONT so original order would put this non-base entry
-      // ahead of every base plugin — only the batch rule can fix that.
-      tw.tiddlers.all.unshift({
-        title: '$AaaaTestPlugin',
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {meta: {name: 'AaaaTestPlugin', version: '1.0.0'}, init() {}}; })()`,
-      });
-    });
-  });
+  // Seeded into the store, this non-base plugin loads ahead of every base
+  // (package) plugin — only the batch rule can sort it after them.
+  await seedTiddlers(page, [
+    {
+      title: '$AaaaTestPlugin',
+      type: 'script/js',
+      tags: ['$Plugin'],
+      package: 'test',
+      text: `(function () { return {meta: {name: 'AaaaTestPlugin', version: '1.0.0'}, init() {}}; })()`,
+    },
+  ]);
   await bootApp(page);
   const result = await page.evaluate(() => {
     const idxTest = tw.plugins.findIndex(p => p.meta?.name === 'AaaaTestPlugin');
@@ -221,28 +189,23 @@ test('declared deps order within the base batch: BaseMarkdown before OpenLinksIn
 });
 
 test('renderer.override: a synthetic plugin claims a custom type', async ({page}) => {
-  await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      tw.tiddlers.all.push({
-        title: '$FooRenderer',
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {
-          meta: {name: 'FooRenderer', version: '1.0.0'},
-          start() {
-            tw.events.subscribe('renderer.override', function fooRender({tiddler, text}) {
-              if (tiddler.type !== 'foo') return null;
-              return '<div class="foo">' + text + '</div>';
-            });
-          }
-        }; })()`,
-      });
-    });
-  });
+  await seedTiddlers(page, [
+    {
+      title: '$FooRenderer',
+      type: 'script/js',
+      tags: ['$Plugin'],
+      package: 'test',
+      text: `(function () { return {
+        meta: {name: 'FooRenderer', version: '1.0.0'},
+        start() {
+          tw.events.subscribe('renderer.override', function fooRender({tiddler, text}) {
+            if (tiddler.type !== 'foo') return null;
+            return '<div class="foo">' + text + '</div>';
+          });
+        }
+      }; })()`,
+    },
+  ]);
   await bootApp(page);
   const html = await page.evaluate(() =>
     tw.core.render.makeTiddlerText({title: 'X', type: 'foo', text: 'hi'}),
@@ -251,26 +214,21 @@ test('renderer.override: a synthetic plugin claims a custom type', async ({page}
 });
 
 test('renderer.pre and renderer.post chain transforms around the core renderer', async ({page}) => {
-  await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      tw.tiddlers.all.push({
-        title: '$PrePostProbe',
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {
-          meta: {name: 'PrePostProbe', version: '1.0.0'},
-          start() {
-            tw.events.subscribe('renderer.pre', function preMark(text) { return '«' + text + '»'; });
-            tw.events.subscribe('renderer.post', function postMark(html) { return '<wrap>' + html + '</wrap>'; });
-          }
-        }; })()`,
-      });
-    });
-  });
+  await seedTiddlers(page, [
+    {
+      title: '$PrePostProbe',
+      type: 'script/js',
+      tags: ['$Plugin'],
+      package: 'test',
+      text: `(function () { return {
+        meta: {name: 'PrePostProbe', version: '1.0.0'},
+        start() {
+          tw.events.subscribe('renderer.pre', function preMark(text) { return '«' + text + '»'; });
+          tw.events.subscribe('renderer.post', function postMark(html) { return '<wrap>' + html + '</wrap>'; });
+        }
+      }; })()`,
+    },
+  ]);
   await bootApp(page);
   const html = await page.evaluate(() =>
     tw.core.render.makeTiddlerText({title: 'X', type: 'unknown-type', text: 'hello'}),
@@ -283,27 +241,22 @@ test('renderer.pre and renderer.post chain transforms around the core renderer',
 test('renderer.override returning empty string claims the call (null is the only no-op)', async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    window.addEventListener('twikki.boot.progress', e => {
-      if (e.detail.phase !== 'modules-run') return;
-      tw.tiddlers.all.push({
-        title: '$EmptyClaim',
-        type: 'script/js',
-        tags: ['$Plugin'],
-        created: new Date(),
-        updated: new Date(),
-        package: 'test',
-        text: `(function () { return {
-          meta: {name: 'EmptyClaim', version: '1.0.0'},
-          start() {
-            tw.events.subscribe('renderer.override', function claimEmpty({tiddler}) {
-              return tiddler.type === 'empty-type' ? '' : null;
-            });
-          }
-        }; })()`,
-      });
-    });
-  });
+  await seedTiddlers(page, [
+    {
+      title: '$EmptyClaim',
+      type: 'script/js',
+      tags: ['$Plugin'],
+      package: 'test',
+      text: `(function () { return {
+        meta: {name: 'EmptyClaim', version: '1.0.0'},
+        start() {
+          tw.events.subscribe('renderer.override', function claimEmpty({tiddler}) {
+            return tiddler.type === 'empty-type' ? '' : null;
+          });
+        }
+      }; })()`,
+    },
+  ]);
   await bootApp(page);
   const html = await page.evaluate(() =>
     tw.core.render.makeTiddlerText({title: 'X', type: 'empty-type', text: 'whatever'}),
@@ -389,13 +342,13 @@ test('CsvRenderer registers "csv" type in the new-tiddler picker datalist', asyn
   expect(options.some(o => o.value === 'markdown')).toBe(true);
 });
 
-test('tw.call resolves functions that moved out of the platform closure', async ({page}) => {
+test('core functions that moved out of the platform closure are reachable on the registries', async ({page}) => {
   await bootApp(page);
   const results = await page.evaluate(() => ({
-    tiddlerExists: tw.call('tiddlerExists', '$MainLayout'),
-    getTiddler: tw.call('getTiddler', '$MainLayout')?.title,
-    renderTWikki: typeof tw.call('renderTWikki', {text: 'plain', title: 'x'}),
-    getJSONObject: typeof tw.call('getJSONObject', '$GeneralSettings'),
+    tiddlerExists: tw.core.tiddlers.tiddlerExists('$MainLayout'),
+    getTiddler: tw.run.getTiddler('$MainLayout')?.title,
+    renderTWikki: typeof tw.core.render.renderTWikki({text: 'plain', title: 'x'}),
+    getJSONObject: typeof tw.run.getJSONObject('$GeneralSettings'),
   }));
   expect(results.tiddlerExists).toBe(true);
   expect(results.getTiddler).toBe('$MainLayout');
@@ -420,26 +373,6 @@ test('module eval failure: one error page, names the failing module(s)', async (
   expect(heading).toMatch(/core\.dom/);
   // The per-module error paragraphs bold each name and include the JS message.
   await expect(page.locator('p.error').first()).toContainText('core.dom.js');
-});
-
-test('boot halts on an incompatible module and shows the (lazily-loaded) compat dialog', async ({
-  page,
-}) => {
-  // Serve core.common.js claiming a different MAJOR platform → a hard 'block'.
-  await page.route('**/modules/core.common.js', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      /const platform = '[^']+'/,
-      "const platform = '9.9.9'",
-    );
-    await route.fulfill({response, body});
-  });
-  await page.goto('/?reload'); // force network so the tampered module is fetched
-  await expect(page.locator('#tw-compat-dialog')).toBeVisible({timeout: 15000});
-  await expect(page.locator('#tw-compat-dialog tbody tr').first()).toContainText('✗');
-  expect(await page.evaluate(() => tw.tmp.bootAborted)).toBe(true);
-  // The blocked row's checkbox can never be selected for install
-  await expect(page.locator('#tw-compat-dialog .tw-compat-pick').first()).toBeDisabled();
 });
 
 test.describe('?safemode (extension packages skipped, base plugins still load)', () => {

@@ -5,7 +5,7 @@
  * interpolation (dot-paths allowed), `{{key}}…{{:key}}…{{/key}}` if/else
  * blocks, `{{!key}}` negation, and `{{@key}}` iteration exposing `_key`/`_val`.
  */
-(function (tw) {
+export default function (tw) {
   const name = 'core.templater';
   const version = '0.24.0';
   const platform = '0.27.0'; // built for platform ^0.27.0
@@ -74,4 +74,4 @@
         return '';
       });
   }
-});
+}

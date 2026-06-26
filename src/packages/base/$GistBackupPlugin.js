@@ -116,7 +116,7 @@
   };
 
   function readConfig() {
-    let settings = tw.call('getJSONObject', '$GeneralSettings');
+    let settings = tw.run.getJSONObject('$GeneralSettings');
     if (!settings || !settings.backup?.Gist?.accessToken) {
       tw.ui.notify('No Gist accessToken found in $GeneralSettings.backup.Gist!', 'W');
       return null;

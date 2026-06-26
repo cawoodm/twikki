@@ -60,6 +60,24 @@ export async function bootApp(page) {
   }
 }
 
+/**
+ * Pre-seed tiddlers into the persisted workspace store BEFORE the app boots, so
+ * loadStore() loads them into tw.tiddlers.all and (for $Plugin-tagged ones)
+ * loadPlugins() picks them up. Store tiddlers land ahead of base-package
+ * plugins in load order, which is what the ordering tests rely on. Call before
+ * bootApp(page). `created`/`updated` default to now. Replaces the old
+ * boot-progress 'modules-run' injection hook.
+ */
+export async function seedTiddlers(page, tiddlers) {
+  await page.addInitScript(seed => {
+    const k = '/ws/default/tiddlers';
+    const now = new Date().toISOString();
+    const store = JSON.parse(localStorage.getItem(k) || '[]');
+    store.push(...seed.map(t => ({created: now, updated: now, ...t})));
+    localStorage.setItem(k, JSON.stringify(store));
+  }, tiddlers);
+}
+
 /** Auto-accept any confirm()/prompt() dialogs (Playwright otherwise dismisses them). */
 export function acceptDialogs(page) {
   page.on('dialog', d => d.accept());

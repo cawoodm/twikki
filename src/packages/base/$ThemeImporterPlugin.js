@@ -80,7 +80,7 @@
   }
 
   function importUrl() {
-    let settings = tw.call('getJSONObject', '$GeneralSettings');
+    let settings = tw.run.getJSONObject('$GeneralSettings');
     return settings?.urls?.themeUrl || DEFAULT_URL;
   }
 

@@ -6,7 +6,7 @@
  * (via `tw.core.common.decoder`).
  * Loads after core.common (which must come first in modulesToLoad).
  */
-(function (tw) {
+export default function (tw) {
   const name = 'twikki.core';
   const version = '0.28.0';
   const platform = '0.28.0'; // built for platform ^0.28.0
@@ -129,4 +129,4 @@
   })();
 
   return {name, version, platform};
-});
+}

@@ -62,7 +62,7 @@
   }
 
   function openOnGitHub(title) {
-    const t = tw.call('getTiddler', title);
+    const t = tw.run.getTiddler(title);
     if (!t) return tw.ui.notify(`Unknown tiddler '${title}'!`, 'E');
     if (isLocalOnly(t)) return tw.ui.notify(`'${title}' is local-only — not synched to GitHub.`, 'I');
     const url = repoUrl(title);
