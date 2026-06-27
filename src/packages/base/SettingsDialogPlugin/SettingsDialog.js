@@ -23,6 +23,12 @@
       return;
     }
     if (!isPlainObject(settings)) return;
+    // The field tree (structure + `~` descriptors) comes from the workspace
+    // $Settings, but a setting promoted entirely to the user layer is removed
+    // from $Settings — overlay the user store so those still render. (Field
+    // values themselves are read live via getRaw() in renderField.)
+    const user = tw.store.global.get('/settings.json');
+    if (isPlainObject(user)) settings = deepMerge(settings, user);
 
     const formHtml = buildForm(settings);
     if (!formHtml) return; // nothing renderable → leave raw view
@@ -81,11 +87,17 @@
 
   function renderField(key, value, descriptor, path) {
     const meta = parseDescriptor(descriptor);
-    const type = meta.type || inferType(value);
+    // Show the effective stored value (user override wins over workspace), NOT
+    // secret-expanded — a `${secret:…}` reference shows as-is.
+    const raw = tw.core.settings.getRaw(path);
+    const v = raw === undefined ? value : raw;
+    const type = meta.type || inferType(v);
     const help = meta.description ? `<div class="settings-field-help">${esc(meta.description)}</div>` : '';
+    const atUser = tw.core.settings.placement(path) === 'user';
+    const scope = `<label class="settings-scope" title="Save at user level (shared across all workspaces) instead of only this workspace"><input type="checkbox" class="settings-scope-toggle" data-scope="${esc(path)}"${atUser ? ' checked' : ''}> user</label>`;
     return `<div class="settings-field">
       <label class="settings-field-label">${esc(humanize(key))}${help}</label>
-      <div class="settings-field-control">${renderControl(type, value, meta, path)}</div>
+      <div class="settings-field-control">${renderControl(type, v, meta, path)}${scope}</div>
     </div>`;
   }
 
@@ -148,6 +160,14 @@
 
   function onChange(e, formRoot) {
     const el = e.target;
+    // The per-field "user" checkbox moves the setting between layers, keeping
+    // its current value (set() de-dupes the other layer).
+    if (el.classList.contains('settings-scope-toggle')) {
+      const sp = el.dataset.scope;
+      tw.core.settings.set(sp, tw.core.settings.getRaw(sp), el.checked ? 'user' : 'workspace');
+      if (sp === 'urls.baseUrl') tw.store.global.set('/baseUrl', tw.core.settings.getRaw(sp));
+      return;
+    }
     const path = el.dataset.path;
     if (!path) return;
     let value;
@@ -184,22 +204,13 @@
   }
 
   function writeSetting(path, value) {
-    const t = tw.run.getTiddler(TIDDLER);
-    if (!t) return;
-    let parsed;
-    try {
-      parsed = JSON.parse(t.text || '{}');
-    } catch (e) {
-      console.error('SettingsDialog.writeSetting()', e.message);
-      return tw.ui.notify('Settings JSON is invalid; use Edit to fix it', 'E');
-    }
-    setByPath(parsed, path, value);
-    t.text = JSON.stringify(parsed, null, 2);
-    delete t.doNotSave;
-    tw.run.updateTiddlerHard(TIDDLER, t); // silent — no event, no re-render/flicker
-    // This url is global (read by the platform before any workspace exists)
-    if (path === 'urls.baseUrl') tw.store.global.set('/baseUrl', parsed.urls?.baseUrl);
-    tw.events.send('save.auto');
+    // Write to the setting's current layer (user if it's been promoted there,
+    // else workspace). core.settings.set() persists + sends save.auto.
+    const level = tw.core.settings.placement(path) || 'workspace';
+    tw.core.settings.set(path, value, level);
+    // baseUrl is read by the platform (via tw.store.global) before any workspace
+    // exists, so mirror it to the dedicated global key as well.
+    if (path === 'urls.baseUrl') tw.store.global.set('/baseUrl', value);
   }
 
   /* ---------- helpers ---------- */
@@ -214,6 +225,14 @@
 
   function isPlainObject(v) {
     return v !== null && typeof v === 'object' && !Array.isArray(v);
+  }
+
+  function deepMerge(base, overlay) {
+    const out = isPlainObject(base) ? {...base} : {};
+    for (const k of Object.keys(overlay)) {
+      out[k] = isPlainObject(out[k]) && isPlainObject(overlay[k]) ? deepMerge(out[k], overlay[k]) : overlay[k];
+    }
+    return out;
   }
 
   function inferType(value) {

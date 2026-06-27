@@ -27,7 +27,7 @@ export default function (tw) {
   // path -> {default, type?, description?, options?, secret?, owner}
   const registry = {};
 
-  const exports = {register, get, set, materialize, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
+  const exports = {register, get, getRaw, set, materialize, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
 
   const run = () => {};
   return {name, version, platform, exports, run};
@@ -53,6 +53,15 @@ export default function (tw) {
     if (val === undefined && path in registry) val = registry[path].default;
     if (val === undefined) val = def;
     return expandSecrets(val);
+  }
+
+  // Resolved value WITHOUT secret expansion — the raw stored value (may be a
+  // `${secret:…}` reference). Used by the settings UI to show what is stored.
+  function getRaw(path) {
+    let val = byPath(readUser(), path);
+    if (val === undefined) val = byPath(readWorkspace(), path);
+    if (val === undefined && path in registry) val = registry[path].default;
+    return val;
   }
 
   // Which layer currently holds an explicit value for `path` ('user' | 'workspace' | null).
