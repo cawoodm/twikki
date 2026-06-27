@@ -14,6 +14,7 @@ export default defineConfig({
     port: 3002,
     open: !process.env.VITE_TEST, // e2e harness sets VITE_TEST to avoid popping a browser
     host: true,
+    allowedHosts: ['.ngrok-free.app'], // allow exposing the dev server through an ngrok tunnel
   },
   plugins: [
     tiddlerCompile([
