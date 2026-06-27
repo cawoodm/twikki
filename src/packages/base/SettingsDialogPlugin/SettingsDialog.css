@@ -1,4 +1,4 @@
-/* Settings form — in-place editable form rendered over the $GeneralSettings JSON.
+/* Settings form — in-place editable form rendered over the $Settings JSON.
    Namespaced so it does not collide with the global tab strip (.tab / .tab-active). */
 .settings-form {
   display: flex;

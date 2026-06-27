@@ -6,7 +6,7 @@
  *
  * Clicking it opens the current tiddler's file in the configured GitHub repo on
  * github.com. It reads the SAME settings as GitHubSyncPlugin
- * ($GeneralSettings.synch.GithubRepo: repo, branch, dir) and reconstructs the
+ * ($Settings.synch.GithubRepo: repo, branch, dir) and reconstructs the
  * web URL the way GitHubSyncPlugin builds the file path — so the link points at
  * exactly the blob that sync pushes.
  *
@@ -26,7 +26,7 @@
 
   // Mirror GitHubSyncPlugin.isLocalOnly: these tiddlers are never synched, so
   // there is no GitHub file to open.
-  const isLocalOnly = t => t.title === '$GeneralSettings' || t.doNotSave === true || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
+  const isLocalOnly = t => t.title === '$Settings' || t.doNotSave === true || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
 
   // Mirror GitHubSyncPlugin.encodePathSegment: escape ONLY the characters unsafe
   // in a Git / Windows path; spaces, parentheses and unicode stay readable so the
@@ -52,7 +52,7 @@
   function repoUrl(title) {
     const config = tw.core.common.getSetting('synch.GithubRepo');
     if (!config || !config.repo || !/^[^/]+\/[^/]+$/.test(config.repo)) {
-      tw.ui.notify("Set $GeneralSettings.synch.GithubRepo.repo to 'owner/name' first.", 'W');
+      tw.ui.notify("Set $Settings.synch.GithubRepo.repo to 'owner/name' first.", 'W');
       return null;
     }
     const branch = config.branch || DEFAULT_BRANCH;

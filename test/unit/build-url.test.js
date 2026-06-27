@@ -24,8 +24,8 @@ function loadBuildUrl({moduleUrlInStorage = null, moduleUrlOnWindow = null, loca
     'window',
     m[0] + '\nreturn buildUrl;',
   );
-  const tw = {storage: {get: k => (k === '/moduleUrl' ? moduleUrlInStorage : null)}};
-  const win = {MODULE_URL: moduleUrlOnWindow, location: {href: locationHref}};
+  const tw = {storage: {get: k => (k === '/baseUrl' ? moduleUrlInStorage : null)}};
+  const win = {BASE_URL: moduleUrlOnWindow, location: {href: locationHref}};
   return factory(tw, win);
 }
 

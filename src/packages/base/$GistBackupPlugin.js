@@ -4,7 +4,7 @@
  * Each tiddler is stored as a separate file so changes appear as diffs in
  * the gist's history. A sidecar `_twikki.meta.json` holds the visible/trashed
  * lists. On first save (when no gistId is configured) a new private gist is
- * created and its id is written back to [[$GeneralSettings]].
+ * created and its id is written back to [[$Settings]].
  *
  * Loading this plugin overrides any previously installed backup provider.
  *
@@ -36,7 +36,7 @@
     async restore() {
       let cfg = readConfig();
       if (!cfg) return;
-      if (!cfg.gistId) return tw.ui.notify('No Gist gistId found in $GeneralSettings.backup.Gist!', 'W');
+      if (!cfg.gistId) return tw.ui.notify('No Gist gistId found in $Settings.backup.Gist!', 'W');
       let res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('GistBackup restore', await readError(res));
@@ -108,7 +108,7 @@
       if (!cfg.gistId) {
         let created = await res.json();
         persistGistId(created.id);
-        tw.ui.notify(`New gist created (${created.id}) and saved to $GeneralSettings`, 'I');
+        tw.ui.notify(`New gist created (${created.id}) and saved to $Settings`, 'I');
       }
       let fileCount = Object.values(files).filter(f => f !== null).length;
       tw.ui.notify(`Backup complete! (${fileCount} files, ${(body.length / 1000).toFixed(1)} KB)`, 'S');
@@ -116,9 +116,9 @@
   };
 
   function readConfig() {
-    let settings = tw.run.getJSONObject('$GeneralSettings');
+    let settings = tw.run.getJSONObject('$Settings');
     if (!settings || !settings.backup?.Gist?.accessToken) {
-      tw.ui.notify('No Gist accessToken found in $GeneralSettings.backup.Gist!', 'W');
+      tw.ui.notify('No Gist accessToken found in $Settings.backup.Gist!', 'W');
       return null;
     }
     return {
@@ -140,7 +140,7 @@
   }
 
   function persistGistId(newId) {
-    let tiddler = tw.run.getTiddler('$GeneralSettings');
+    let tiddler = tw.run.getTiddler('$Settings');
     let parsed = {};
     try {
       parsed = JSON.parse(tiddler.text || '{}');
@@ -150,7 +150,7 @@
     parsed.backup.Gist.gistId = newId;
     tiddler.text = JSON.stringify(parsed, null, 2);
     delete tiddler.doNotSave;
-    tw.run.updateTiddlerHard('$GeneralSettings', tiddler);
+    tw.run.updateTiddlerHard('$Settings', tiddler);
     tw.events.send('save.refresh');
     tw.events.send('save.auto');
   }

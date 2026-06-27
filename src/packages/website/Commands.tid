@@ -37,7 +37,7 @@ The palette **is** the navigator: type a note's name (no `>` prefix) to jump to 
 
 | Command       | What it does              | Event                               |
 | ------------- | ------------------------- | ----------------------------------- |
-| Open Settings | Open [[$GeneralSettings]] | `tiddler.show` → `$GeneralSettings` |
+| Open Settings | Open [[$Settings]] | `tiddler.show` → `$Settings` |
 
 ### Workspaces
 
@@ -118,7 +118,7 @@ A `run` function is invoked directly. An `event` is sent through `tw.events`, wi
 Commands have no direct URL syntax of their own, but their `event` does. Any `msg:` link runs the underlying handler — the palette is just one front-end:
 
 ```
-[Open Settings](#msg:tiddler.show:$GeneralSettings)
+[Open Settings](#msg:tiddler.show:$Settings)
 [New note](#msg:tiddler.new)
 [Empty trash](#msg:tiddlers.trashed.empty)
 ```

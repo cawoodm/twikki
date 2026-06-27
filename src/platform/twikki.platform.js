@@ -7,6 +7,7 @@ import coreParams from '../modules/core.params.js';
 import coreRender from '../modules/core.render.js';
 import coreSearch from '../modules/core.search.js';
 import coreSections from '../modules/core.sections.js';
+import coreSettings from '../modules/core.settings.js';
 import coreStore from '../modules/core.store.js';
 import coreTemplater from '../modules/core.templater.js';
 import coreTiddlers from '../modules/core.tiddlers.js';
@@ -34,6 +35,7 @@ import coreDefaults from '../generated/core.defaults.json';
     {name: '/core.dom.js', factory: coreDom},
     {name: '/core.store.js', factory: coreStore},
     {name: '/core.tiddlers.js', factory: coreTiddlers},
+    {name: '/core.settings.js', factory: coreSettings},
     {name: '/core.render.js', factory: coreRender},
     {name: '/core.defaults.json', tiddlers: coreDefaults.tiddlers},
     {name: '/core.notifications.js', factory: coreNotifications},
@@ -154,6 +156,11 @@ import coreDefaults from '../generated/core.defaults.json';
       tw.events.subscribe('ui.reload', reload, 'core');
 
       if (!runModules()) return;
+
+      // Register each core module's declared settings (its `settings` block) into
+      // the settings registry. Plugin settings + the merge into $Settings happen
+      // in reload(), after plugins load.
+      tw.modules.forEach(m => m.meta?.settings && tw.core.settings.register(m.meta.name, m.meta.settings));
 
       document.title = tw.core.render.renderTiddler('$SiteTitle');
 
@@ -341,6 +348,10 @@ import coreDefaults from '../generated/core.defaults.json';
     sortPluginsByDependencies();
     initPlugins();
     startPlugins();
+    // Register plugin-declared settings, then merge all registered defaults into
+    // the per-workspace $Settings tiddler (existing values win).
+    tw.plugins.forEach(p => p.settings && tw.core.settings.register(p.meta?.name || p.source, p.settings));
+    tw.core.settings.materialize();
     runScripts();
     tw.core.render.loadTemplates(); // Must load templates here or we can use no macros in the templates
     tw.core.dom.$$('*[tiddler-include]')?.forEach(tw.core.render.tiddlerSpanInclude);
@@ -476,6 +487,7 @@ import coreDefaults from '../generated/core.defaults.json';
     entry.init = typeof returned.init === 'function' ? returned.init : undefined;
     entry.start = typeof returned.start === 'function' ? returned.start : undefined;
     entry.unload = typeof returned.unload === 'function' ? returned.unload : undefined;
+    entry.settings = returned.settings && typeof returned.settings === 'object' ? returned.settings : undefined;
     if (!entry.meta.name) {
       entry.error = {phase: 'load', message: 'plugin meta.name is required'};
       return entry;

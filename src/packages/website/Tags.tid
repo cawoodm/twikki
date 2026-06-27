@@ -6,7 +6,7 @@ For example this tiddler is tagged with <<Tag Help>>.
 
 By convention, tags beginning with `$` are *special system tags*. Some are purely a convention to make tiddlers easier to find (e.g. <<Tag $StyleSheet>>); others change how the platform treats a tiddler. To list every tiddler carrying a given tag, search for `$tag:<TagName>` (system tiddlers are hidden unless your search starts with `$`).
 
-You can also hide whole groups of tiddlers from normal search *by tag* — without renaming them — via the `includeTags`/`excludeTags` settings on the **Search** tab of [[$GeneralSettings]]. By default `$Theme` and `$StyleSheet` are excluded. An explicit `tag:` search or a `$`-prefixed search always ignores these lists. See [[Help]] for details.
+You can also hide whole groups of tiddlers from normal search *by tag* — without renaming them — via the `includeTags`/`excludeTags` settings on the **Search** tab of [[$Settings]]. By default `$Theme` and `$StyleSheet` are excluded. An explicit `tag:` search or a `$`-prefixed search always ignores these lists. See [[Help]] for details.
 
 ### Tags that change behaviour
 

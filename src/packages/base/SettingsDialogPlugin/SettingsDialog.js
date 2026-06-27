@@ -6,7 +6,7 @@
     description: 'Settings JSON viewer/editor surfaced via the command palette.',
   };
 
-  const TIDDLER = '$GeneralSettings';
+  const TIDDLER = '$Settings';
   const META = '~'; // companion descriptor key suffix
   const TYPES = ['string', 'text', 'number', 'boolean', 'date', 'secret', 'option', 'selection'];
 

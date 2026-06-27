@@ -28,25 +28,21 @@ test('module returns name/version/platform and the pure utilities', () => {
   assert.equal(typeof meta.exports.getSetting, 'function');
 });
 
-test('getSetting resolves a dotted path, defaults, and never throws', () => {
+test('getSetting delegates to tw.core.settings.get and falls back to def', () => {
   const {tw, meta} = freshCommon();
   const {getSetting} = meta.exports;
 
-  // No getJSONObject wired yet (calling undefined throws) → falls back, no throw.
+  // No tw.core.settings wired yet → returns def, never throws.
   assert.equal(getSetting('data.autoSave', true), true);
 
-  tw.run.getJSONObject = () => ({data: {autoSave: false, count: 0}, backup: {secs: 1800}});
-  assert.equal(getSetting('data.autoSave', true), false, 'explicit false is returned, not the default');
-  assert.equal(getSetting('data.count', 99), 0, 'falsy-but-present value wins over default');
-  assert.equal(getSetting('backup.secs', 0), 1800);
+  // Delegates to the settings engine when present.
+  tw.core = {settings: {get: (path, def) => (path === 'data.autoSave' ? false : def)}};
+  assert.equal(getSetting('data.autoSave', true), false, 'engine value is returned, not the default');
+  assert.equal(getSetting('x.y', 7), 7, 'unknown path falls back to def');
 
-  // Missing leaf or missing branch → default (no throw on null traversal).
-  assert.equal(getSetting('data.missing', 'd'), 'd');
-  assert.equal(getSetting('a.b.c.d', 42), 42);
-
-  // A throwing getJSONObject (e.g. invalid JSON) → default.
-  tw.run.getJSONObject = () => {
-    throw new Error('bad json');
+  // A throwing engine → def.
+  tw.core.settings.get = () => {
+    throw new Error('boom');
   };
   assert.equal(getSetting('data.autoSave', true), true);
 });
