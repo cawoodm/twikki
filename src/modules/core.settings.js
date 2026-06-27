@@ -27,7 +27,12 @@ export default function (tw) {
   // path -> {default, type?, description?, options?, secret?, owner}
   const registry = {};
 
-  const exports = {register, get, getRaw, set, materialize, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
+  const MIGRATED_KEY = '/settings.secretsMigrated';
+  // Token settings that historically held a plaintext secret and should now hold
+  // a ${secret:…} reference.
+  const SECRET_PATHS = ['backup.Gist.accessToken', 'synch.Gist.accessToken'];
+
+  const exports = {register, get, getRaw, set, materialize, migrateSecrets, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
 
   const run = () => {};
   return {name, version, platform, exports, run};
@@ -99,6 +104,26 @@ export default function (tw) {
       }
     }
     if (changed) writeWorkspace(ws);
+    migrateSecrets();
+  }
+
+  // One-time: a plaintext token stored directly in a secret setting is moved into
+  // the global secrets store and the setting is rewritten as a ${secret:…}
+  // reference (in whatever layer held it). Guarded by a stamp so it runs once.
+  function migrateSecrets() {
+    if (tw.store.global.get(MIGRATED_KEY)) return;
+    let moved = 0;
+    for (const path of SECRET_PATHS) {
+      const v = getRaw(path);
+      if (typeof v === 'string' && v && !v.includes('${secret:')) {
+        const key = path.replace(/\./g, '_'); // backup.Gist.accessToken → backup_Gist_accessToken
+        writeSecret(key, v);
+        set(path, '${secret:' + key + '}', placement(path) || 'workspace');
+        moved++;
+      }
+    }
+    tw.store.global.set(MIGRATED_KEY, true);
+    if (moved) console.warn(`core.settings: migrated ${moved} plaintext secret(s) into ${SECRETS_KEY}`);
   }
 
   // --- Secrets: ${secret:KEY} → value from the global secrets store ---

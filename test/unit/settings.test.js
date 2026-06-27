@@ -91,3 +91,23 @@ test('same owner re-registering overwrites silently (soft reload)', () => {
   s.register('plugin.b', {'x.y': {default: 9}});
   assert.equal(s.get('x.y'), 9);
 });
+
+test('migrateSecrets moves a plaintext token to secrets.txt and references it (once)', () => {
+  const {s, globalStore} = load();
+  s.set('backup.Gist.accessToken', 'ghp_plain', 'workspace');
+  s.migrateSecrets();
+  assert.equal(s.getRaw('backup.Gist.accessToken'), '${secret:backup_Gist_accessToken}', 'setting now holds a reference');
+  assert.equal(s.get('backup.Gist.accessToken'), 'ghp_plain', 'reference resolves to the moved token');
+  assert.match(globalStore['secrets.txt'], /backup_Gist_accessToken: ghp_plain/);
+  // idempotent: a second run does not touch an already-referenced value
+  s.migrateSecrets();
+  assert.equal(s.getRaw('backup.Gist.accessToken'), '${secret:backup_Gist_accessToken}');
+});
+
+test('migrateSecrets skips empty and already-referenced values', () => {
+  const {s, globalStore} = load();
+  s.set('synch.Gist.accessToken', '${secret:mine}', 'workspace'); // already a reference
+  s.migrateSecrets();
+  assert.equal(s.getRaw('synch.Gist.accessToken'), '${secret:mine}', 'reference left untouched');
+  assert.equal(globalStore['secrets.txt'], undefined, 'nothing written for empty/reference values');
+});

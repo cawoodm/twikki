@@ -316,10 +316,42 @@
     return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&');
   }
 
+  /* ---------- secrets editor ---------- */
+
+  // secrets.txt lives in tw.store.global (one key:value per line) and is never
+  // synced/backed up. Settings reference a secret as ${secret:key}; this editor
+  // is the GUI for that store (otherwise console-only).
+  function openSecretsDialog() {
+    const KEY = tw.core.settings.SECRETS_KEY;
+    const current = tw.store.global.get(KEY) || '';
+    tw.ui.dialog({
+      id: 'secrets-editor',
+      title: 'Secrets — device-local, never synced or backed up',
+      html:
+        '<p class="settings-field-help">One <code>key: value</code> per line. Reference a secret from any setting with <code>${secret:key}</code>.</p>' +
+        `<textarea id="secrets-editor-text" class="settings-json" spellcheck="false" autocomplete="off" rows="8">${esc(current)}</textarea>`,
+      buttons: [
+        {
+          text: 'Save',
+          close: true,
+          onClick: (ev, api) => {
+            const ta = api.content.querySelector('#secrets-editor-text');
+            if (!ta) return;
+            tw.store.global.set(KEY, ta.value);
+            tw.ui.notify('Secrets saved (this device only)', 'S');
+          },
+        },
+        {text: 'Cancel', close: true},
+      ],
+    });
+  }
+
   return {
     meta,
     init() {
       tw.events.subscribe('tiddler.element.created', settingsDialogOnElementCreated);
+      tw.events.subscribe('settings.secrets', openSecretsDialog, meta.name);
+      tw.extensions.registerCommand({label: 'Edit secrets', event: 'settings.secrets'});
     },
   };
 })();
