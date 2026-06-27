@@ -3,7 +3,7 @@ tags: $Plugin
 # Description
 
 Renders an editable FORM in place of the raw JSON whenever the
-`$GeneralSettings` tiddler is displayed. The object maps to the UI:
+`$Settings` tiddler is displayed. The object maps to the UI:
   - each top-level key whose value is an object  → a TAB
   - each child object inside a tab               → a SECTION
   - each leaf value                              → a FORM FIELD

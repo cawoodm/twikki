@@ -13,7 +13,7 @@
   let strip; // #tab-strip
   let vis; // #visible-tiddlers
   let app; // #app (carries the mode-tabs / mode-river class)
-  let mode = 'tabs'; // 'tabs' | 'river' — from $GeneralSettings.layout.mode
+  let mode = 'tabs'; // 'tabs' | 'river' — from $Settings.layout.mode
   let lastVisible = [];
   let batch = [];
   let scheduled = false;
@@ -80,7 +80,7 @@
 
   function layoutMode() {
     try {
-      return tw.run.getJSONObject('$GeneralSettings')?.layout?.mode === 'tabs' ? 'tabs' : 'river';
+      return tw.run.getJSONObject('$Settings')?.layout?.mode === 'tabs' ? 'tabs' : 'river';
     } catch {
       return 'tabs';
     }
@@ -214,6 +214,9 @@
 
   return {
     meta,
+    settings: {
+      'layout.mode': {default: 'river', type: 'option', options: ['river', 'tabs'], description: 'How open notes are displayed: tabs (one at a time) or river (all stacked)'},
+    },
     init() {
       wireUp('ui.loaded', init);
       wireUp('ui.reloaded', init);

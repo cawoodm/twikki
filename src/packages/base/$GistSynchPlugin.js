@@ -7,7 +7,7 @@
  * Each tiddler is stored as a separate file so changes appear as per-tiddler
  * diffs in the gist's history. A sidecar `_twikki.meta.json` holds the visible
  * list. On first push (when no gistId is configured) a new private gist is
- * created and its id is written back to [[$GeneralSettings]].
+ * created and its id is written back to [[$Settings]].
  *
  * Tiddlers tagged `$NoSynch` are never pushed.
  *
@@ -45,12 +45,14 @@
   async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
 
-    let settings = tw.run.getJSONObject('$GeneralSettings');
-    if (!settings || !settings.synch?.Gist?.accessToken) return tw.ui.notify('No Gist accessToken found in $GeneralSettings.synch.Gist!', 'W');
+    // Read via tw.core.settings.get so ${secret:…} references resolve to the
+    // actual token (a direct $Settings read would return the reference string).
+    const accessToken = tw.core.settings.get('synch.Gist.accessToken');
+    if (!accessToken) return tw.ui.notify('No Gist accessToken found in $Settings.synch.Gist!', 'W');
     const cfg = {
-      accessToken: settings.synch.Gist.accessToken,
-      gistId: settings.synch.Gist.gistId || '',
-      description: settings.synch.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
+      accessToken,
+      gistId: tw.core.settings.get('synch.Gist.gistId') || '',
+      description: tw.core.settings.get('synch.Gist.description') || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
 
     // Fetch remote
@@ -204,7 +206,7 @@
       if (!cfg.gistId) {
         let created = await res.json();
         persistGistId(created.id);
-        tw.ui.notify(`New sync gist created (${created.id}) and saved to $GeneralSettings`, 'I');
+        tw.ui.notify(`New sync gist created (${created.id}) and saved to $Settings`, 'I');
       }
     }
 
@@ -289,7 +291,7 @@
   }
 
   function persistGistId(newId) {
-    let tiddler = tw.run.getTiddler('$GeneralSettings');
+    let tiddler = tw.run.getTiddler('$Settings');
     let parsed = {};
     try {
       parsed = JSON.parse(tiddler.text || '{}');
@@ -299,13 +301,18 @@
     parsed.synch.Gist.gistId = newId;
     tiddler.text = JSON.stringify(parsed, null, 2);
     delete tiddler.doNotSave;
-    tw.run.updateTiddlerHard('$GeneralSettings', tiddler);
+    tw.run.updateTiddlerHard('$Settings', tiddler);
     tw.events.send('save.refresh');
     tw.events.send('save.auto');
   }
 
   return {
     meta,
+    settings: {
+      'synch.synchInSeconds': {default: 60, type: 'number', description: 'Time in seconds between auto-synch'},
+      'synch.Gist.accessToken': {default: '', type: 'secret', description: 'GitHub Personal Access Token (classic) with the gist scope — use ${secret:KEY} to reference secrets.txt'},
+      'synch.Gist.gistId': {default: '', type: 'string', description: 'Id of the gist to synch to'},
+    },
     init() {
       tw.events.override('synch.full', doFull, meta.name);
       tw.events.override('synch.push', doPush, meta.name);

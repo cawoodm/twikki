@@ -56,7 +56,7 @@ You will be asked for a name and then offered to **clone** the current workspace
 |---|---|
 | Tiddlers (notes, tags, drafts, trashed) | **Per workspace** |
 | [[$Theme]] selection and `$StyleSheetUser` | **Per workspace** |
-| Settings tiddlers (`$GeneralSettings`, `$SearchSettings`, …) | **Per workspace** |
+| Settings tiddlers (`$Settings`, `$SearchSettings`, …) | **Per workspace** |
 | List of all known workspaces | Global |
 | "Last switched-to" workspace (the default for fresh tabs) | Global |
 | The active workspace **for this tab** | Per tab (sessionStorage) |

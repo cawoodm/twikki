@@ -1,4 +1,4 @@
-/* Settings form — in-place editable form rendered over the $GeneralSettings JSON.
+/* Settings form — in-place editable form rendered over the $Settings JSON.
    Namespaced so it does not collide with the global tab strip (.tab / .tab-active). */
 .settings-form {
   display: flex;
@@ -95,4 +95,18 @@ input.settings-field-input[type="checkbox"] {
   .settings-field {
     grid-template-columns: 1fr;
   }
+}
+
+/* Per-field "user" toggle — chooses whether the setting is saved at user level
+   (cross-workspace, /settings.json) or only in this workspace ($Settings). */
+.settings-scope {
+  margin-left: 0.5rem;
+  font-size: 0.8em;
+  color: var(--col1);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.settings-scope input {
+  margin-right: 2px;
+  vertical-align: middle;
 }

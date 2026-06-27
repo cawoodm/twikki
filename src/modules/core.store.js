@@ -66,7 +66,18 @@ export default function (tw) {
     saveVisible,
   });
 
-  return {name, version, platform, exports};
+  // Settings this module owns. The platform registers these into the settings
+  // registry and deep-merges the defaults into $Settings on every run, so the
+  // default + metadata live with the code that uses them. See docs/SETTINGS.md.
+  const settings = {
+    'data.autoSave': {
+      default: true,
+      type: 'boolean',
+      description: 'Automatically save changes to local storage',
+    },
+  };
+
+  return {name, version, platform, exports, settings};
 
   function prefix() {
     return '/ws/' + (tw.workspace || 'default') + '/';

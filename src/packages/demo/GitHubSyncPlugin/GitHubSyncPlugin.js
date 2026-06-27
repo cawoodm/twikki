@@ -11,13 +11,13 @@
 
   // Never pushed, and preserved locally across a pull (the repo has no authoritative
   // copy):
-  //   - $GeneralSettings — holds the PAT; committing a token trips GitHub secret
+  //   - $Settings — holds the PAT; committing a token trips GitHub secret
   //     scanning (the token gets revoked).
   //   - $NoSynch / $NoBackup tagged tiddlers — explicit opt-out.
   //   - doNotSave tiddlers — app-provided shadow/package defaults the local store
   //     itself doesn't persist (core.store tiddlersToSave); they're regenerated
   //     from the app on every client, so syncing them only churns the repo.
-  const isLocalOnly = t => t.title === '$GeneralSettings' || t.doNotSave === true || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
+  const isLocalOnly = t => t.title === '$Settings' || t.doNotSave === true || t.tags?.includes('$NoSynch') || t.tags?.includes('$NoBackup');
 
   const sync = {
     synch() {
@@ -178,7 +178,7 @@
   // local data. The remote wins on a title collision (a pull brings the repo's
   // version of a shared tiddler), but any local tiddler the remote does not have
   // is preserved. That covers both never-pushed local-only tiddlers
-  // ($GeneralSettings, $NoSynch/$NoBackup) and freshly-created tiddlers not yet
+  // ($Settings, $NoSynch/$NoBackup) and freshly-created tiddlers not yet
   // pushed — without this, a pull silently dropped new tiddlers (e.g. BibleTest).
   // Trade-off: a tiddler deleted on another client is not removed here on pull;
   // remote deletions are reconciled via the trashed list, not by mere absence.
@@ -621,11 +621,11 @@ dialog.ghsync-conflicts{background:#1c1f24;color:#e6e8eb}
   function readConfig() {
     const config = tw.core.common.getSetting('synch.GithubRepo');
     if (!config || !config.accessToken) {
-      tw.ui.notify('No accessToken found in $GeneralSettings.synch.GithubRepo!', 'W');
+      tw.ui.notify('No accessToken found in $Settings.synch.GithubRepo!', 'W');
       return null;
     }
     if (!config.repo || !/^[^/]+\/[^/]+$/.test(config.repo)) {
-      tw.ui.notify("Set $GeneralSettings.synch.GithubRepo.repo to 'owner/name'!", 'W');
+      tw.ui.notify("Set $Settings.synch.GithubRepo.repo to 'owner/name'!", 'W');
       return null;
     }
     return {

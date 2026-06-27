@@ -4,7 +4,7 @@
  * Each tiddler is stored as a separate file so changes appear as diffs in
  * the gist's history. A sidecar `_twikki.meta.json` holds the visible/trashed
  * lists. On first save (when no gistId is configured) a new private gist is
- * created and its id is written back to [[$GeneralSettings]].
+ * created and its id is written back to [[$Settings]].
  *
  * Loading this plugin overrides any previously installed backup provider.
  *
@@ -36,7 +36,7 @@
     async restore() {
       let cfg = readConfig();
       if (!cfg) return;
-      if (!cfg.gistId) return tw.ui.notify('No Gist gistId found in $GeneralSettings.backup.Gist!', 'W');
+      if (!cfg.gistId) return tw.ui.notify('No Gist gistId found in $Settings.backup.Gist!', 'W');
       let res = await fetch(tw.core.buildUrl('gists/' + cfg.gistId, 'https://api.github.com/'), {headers: authHeaders(cfg.accessToken)});
       if (!res.ok) {
         console.error('GistBackup restore', await readError(res));
@@ -108,7 +108,7 @@
       if (!cfg.gistId) {
         let created = await res.json();
         persistGistId(created.id);
-        tw.ui.notify(`New gist created (${created.id}) and saved to $GeneralSettings`, 'I');
+        tw.ui.notify(`New gist created (${created.id}) and saved to $Settings`, 'I');
       }
       let fileCount = Object.values(files).filter(f => f !== null).length;
       tw.ui.notify(`Backup complete! (${fileCount} files, ${(body.length / 1000).toFixed(1)} KB)`, 'S');
@@ -116,15 +116,17 @@
   };
 
   function readConfig() {
-    let settings = tw.run.getJSONObject('$GeneralSettings');
-    if (!settings || !settings.backup?.Gist?.accessToken) {
-      tw.ui.notify('No Gist accessToken found in $GeneralSettings.backup.Gist!', 'W');
+    // Read via tw.core.settings.get so ${secret:…} references resolve to the
+    // actual token (a direct $Settings read would return the reference string).
+    const accessToken = tw.core.settings.get('backup.Gist.accessToken');
+    if (!accessToken) {
+      tw.ui.notify('No Gist accessToken found in $Settings.backup.Gist!', 'W');
       return null;
     }
     return {
-      accessToken: settings.backup.Gist.accessToken,
-      gistId: settings.backup.Gist.gistId || '',
-      description: settings.backup.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
+      accessToken,
+      gistId: tw.core.settings.get('backup.Gist.gistId') || '',
+      description: tw.core.settings.get('backup.Gist.description') || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
   }
 
@@ -140,7 +142,7 @@
   }
 
   function persistGistId(newId) {
-    let tiddler = tw.run.getTiddler('$GeneralSettings');
+    let tiddler = tw.run.getTiddler('$Settings');
     let parsed = {};
     try {
       parsed = JSON.parse(tiddler.text || '{}');
@@ -150,7 +152,7 @@
     parsed.backup.Gist.gistId = newId;
     tiddler.text = JSON.stringify(parsed, null, 2);
     delete tiddler.doNotSave;
-    tw.run.updateTiddlerHard('$GeneralSettings', tiddler);
+    tw.run.updateTiddlerHard('$Settings', tiddler);
     tw.events.send('save.refresh');
     tw.events.send('save.auto');
   }
@@ -212,6 +214,11 @@
 
   return {
     meta,
+    settings: {
+      'backup.backupInSeconds': {default: 600, type: 'number', description: 'Time in seconds between auto-backups'},
+      'backup.Gist.accessToken': {default: '', type: 'secret', description: 'GitHub Personal Access Token (classic) with the gist scope — use ${secret:KEY} to reference secrets.txt'},
+      'backup.Gist.gistId': {default: '', type: 'string', description: 'Id of the gist to back up to'},
+    },
     init() {
       // Expose the two button macros. `backup.save` / `backup.restore` are not
       // macros (they return promises, not HTML) — they are wired via

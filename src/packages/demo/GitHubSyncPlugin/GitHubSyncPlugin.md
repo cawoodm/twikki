@@ -8,7 +8,7 @@ Direction is explicit and non-merging: **push** sends local changes up, **pull**
 
 ## Installation
 
-Add a `synch.GithubRepo` block to [[$GeneralSettings]]:
+Add a `synch.GithubRepo` block to [[$Settings]]:
 
 ```json
 {
@@ -36,7 +36,7 @@ Optionally, add the following buttons to your [[$TitleBar]]:
 - `<<ghsync.pull>>`: <<ghsync.pull>>
 - `<<ghsync.push>>`: <<ghsync.push>>
 
-Tiddlers tagged `$NoSynch` or `$NoBackup` are never pushed. `$GeneralSettings` is local-only (it holds your PAT — committing a token trips GitHub secret scanning and revokes it) and is preserved across a pull.
+Tiddlers tagged `$NoSynch` or `$NoBackup` are never pushed. `$Settings` is local-only (it holds your PAT — committing a token trips GitHub secret scanning and revokes it) and is preserved across a pull.
 
 # Meta
 

@@ -13,7 +13,7 @@
  * also imports it (apply implies import). After import the selected theme,
  * if any, is applied via the `theme.switch` event.
  *
- * The gist URL is read from `$GeneralSettings.urls.themeUrl`; if absent a
+ * The gist URL is read from `$Settings.urls.themeUrl`; if absent a
  * built-in default is used. The dialog shows this URL in an editable field and
  * reloads the theme list whenever it is changed. The URL may point either at
  * the raw `themes.json` (returns `{tiddlers}` directly) or at the gist API
@@ -80,7 +80,7 @@
   }
 
   function importUrl() {
-    let settings = tw.run.getJSONObject('$GeneralSettings');
+    let settings = tw.run.getJSONObject('$Settings');
     return settings?.urls?.themeUrl || DEFAULT_URL;
   }
 
@@ -235,6 +235,9 @@
 
   return {
     meta,
+    settings: {
+      'urls.themeUrl': {default: 'https://gist.githubusercontent.com/cawoodm/c43037e0370393ef2928848fee64e95d/raw/themes.json', type: 'string', description: 'URL of the themes manifest JSON imported by the Theme Importer'},
+    },
     init() {
       tw.extensions.registerMacro('themeImport', 'button', () => tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"'), {
         description: 'Button to open the theme-import dialog.',

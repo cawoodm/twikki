@@ -1,6 +1,6 @@
 Synchronization replicates local changes to a remote server.
 
-The standard setup uses [Github Gists](https://gists.github.com/) so create a gist and [Personal Access Token](https://github.com/settings/tokens) add your `gistId` and `accessToken` to [[$GeneralSettings]]
+The standard setup uses [Github Gists](https://gists.github.com/) so create a gist and [Personal Access Token](https://github.com/settings/tokens) add your `gistId` and `accessToken` to [[$Settings]]
 
 - <<synch.test>>: Simulate a Synch
 - <<synch.full>>: Run full synch (pull+push)

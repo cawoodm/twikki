@@ -3,7 +3,7 @@
  * Ranked substring search over the tiddler store: exact-title > title >
  * fulltext, with `tag:`/`pck:`/`type:` field filters and a `$` prefix to
  * include hidden/system tiddlers. Tag-based visibility comes from
- * `$GeneralSettings.search` includeTags/excludeTags via `tagFilter` (also
+ * `$Settings.search` includeTags/excludeTags via `tagFilter` (also
  * exported, so the sidebar Notes list hides the same tiddlers). Also wires
  * the search box UI and renders the clickable results dropdown.
  */
@@ -32,7 +32,13 @@ export default function (tw) {
     tw.events.subscribe('search.advanced', searchQueryAdvanced, name); // From #msg:search.advanced:pck:icons title:add
   };
 
-  return {name, version, platform, exports, run};
+  // Settings this module owns (see docs/SETTINGS.md).
+  const settings = {
+    'search.includeTags': {default: '', type: 'text', description: 'Only show tiddlers with these tags in search (comma-separated; empty = all)'},
+    'search.excludeTags': {default: '$NoSearch, $Theme, $StyleSheet, $Template', type: 'text', description: 'Hide tiddlers with these tags from search; applied after the include list (comma-separated)'},
+  };
+
+  return {name, version, platform, exports, run, settings};
 
   function searchQueryAdvanced({all = false, title, tag, pck, type, id}) {
     let q = '';
@@ -143,7 +149,7 @@ export default function (tw) {
     if (searchType) q = q.replace(reType, '');
     q = q.trim();
 
-    // Tag-based visibility (from $GeneralSettings.search). Computed once per search.
+    // Tag-based visibility (from $Settings.search). Computed once per search.
     // Skipped for `$…` ("search all") queries and explicit tag: queries so neither
     // ever traps a tiddler the user is asking for by name/tag.
     const tagVisible = tagFilter();
@@ -199,13 +205,13 @@ export default function (tw) {
   }
 
   /**
-   * Visibility predicate built from $GeneralSettings.search (whitelist first, then
+   * Visibility predicate built from $Settings.search (whitelist first, then
    * blacklist). Returns a function (tiddler) → true if it should be VISIBLE.
    * Shared by search and the sidebar Notes list (ExplorerPlugin) so tag-based
    * hiding is consistent across the UI. Reads settings once; call per render/search.
    */
   function tagFilter() {
-    const cfg = tw.run.getJSONObject('$GeneralSettings')?.search || {};
+    const cfg = tw.run.getJSONObject('$Settings')?.search || {};
     const includeTags = parseTagList(cfg.includeTags);
     const excludeTags = parseTagList(cfg.excludeTags);
     if (!includeTags.length && !excludeTags.length) return () => true;

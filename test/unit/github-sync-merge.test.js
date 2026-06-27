@@ -61,11 +61,11 @@ test('mergePull passes the remote visible list through unchanged', () => {
 });
 
 // --- isLocalOnly: what the sync must never push / must preserve locally ---
-test('isLocalOnly excludes doNotSave, $GeneralSettings, $NoSynch/$NoBackup; keeps normal tiddlers', () => {
+test('isLocalOnly excludes doNotSave, $Settings, $NoSynch/$NoBackup; keeps normal tiddlers', () => {
   const {isLocalOnly} = loadPlugin();
   assert.equal(isLocalOnly({title: 'My Note', tags: []}), false, 'a normal tiddler syncs');
   assert.equal(isLocalOnly({title: '$BaseReset', tags: ['$StyleSheet'], doNotSave: true}), true, 'doNotSave defaults are not synced');
-  assert.equal(isLocalOnly({title: '$GeneralSettings', tags: []}), true, 'the PAT-holding settings stay local');
+  assert.equal(isLocalOnly({title: '$Settings', tags: []}), true, 'the PAT-holding settings stay local');
   assert.equal(isLocalOnly({title: 'X', tags: ['$NoSynch']}), true);
   assert.equal(isLocalOnly({title: 'Y', tags: ['$NoBackup']}), true);
   assert.equal(isLocalOnly({title: 'Z', tags: ['$StyleSheet'], doNotSave: false}), false, 'doNotSave:false still syncs');

@@ -25,17 +25,12 @@ export default function (tw) {
 
   return {name, version, platform, exports, run};
 
-  // Read a value from the $GeneralSettings JSON by dotted path (e.g.
-  // 'data.autoSave'), returning `def` when the settings tiddler, the path, or the
-  // value is missing. Never throws — a missing tiddler, bad JSON, or absent
-  // tw.run.getJSONObject all fall through to `def`.
+  // Back-compat shim: settings resolution moved to core.settings (layered
+  // user → workspace → registered default, plus ${secret:} expansion). Kept here
+  // because existing callers use `tw.core.common.getSetting`.
   function getSetting(path, def) {
     try {
-      const settings = tw.run.getJSONObject('$GeneralSettings');
-      const val = String(path)
-        .split('.')
-        .reduce((o, k) => (o == null ? undefined : o[k]), settings);
-      return val === undefined ? def : val;
+      return tw.core.settings.get(path, def);
     } catch {
       return def;
     }

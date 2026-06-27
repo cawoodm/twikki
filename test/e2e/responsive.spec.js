@@ -50,7 +50,7 @@ test.describe('Phone (≤600px)', () => {
 
   test('settings field rows collapse to a single column on phones', async ({page}) => {
     await bootApp(page);
-    await page.evaluate(() => tw.events.send('tiddler.show', '$GeneralSettings'));
+    await page.evaluate(() => tw.events.send('tiddler.show', '$Settings'));
     const field = page.locator('.settings-field').first();
     await expect(field).toBeVisible();
     const cols = await field.evaluate(el => getComputedStyle(el).gridTemplateColumns);
@@ -139,9 +139,9 @@ test.describe('Touch device', () => {
     await bootApp(page);
     // Switch to tabs mode (default layout is river; tabs mode is required for the strip).
     await page.evaluate(() => {
-      const s = tw.run.getTiddler('$GeneralSettings');
-      tw.run.updateTiddlerHard('$GeneralSettings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
-      tw.events.send('tiddler.modified', '$GeneralSettings');
+      const s = tw.run.getTiddler('$Settings');
+      tw.run.updateTiddlerHard('$Settings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
+      tw.events.send('tiddler.modified', '$Settings');
     });
     // Open two tiddlers so the tab strip renders closable tabs.
     await page.evaluate(() => {
@@ -162,9 +162,9 @@ test.describe('Touch device', () => {
     await bootApp(page);
     // Switch to tabs mode (default layout is river; tabs mode is required for the strip).
     await page.evaluate(() => {
-      const s = tw.run.getTiddler('$GeneralSettings');
-      tw.run.updateTiddlerHard('$GeneralSettings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
-      tw.events.send('tiddler.modified', '$GeneralSettings');
+      const s = tw.run.getTiddler('$Settings');
+      tw.run.updateTiddlerHard('$Settings', {...s, text: JSON.stringify({...JSON.parse(s.text), layout: {mode: 'tabs'}})});
+      tw.events.send('tiddler.modified', '$Settings');
     });
     await page.evaluate(() => {
       tw.run.addTiddlerHard({title: 'Spaced Tab Note', text: 'a', type: 'markdown', tags: [], created: new Date(), updated: new Date()});

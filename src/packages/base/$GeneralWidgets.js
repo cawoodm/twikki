@@ -12,8 +12,8 @@ tw.extensions.registerMacro('core', 'Save', () => tw.ui.button('{{$IconSave}}', 
   description: 'Save all tiddlers (icon button).',
   example: '<<Save>>',
 });
-tw.extensions.registerMacro('core', 'Settings', (size = '22') => tw.ui.button(`{{$IconSettings|size:${size}px}}`, 'tiddler.show', '$GeneralSettings', '', 'title="Settings"'), {
-  description: 'Open the $GeneralSettings tiddler. Optional icon size in px.',
+tw.extensions.registerMacro('core', 'Settings', (size = '22') => tw.ui.button(`{{$IconSettings|size:${size}px}}`, 'tiddler.show', '$Settings', '', 'title="Settings"'), {
+  description: 'Open the $Settings tiddler. Optional icon size in px.',
   example: '<<Settings 16>>',
 });
 tw.extensions.registerMacro('core', 'New', () => tw.ui.button('{{$IconNew}}', 'tiddler.new', null), {
@@ -42,5 +42,5 @@ tw.extensions.registerCommand([
   {label: 'New note', event: 'tiddler.new'},
   {label: 'Save', event: 'save'},
   {label: 'Reload UI', event: 'ui.reload'},
-  {label: 'Open Settings', event: 'tiddler.show', payload: '$GeneralSettings'},
+  {label: 'Open Settings', event: 'tiddler.show', payload: '$Settings'},
 ]);
