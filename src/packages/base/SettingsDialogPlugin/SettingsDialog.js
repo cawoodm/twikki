@@ -290,16 +290,6 @@
       .filter(Boolean);
   }
 
-  function setByPath(obj, path, value) {
-    const parts = path.split('.');
-    let cur = obj;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!isPlainObject(cur[parts[i]])) cur[parts[i]] = {};
-      cur = cur[parts[i]];
-    }
-    cur[parts[parts.length - 1]] = value;
-  }
-
   function humanize(key) {
     return String(key)
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2')

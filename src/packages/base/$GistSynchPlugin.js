@@ -45,12 +45,14 @@
   async function synch({fetchRemote = true, push = true, pull = true, dryRun = false}) {
     if (!push && !pull) throw new Error('SynchDataFunctions: Please supply push or pull parameters!');
 
-    let settings = tw.run.getJSONObject('$Settings');
-    if (!settings || !settings.synch?.Gist?.accessToken) return tw.ui.notify('No Gist accessToken found in $Settings.synch.Gist!', 'W');
+    // Read via tw.core.settings.get so ${secret:…} references resolve to the
+    // actual token (a direct $Settings read would return the reference string).
+    const accessToken = tw.core.settings.get('synch.Gist.accessToken');
+    if (!accessToken) return tw.ui.notify('No Gist accessToken found in $Settings.synch.Gist!', 'W');
     const cfg = {
-      accessToken: settings.synch.Gist.accessToken,
-      gistId: settings.synch.Gist.gistId || '',
-      description: settings.synch.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
+      accessToken,
+      gistId: tw.core.settings.get('synch.Gist.gistId') || '',
+      description: tw.core.settings.get('synch.Gist.description') || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
 
     // Fetch remote

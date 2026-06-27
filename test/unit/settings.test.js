@@ -104,6 +104,21 @@ test('migrateSecrets moves a plaintext token to secrets.txt and references it (o
   assert.equal(s.getRaw('backup.Gist.accessToken'), '${secret:backup_Gist_accessToken}');
 });
 
+test('promoting a nested setting to user prunes the now-empty parents in $Settings', () => {
+  const {s, wsTiddlers} = load();
+  s.set('backup.Gist.gistId', 'abc', 'workspace');
+  s.set('backup.Gist.gistId', 'abc', 'user'); // de-dupes workspace, leaving backup.Gist empty
+  const ws = JSON.parse(wsTiddlers['$Settings'].text);
+  assert.equal(ws.backup, undefined, 'empty backup/Gist parents pruned, not left as {backup:{Gist:{}}}');
+});
+
+test('writeSecret strips newlines so a value cannot inject extra entries', () => {
+  const {s, globalStore} = load();
+  s.writeSecret('tok', 'ghp_x\nmalicious: hijacked');
+  assert.equal(globalStore['secrets.txt'], 'tok: ghp_x malicious: hijacked', 'newline neutralised to a space');
+  assert.equal(s.readSecrets().malicious, undefined, 'no injected entry');
+});
+
 test('migrateSecrets skips empty and already-referenced values', () => {
   const {s, globalStore} = load();
   s.set('synch.Gist.accessToken', '${secret:mine}', 'workspace'); // already a reference

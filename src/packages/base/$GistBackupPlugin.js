@@ -116,15 +116,17 @@
   };
 
   function readConfig() {
-    let settings = tw.run.getJSONObject('$Settings');
-    if (!settings || !settings.backup?.Gist?.accessToken) {
+    // Read via tw.core.settings.get so ${secret:…} references resolve to the
+    // actual token (a direct $Settings read would return the reference string).
+    const accessToken = tw.core.settings.get('backup.Gist.accessToken');
+    if (!accessToken) {
       tw.ui.notify('No Gist accessToken found in $Settings.backup.Gist!', 'W');
       return null;
     }
     return {
-      accessToken: settings.backup.Gist.accessToken,
-      gistId: settings.backup.Gist.gistId || '',
-      description: settings.backup.Gist.description || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
+      accessToken,
+      gistId: tw.core.settings.get('backup.Gist.gistId') || '',
+      description: tw.core.settings.get('backup.Gist.description') || `${DEFAULT_DESCRIPTION} ${tw.workspace}`,
     };
   }
 

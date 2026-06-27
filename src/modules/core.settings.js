@@ -154,7 +154,9 @@ export default function (tw) {
 
   function writeSecret(key, value) {
     const secrets = readSecrets();
-    secrets[key] = value;
+    // One entry per line, so strip newlines — otherwise a value could inject
+    // additional (fake) secret lines.
+    secrets[String(key).replace(/[\r\n]+/g, '')] = String(value).replace(/[\r\n]+/g, ' ');
     const text = Object.entries(secrets)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');
@@ -203,15 +205,22 @@ export default function (tw) {
   }
   function deleteByPath(obj, path) {
     const parts = String(path).split('.');
+    const chain = [obj]; // objects visited, for pruning empty parents after delete
     let cur = obj;
     for (let i = 0; i < parts.length - 1; i++) {
       if (cur[parts[i]] == null || typeof cur[parts[i]] !== 'object') return false;
       cur = cur[parts[i]];
+      chain.push(cur);
     }
-    if (parts[parts.length - 1] in cur) {
-      delete cur[parts[parts.length - 1]];
-      return true;
+    const leaf = parts[parts.length - 1];
+    if (!(leaf in cur)) return false;
+    delete cur[leaf];
+    // Prune now-empty parent objects up the chain (e.g. don't leave
+    // {backup: {Gist: {}}} after promoting the last backup setting to user).
+    for (let i = chain.length - 1; i >= 1; i--) {
+      if (Object.keys(chain[i]).length === 0) delete chain[i - 1][parts[i - 1]];
+      else break;
     }
-    return false;
+    return true;
   }
 }
