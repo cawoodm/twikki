@@ -348,7 +348,7 @@ test('core functions that moved out of the platform closure are reachable on the
     tiddlerExists: tw.core.tiddlers.tiddlerExists('$MainLayout'),
     getTiddler: tw.run.getTiddler('$MainLayout')?.title,
     renderTWikki: typeof tw.core.render.renderTWikki({text: 'plain', title: 'x'}),
-    getJSONObject: typeof tw.run.getJSONObject('$GeneralSettings'),
+    getJSONObject: typeof tw.run.getJSONObject('$Settings'),
   }));
   expect(results.tiddlerExists).toBe(true);
   expect(results.getTiddler).toBe('$MainLayout');
@@ -356,24 +356,9 @@ test('core functions that moved out of the platform closure are reachable on the
   expect(results.getJSONObject).toBe('object');
 });
 
-test('module eval failure: one error page, names the failing module(s)', async ({page}) => {
-  // Serve core.dom.js with a syntax error → its eval throws, every downstream
-  // module that touches tw.core.dom errors too. This is the exact path that
-  // used to produce <h1>Module Errors Occurred</h1> twice (handleModuleErrors
-  // returned undefined → caller's early return never fired → start() pushed
-  // more errors and re-invoked it).
-  await page.route('**/modules/core.dom.js', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(/\(function\s*\(\s*tw\s*\)/, '(function(tw-)');
-    await route.fulfill({response, body});
-  });
-  await page.goto('/?reload');
-  await expect(page.locator('h1')).toHaveCount(1);
-  const heading = await page.locator('h1').textContent();
-  expect(heading).toMatch(/core\.dom/);
-  // The per-module error paragraphs bold each name and include the JS message.
-  await expect(page.locator('p.error').first()).toContainText('core.dom.js');
-});
+// (Removed) "module eval failure shows an error page": core modules are bundled
+// by Vite now (not fetched), so a syntax error fails the build rather than boot,
+// and the runtime handleModuleErrors page was removed. The scenario no longer exists.
 
 test.describe('?safemode (extension packages skipped, base plugins still load)', () => {
   test('boots with base plugins only and the full edit round-trip works', async ({page}) => {
