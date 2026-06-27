@@ -1,0 +1,35 @@
+tags: Help
+
+**Settings** are your preferences for how TWikki looks and behaves — things like whether changes save automatically, how open notes are arranged, and where your backups go.
+
+Open them with the **⚙ Settings** button in the sidebar (<<Settings>>), or press **Ctrl+K** and type *Settings*. Each setting shows a short description and a control to change it; changes take effect immediately — there is no separate save step.
+
+## Where a setting is saved
+
+Every setting has a small **user** switch beside it that decides where the value is kept:
+
+- **Off (the default)** — the setting applies to **this [[workspace|Workspaces]] only**. Good for things you want different per workspace, like the layout or your search filters.
+- **On** — the setting is shared across **all** your workspaces. Good for things you want everywhere, like your backup account.
+
+Flip the switch any time and TWikki moves the value across for you. If a setting isn't set in either place, TWikki falls back to a sensible **default**.
+
+## Defaults come with the app
+
+You never face a blank settings screen. TWikki — and every [[plugin|Plugins]] you add — comes with sensible defaults, and new settings simply appear when you install a plugin that needs them. You only ever change the few you care about.
+
+## Secrets stay on your device
+
+Passwords and access tokens — for example a GitHub token used by backup or [[sync|Synchronization]] — are **not** stored with your ordinary settings. They live in a separate **secrets** list that is **never synced or backed up** and never leaves this device.
+
+A setting that needs a secret just points at it by name, written like `${secret:myToken}`. To manage your secrets, press **Ctrl+K** and choose **Edit secrets**, then add one line per secret:
+
+```
+myToken: ghp_xxxxxxxxxxxx
+```
+
+Because settings only *refer* to a secret rather than containing it, you can sync or share your settings without ever exposing a password.
+
+## See also
+
+- [[Workspaces]] — what is kept per workspace versus shared across all of them
+- [[Synchronization]] — backing up and syncing your notes
