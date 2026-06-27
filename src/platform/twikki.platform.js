@@ -143,6 +143,11 @@ import coreDefaults from '../generated/core.defaults.json';
 
       if (!loadModules()) return;
 
+      // Register each core module's declared settings (its `settings` block) into
+      // the settings registry, so defaults resolve from the moment the store
+      // loads. Plugin settings + the merge into $Settings happen in reload().
+      tw.modules.forEach(m => m.meta?.settings && tw.core.settings.register(m.meta.name, m.meta.settings));
+
       legacyAliases();
 
       // Load workspace data
@@ -156,11 +161,6 @@ import coreDefaults from '../generated/core.defaults.json';
       tw.events.subscribe('ui.reload', reload, 'core');
 
       if (!runModules()) return;
-
-      // Register each core module's declared settings (its `settings` block) into
-      // the settings registry. Plugin settings + the merge into $Settings happen
-      // in reload(), after plugins load.
-      tw.modules.forEach(m => m.meta?.settings && tw.core.settings.register(m.meta.name, m.meta.settings));
 
       document.title = tw.core.render.renderTiddler('$SiteTitle');
 

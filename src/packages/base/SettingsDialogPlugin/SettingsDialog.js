@@ -86,7 +86,11 @@
   }
 
   function renderField(key, value, descriptor, path) {
-    const meta = parseDescriptor(descriptor);
+    // Field metadata: a `~` descriptor in $Settings wins; otherwise fall back to
+    // the registered schema (type/description/options) declared by the owning
+    // module/plugin, so a setting needs its metadata in only one place.
+    const reg = (tw.core.settings.registry && tw.core.settings.registry[path]) || {};
+    const meta = {...reg, ...parseDescriptor(descriptor)};
     // Show the effective stored value (user override wins over workspace), NOT
     // secret-expanded — a `${secret:…}` reference shows as-is.
     const raw = tw.core.settings.getRaw(path);
