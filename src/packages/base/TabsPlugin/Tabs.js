@@ -214,6 +214,9 @@
 
   return {
     meta,
+    settings: {
+      'layout.mode': {default: 'river', type: 'option', options: ['river', 'tabs'], description: 'How open notes are displayed: tabs (one at a time) or river (all stacked)'},
+    },
     init() {
       wireUp('ui.loaded', init);
       wireUp('ui.reloaded', init);

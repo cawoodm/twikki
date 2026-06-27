@@ -212,6 +212,11 @@
 
   return {
     meta,
+    settings: {
+      'backup.backupInSeconds': {default: 600, type: 'number', description: 'Time in seconds between auto-backups'},
+      'backup.Gist.accessToken': {default: '', type: 'secret', description: 'GitHub Personal Access Token (classic) with the gist scope — use ${secret:KEY} to reference secrets.txt'},
+      'backup.Gist.gistId': {default: '', type: 'string', description: 'Id of the gist to back up to'},
+    },
     init() {
       // Expose the two button macros. `backup.save` / `backup.restore` are not
       // macros (they return promises, not HTML) — they are wired via

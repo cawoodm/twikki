@@ -306,6 +306,11 @@
 
   return {
     meta,
+    settings: {
+      'synch.synchInSeconds': {default: 60, type: 'number', description: 'Time in seconds between auto-synch'},
+      'synch.Gist.accessToken': {default: '', type: 'secret', description: 'GitHub Personal Access Token (classic) with the gist scope — use ${secret:KEY} to reference secrets.txt'},
+      'synch.Gist.gistId': {default: '', type: 'string', description: 'Id of the gist to synch to'},
+    },
     init() {
       tw.events.override('synch.full', doFull, meta.name);
       tw.events.override('synch.push', doPush, meta.name);

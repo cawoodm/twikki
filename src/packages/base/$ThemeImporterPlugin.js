@@ -235,6 +235,9 @@
 
   return {
     meta,
+    settings: {
+      'urls.themeUrl': {default: 'https://gist.githubusercontent.com/cawoodm/c43037e0370393ef2928848fee64e95d/raw/themes.json', type: 'string', description: 'URL of the themes manifest JSON imported by the Theme Importer'},
+    },
     init() {
       tw.extensions.registerMacro('themeImport', 'button', () => tw.ui.button('{{$IconPull}}', 'theme.import', null, 'theme-import-btn', 'title="Import Themes"'), {
         description: 'Button to open the theme-import dialog.',

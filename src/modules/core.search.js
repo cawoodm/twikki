@@ -32,7 +32,13 @@ export default function (tw) {
     tw.events.subscribe('search.advanced', searchQueryAdvanced, name); // From #msg:search.advanced:pck:icons title:add
   };
 
-  return {name, version, platform, exports, run};
+  // Settings this module owns (see docs/SETTINGS.md).
+  const settings = {
+    'search.includeTags': {default: '', type: 'text', description: 'Only show tiddlers with these tags in search (comma-separated; empty = all)'},
+    'search.excludeTags': {default: '$NoSearch, $Theme, $StyleSheet, $Template', type: 'text', description: 'Hide tiddlers with these tags from search; applied after the include list (comma-separated)'},
+  };
+
+  return {name, version, platform, exports, run, settings};
 
   function searchQueryAdvanced({all = false, title, tag, pck, type, id}) {
     let q = '';

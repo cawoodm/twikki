@@ -147,6 +147,11 @@ import coreDefaults from '../generated/core.defaults.json';
       // the settings registry, so defaults resolve from the moment the store
       // loads. Plugin settings + the merge into $Settings happen in reload().
       tw.modules.forEach(m => m.meta?.settings && tw.core.settings.register(m.meta.name, m.meta.settings));
+      // The platform owns baseUrl (read via tw.store.global before any workspace
+      // exists; the dialog mirrors it back to the /baseUrl global key).
+      tw.core.settings.register('platform', {
+        'urls.baseUrl': {default: 'https://cawoodm.github.io/twikki', type: 'string', description: 'Base URL the platform loads its packages from'},
+      });
 
       legacyAliases();
 
