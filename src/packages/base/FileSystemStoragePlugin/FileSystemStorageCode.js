@@ -58,6 +58,23 @@
         }),
     );
   }
+  function idbDelete(key) {
+    return openHandleDb().then(
+      db =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(HANDLE_STORE, 'readwrite');
+          tx.objectStore(HANDLE_STORE).delete(key);
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => {
+            db.close();
+            reject(tx.error);
+          };
+        }),
+    );
+  }
 
   // Snapshot the live store (whatever backend is active right now) as a flat
   // {key: rawValue} object the boot script will write into the folder on its
@@ -135,9 +152,12 @@
   }
 
   // Disconnect: remove the boot script and reboot back to the default backend.
-  // The folder and its files are left untouched on disk.
+  // The folder and its files are left untouched on disk; the saved handle and any
+  // leftover migration dump are dropped so no stale state lingers in IndexedDB.
   function disconnect() {
     window.localStorage.removeItem(BOOT_KEY);
+    idbDelete(HANDLE_KEY).catch(() => {});
+    idbDelete(DUMP_KEY).catch(() => {});
     tw.ui.notify('File storage disconnected. Your folder files are kept on disk. Reloading…', 'I');
     tw.events.send('reboot.hard');
   }
@@ -168,8 +188,8 @@
   }
 
   function promptIfStale() {
-    if (!window.localStorage.getItem(BOOT_KEY)) return; // only when FS storage is installed
     const installed = window.localStorage.getItem(BOOT_KEY);
+    if (!installed) return; // only when FS storage is installed
     const bundled = tw.run.getTiddlerTextRaw(SECTION);
     const dismissedToday = window.localStorage.getItem(DISMISS_KEY) === todayKey();
     if (!shouldPrompt({installed, bundled, dismissedToday, sessionFlag: tw.tmp.fsBootPrompted})) return;

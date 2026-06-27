@@ -92,6 +92,12 @@ test('parseTiddlerFile: empty body round-trips to empty string', () => {
   assert.equal(H.parseTiddlerFile(H.serializeTiddler(t), 'Empty', 'markdown').text, '');
 });
 
+test('serializeTiddler / parseTiddlerFile: multi-word tags survive the round-trip', () => {
+  const t = {title: 'X', type: 'markdown', tags: ['My Project', 'todo'], text: 'body'};
+  const parsed = H.parseTiddlerFile(H.serializeTiddler(t), 'X', 'markdown');
+  assert.deepEqual(parsed.tags, ['My Project', 'todo']);
+});
+
 test('parseTiddlerFile: missing title/type fall back to filename/ext', () => {
   const parsed = H.parseTiddlerFile('just body, no header', 'FromFilename', 'markdown');
   assert.equal(parsed.title, 'FromFilename');

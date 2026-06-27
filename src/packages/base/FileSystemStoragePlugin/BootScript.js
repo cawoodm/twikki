@@ -155,7 +155,7 @@
     const t = {
       title: meta.title !== undefined ? meta.title : fallbackTitle,
       text: lines.slice(i).join('\n'),
-      tags: meta.tags !== undefined ? String(meta.tags).split(/[,\s]+/).filter(Boolean) : [],
+      tags: meta.tags !== undefined ? String(meta.tags).split(/,\s*/).filter(Boolean) : [],
       type: meta.type !== undefined ? meta.type : fallbackType || 'x-twikki',
     };
     for (const k of Object.keys(meta)) {
@@ -352,6 +352,11 @@
         }
         continue;
       }
+      // Skip metadata directories so a folder the user has `git init`-ed (`.git`)
+      // or that holds tool caches (`__pycache__`, …) is never mistaken for a
+      // workspace. Workspaces are user-named; `_…` is reserved (`_user`, `_meta`
+      // only ever appear INSIDE a workspace, never at the root).
+      if (name.startsWith('.') || name.startsWith('_')) continue;
       const ws = name; // a directory at the root is a workspace
       const tiddlers = [];
       const index = new Map();
@@ -380,7 +385,12 @@
     }
   }
 
-  /* ---- one-shot migration: live-store dump (captured by the plugin) → folder ---- */
+  /* ---- one-shot migration: live-store dump (captured by the plugin) → folder ----
+     Runs only when the `.twikki-migrated` sentinel is absent, so it fires once per
+     folder. The dump is deleted after a successful migration; a dump left behind by
+     a connect() that crashed before the sentinel was written would be re-applied on
+     the next boot of that same (still-unmigrated) folder — acceptable, since it only
+     re-seeds the very data the user just chose to export. */
   async function migrateFromDump() {
     const dump = await idbGet(DUMP_KEY);
     if (dump && typeof dump === 'object') {
@@ -423,8 +433,22 @@
   /* ---- write queue: fire-and-forget, serialised, awaited by flush() ---- */
   const pending = new Set();
   let chain = Promise.resolve();
+  let writeWarned = false; // surface the first write failure once, then stay quiet
+  function onWriteError(e) {
+    console.warn('FS write failed', e);
+    if (writeWarned) return;
+    writeWarned = true;
+    // A persistent failure (folder moved, drive unmounted, access revoked) means
+    // saves are silently not reaching disk — make it visible once so edits aren't
+    // lost on reload without warning.
+    try {
+      tw.ui?.notify?.('File storage write failed — your folder may be disconnected. Reconnect to keep saving.', 'E');
+    } catch {
+      /* tw.ui not ready */
+    }
+  }
   function schedule(fn) {
-    const p = (chain = chain.then(fn).catch(e => console.warn('FS write failed', e)));
+    const p = (chain = chain.then(fn).catch(onWriteError));
     pending.add(p);
     p.then(() => pending.delete(p));
     return p;
@@ -441,7 +465,13 @@
       key = ensureSlash(key);
       const raw = map.get(key);
       if (raw === undefined || raw === null) return raw;
-      if (typeof raw === 'string' && /^[\[\{]/.test(raw)) return JSON.parse(raw);
+      if (typeof raw === 'string' && /^[\[\{]/.test(raw)) {
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return raw;
+        }
+      }
       return raw;
     },
     set(key, value) {
