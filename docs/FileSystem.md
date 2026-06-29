@@ -115,4 +115,3 @@ reconnect (or copy the files back) to recover it.
 - [`src/packages/base/FileSystemStoragePlugin/BootScript.js`](../src/packages/base/FileSystemStoragePlugin/BootScript.js)
   — the implementation; the pure helpers (serialise/parse, filename safety, planning, diffing) are
   covered by [`test/unit/fs-storage.test.js`](../test/unit/fs-storage.test.js).
-```

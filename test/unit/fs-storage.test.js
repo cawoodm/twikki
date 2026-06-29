@@ -54,6 +54,15 @@ test('safeBaseName: deterministic, and distinct lossy titles do not collide', ()
   assert.notEqual(H.safeBaseName('a/b'), H.safeBaseName('a:b'), 'distinct titles → distinct names');
 });
 
+test('safeBaseName: Windows reserved device names get a hash suffix', () => {
+  for (const name of ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT9', 'con', 'nul']) {
+    const out = H.safeBaseName(name);
+    assert.ok(out.includes('~'), `${name} → hash suffix added (got: ${out})`);
+  }
+  // A title that merely contains a reserved word but isn't one should be unaffected.
+  assert.ok(!H.safeBaseName('console').includes('~'), 'console is not reserved');
+});
+
 test('packageFolder: falls back to _user when no package', () => {
   assert.equal(H.packageFolder({package: 'base'}), 'base');
   assert.equal(H.packageFolder({}), '_user');
