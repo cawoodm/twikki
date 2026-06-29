@@ -21,7 +21,7 @@
 
   const sync = {
     synch() {
-      return tw.ui.button('{{$IconSynch}}', 'ghsync.synch', null, 'ghsync-synch', 'title="Pull then push changed tiddlers to GitHub repo"');
+      return tw.ui.button('{{$IconSynch}}', 'ghsync.synch', null, 'ghsync-synch', 'title="Synch changed tiddlers to GitHub repo"');
     },
     push() {
       return tw.ui.button('{{$IconPush}}', 'ghsync.push', null, 'ghsync-push', 'title="Push changed tiddlers to GitHub repo"');
