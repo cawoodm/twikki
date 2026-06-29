@@ -211,9 +211,10 @@ export default function (tw) {
    * hiding is consistent across the UI. Reads settings once; call per render/search.
    */
   function tagFilter() {
-    const cfg = tw.run.getJSONObject('$Settings')?.search || {};
-    const includeTags = parseTagList(cfg.includeTags);
-    const excludeTags = parseTagList(cfg.excludeTags);
+    // Resolve each leaf through the layered settings (user → workspace → default)
+    // rather than the raw $Settings tiddler, so a user-level override is honoured.
+    const includeTags = parseTagList(tw.core.common.getSetting('search.includeTags'));
+    const excludeTags = parseTagList(tw.core.common.getSetting('search.excludeTags'));
     if (!includeTags.length && !excludeTags.length) return () => true;
     return t => {
       const tags = (t.tags || []).map(x => x.toLowerCase());

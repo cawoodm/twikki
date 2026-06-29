@@ -80,8 +80,9 @@
   }
 
   function importUrl() {
-    let settings = tw.run.getJSONObject('$Settings');
-    return settings?.urls?.themeUrl || DEFAULT_URL;
+    // Layered resolution (user → workspace → default) rather than the raw $Settings
+    // tiddler, so a user-level themeUrl override is honoured.
+    return tw.core.common.getSetting('urls.themeUrl', DEFAULT_URL) || DEFAULT_URL;
   }
 
   function showDialog(url) {

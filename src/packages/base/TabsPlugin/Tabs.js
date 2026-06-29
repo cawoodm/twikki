@@ -79,11 +79,10 @@
   }
 
   function layoutMode() {
-    try {
-      return tw.run.getJSONObject('$Settings')?.layout?.mode === 'tabs' ? 'tabs' : 'river';
-    } catch {
-      return 'tabs';
-    }
+    // Resolve through the layered settings (user → workspace → registered default
+    // 'river'), NOT the raw $Settings tiddler — otherwise a value promoted to the
+    // user layer (and so removed from $Settings) would be silently ignored here.
+    return tw.core.common.getSetting('layout.mode', 'river') === 'tabs' ? 'tabs' : 'river';
   }
 
   function refreshMode() {

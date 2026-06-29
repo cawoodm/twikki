@@ -61,7 +61,7 @@
 
     const panels = tabs.map((t, i) => `<div class="settings-tab-panel${i === 0 ? '' : ' is-hidden'}" data-tab="${esc(t.id)}">${t.body}</div>`).join('');
 
-    return `<div class="settings-form">${strip}${panels}</div>`;
+    return `<div class="settings-form">${strip}${panels}</div>` + '<div>Tip: Reference <a href="#$Secrets">secrets</a> with <code>${secret:nameOfSecret}</code></div>';
   }
 
   function renderTabBody(node, prefix) {
@@ -318,7 +318,7 @@
       id: 'secrets-editor',
       title: 'Secrets — device-local, never synced or backed up',
       html:
-        '<p class="settings-field-help">One <code>key: value</code> per line. Reference a <a href="$Secrets">secret</a> from any setting with <code>${secret:key}</code>.</p>' +
+        '<p class="settings-field-help">One <code>key: value</code> per line. Reference a secret from any setting with <code>${secret:key}</code>.</p>' +
         `<textarea id="secrets-editor-text" class="settings-json" spellcheck="false" autocomplete="off" rows="8">${esc(current)}</textarea>`,
       buttons: [
         {
