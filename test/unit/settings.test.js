@@ -92,18 +92,6 @@ test('same owner re-registering overwrites silently (soft reload)', () => {
   assert.equal(s.get('x.y'), 9);
 });
 
-test('migrateSecrets moves a plaintext token to secrets.txt and references it (once)', () => {
-  const {s, globalStore} = load();
-  s.set('backup.Gist.accessToken', 'ghp_plain', 'workspace');
-  s.migrateSecrets();
-  assert.equal(s.getRaw('backup.Gist.accessToken'), '${secret:backup_Gist_accessToken}', 'setting now holds a reference');
-  assert.equal(s.get('backup.Gist.accessToken'), 'ghp_plain', 'reference resolves to the moved token');
-  assert.match(globalStore['secrets.txt'], /backup_Gist_accessToken: ghp_plain/);
-  // idempotent: a second run does not touch an already-referenced value
-  s.migrateSecrets();
-  assert.equal(s.getRaw('backup.Gist.accessToken'), '${secret:backup_Gist_accessToken}');
-});
-
 test('promoting a nested setting to user prunes the now-empty parents in $Settings', () => {
   const {s, wsTiddlers} = load();
   s.set('backup.Gist.gistId', 'abc', 'workspace');
@@ -115,14 +103,6 @@ test('promoting a nested setting to user prunes the now-empty parents in $Settin
 test('writeSecret strips newlines so a value cannot inject extra entries', () => {
   const {s, globalStore} = load();
   s.writeSecret('tok', 'ghp_x\nmalicious: hijacked');
-  assert.equal(globalStore['secrets.txt'], 'tok: ghp_x malicious: hijacked', 'newline neutralised to a space');
+  assert.equal(globalStore['secrets'], 'tok: ghp_x malicious: hijacked', 'newline neutralised to a space');
   assert.equal(s.readSecrets().malicious, undefined, 'no injected entry');
-});
-
-test('migrateSecrets skips empty and already-referenced values', () => {
-  const {s, globalStore} = load();
-  s.set('synch.Gist.accessToken', '${secret:mine}', 'workspace'); // already a reference
-  s.migrateSecrets();
-  assert.equal(s.getRaw('synch.Gist.accessToken'), '${secret:mine}', 'reference left untouched');
-  assert.equal(globalStore['secrets.txt'], undefined, 'nothing written for empty/reference values');
 });

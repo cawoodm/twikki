@@ -1,0 +1,6 @@
+/* FileSystemStoragePlugin — the plugin tiddler is informational; the buttons
+   inherit the core button styling. A little breathing room between the stacked
+   action buttons in the # Connect section. */
+.tiddler[data-title='FileSystemStoragePlugin'] button {
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}

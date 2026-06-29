@@ -117,11 +117,15 @@ test('exportRaw/importRaw round-trip raw strings without JSON coercion', () => {
   assert.deepEqual(tw.store.get('blob'), {not: 'parsed'}, 'get still coerces');
 });
 
-test('global reaches unscoped keys', () => {
+test('global keys live at the /ws/ root (one segment, no workspace name)', () => {
   const {tw, backing} = freshStore();
   tw.store.global.set('/settings.json', {urls: {}});
-  assert.ok(Object.hasOwn(backing, '/settings.json'), 'no workspace prefix');
+  tw.store.global.set('workspaces', ['default']); // leading slash optional
+  assert.ok(Object.hasOwn(backing, '/ws/settings.json'), 'global under /ws/ root');
+  assert.ok(Object.hasOwn(backing, '/ws/workspaces'), 'normalised regardless of leading slash');
+  assert.ok(!Object.hasOwn(backing, '/settings.json'), 'NOT at the bare top level');
   assert.deepEqual(tw.store.global.get('/settings.json'), {urls: {}});
+  assert.deepEqual(tw.store.global.get('workspaces'), ['default']);
 });
 
 test('tiddlersToSave filters doNotSave', () => {

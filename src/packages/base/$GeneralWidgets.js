@@ -16,7 +16,7 @@ tw.extensions.registerMacro('core', 'Settings', (size = '22') => tw.ui.button(`{
   description: 'Open the $Settings tiddler. Optional icon size in px.',
   example: '<<Settings 16>>',
 });
-tw.extensions.registerMacro('core', 'New', () => tw.ui.button('{{$IconNew}}', 'tiddler.new', null), {
+tw.extensions.registerMacro('core', 'New', () => tw.ui.button('{{$IconNew}}', 'tiddler.new', null, 'new-btn', 'title="New Note"'), {
   description: 'Create a new tiddler.',
   example: '<<New>>',
 });

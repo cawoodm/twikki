@@ -78,7 +78,7 @@ The "Switch workspace: _name_" and "Switch theme: _name_" entries are **not** re
 
 ```js
 tw.extensions.registerCommandProvider('workspaces', () =>
-  (tw.storage.get('workspaces') || []).map(name => ({
+  (tw.store.global.get('workspaces') || []).map(name => ({
     label: `Switch workspace: ${name}`,
     event: 'workspace.load.prompt',
     payload: name,

@@ -22,17 +22,13 @@ export default function (tw) {
 
   const WS_TIDDLER = '$Settings'; // per-workspace settings tiddler
   const USER_KEY = '/settings.json'; // cross-workspace user overrides (tw.store.global)
-  const SECRETS_KEY = 'secrets.txt'; // global secrets (tw.store.global), never synced
+  // TODO: We have a "list" type and would need a unique extension for this
+  const SECRETS_KEY = 'secrets.txt'; // global secrets at /ws/secrets (tw.store.global)
 
   // path -> {default, type?, description?, options?, secret?, owner}
   const registry = {};
 
-  const MIGRATED_KEY = '/settings.secretsMigrated';
-  // Token settings that historically held a plaintext secret and should now hold
-  // a ${secret:…} reference.
-  const SECRET_PATHS = ['backup.Gist.accessToken', 'synch.Gist.accessToken'];
-
-  const exports = {register, get, getRaw, set, materialize, migrateSecrets, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
+  const exports = {register, get, getRaw, set, materialize, registry, expandSecrets, readSecrets, writeSecret, placement, SECRETS_KEY};
 
   const run = () => {};
   return {name, version, platform, exports, run};
@@ -104,38 +100,38 @@ export default function (tw) {
       }
     }
     if (changed) writeWorkspace(ws);
-    migrateSecrets();
-  }
-
-  // One-time: a plaintext token stored directly in a secret setting is moved into
-  // the global secrets store and the setting is rewritten as a ${secret:…}
-  // reference (in whatever layer held it). Guarded by a stamp so it runs once.
-  function migrateSecrets() {
-    if (tw.store.global.get(MIGRATED_KEY)) return;
-    let moved = 0;
-    for (const path of SECRET_PATHS) {
-      const v = getRaw(path);
-      if (typeof v === 'string' && v && !v.includes('${secret:')) {
-        const key = path.replace(/\./g, '_'); // backup.Gist.accessToken → backup_Gist_accessToken
-        writeSecret(key, v);
-        set(path, '${secret:' + key + '}', placement(path) || 'workspace');
-        moved++;
-      }
-    }
-    tw.store.global.set(MIGRATED_KEY, true);
-    if (moved) console.warn(`core.settings: migrated ${moved} plaintext secret(s) into ${SECRETS_KEY}`);
   }
 
   // --- Secrets: ${secret:KEY} → value from the global secrets store ---
+  // Resolves references in a string, or in EVERY string property when given an
+  // object/array (so a setting whose value is a sub-tree, e.g. {token:
+  // '${secret:gist}'}, gets expanded too). Returns COPIES of objects/arrays — never
+  // mutates the stored value, so resolved secrets can't leak back into $Settings.
+  // The secrets store is read at most once per call (lazily, only if a reference is
+  // present); references inside a resolved secret value are not re-expanded.
   function expandSecrets(val) {
-    if (typeof val !== 'string' || !val.includes('${secret:')) return val;
-    const secrets = readSecrets();
-    return val.replace(/\$\{secret:([^}]+)\}/g, (_, key) => {
-      const k = key.trim();
-      if (k in secrets) return secrets[k];
-      console.warn(`core.settings: secret '${k}' not found in ${SECRETS_KEY}`);
-      return '';
-    });
+    let secrets;
+    const lookup = () => secrets || (secrets = readSecrets());
+    const walk = v => {
+      if (typeof v === 'string') {
+        if (!v.includes('${secret:')) return v;
+        const s = lookup();
+        return v.replace(/\$\{secret:([^}]+)\}/g, (_, key) => {
+          const k = key.trim();
+          if (k in s) return s[k];
+          console.warn(`core.settings: secret '${k}' not found in ${SECRETS_KEY}`);
+          return '';
+        });
+      }
+      if (Array.isArray(v)) return v.map(walk);
+      if (v !== null && typeof v === 'object') {
+        const out = {};
+        for (const k of Object.keys(v)) out[k] = walk(v[k]);
+        return out;
+      }
+      return v;
+    };
+    return walk(val);
   }
 
   function readSecrets() {

@@ -82,7 +82,10 @@ import coreDefaults from '../generated/core.defaults.json';
   function buildUrl(path, base) {
     if (/^https?:\/\//.test(path)) return path;
     if (!base) {
-      base = tw.storage.get('/baseUrl') || window.BASE_URL;
+      // baseUrl is a `/ws/` root global (core.store migrates the legacy
+      // top-level `/baseUrl` on first load); read both so the one boot during
+      // that migration still resolves.
+      base = tw.storage.get('/ws/baseUrl') || tw.storage.get('/baseUrl') || window.BASE_URL;
       if (!base) {
         // Derive the base from window.location.href. The URL spec treats the
         // last path segment as a FILE unless the URL ends with '/', so when
@@ -122,6 +125,12 @@ import coreDefaults from '../generated/core.defaults.json';
       tw.logging = initLogging(qs);
 
       await runBootScript(tw);
+
+      // A pre-boot script may halt boot deliberately (e.g. File System storage is
+      // installed but the folder needs access re-granted — it renders its own
+      // reconnect gate). Honour that BEFORE the localStorage fallback, so we don't
+      // boot a throwaway localStorage wiki and write default /ws/* keys into it.
+      if (tw.tmp?.bootAborted) return;
 
       if (!tw.storage) tw.storage = initLocalStorage();
 
@@ -183,7 +192,7 @@ import coreDefaults from '../generated/core.defaults.json';
 
   function legacyAliases() {
     // Mainly for backward compatability and shorthand
-    tw.ui = {notify: tw.core.notifications.notify}; // Legacy API
+    tw.ui = {notify: tw.core.notifications.notify, notifyProgress: tw.core.notifications.notifyProgress}; // Legacy API
     Object.assign(tw.ui, tw.core.ui);
     // (tw.commands, tw.extensions and the core macros are installed by core.ui at eval.)
     tw.plugins = [];

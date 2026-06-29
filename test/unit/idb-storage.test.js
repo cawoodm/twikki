@@ -336,22 +336,38 @@ const SHOULD_PROMPT = (() => {
 })();
 
 test('shouldPrompt: up-to-date source returns false', () => {
-  assert.equal(SHOULD_PROMPT({installed: 'X', bundled: 'X', dismissedToday: false, sessionFlag: false}), false);
+  assert.equal(SHOULD_PROMPT({installed: 'X', bundled: 'X', dismissedToday: false, sessionFlag: false, owned: true}), false);
 });
 
 test('shouldPrompt: different source returns true', () => {
-  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: false}), true);
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: false, owned: true}), true);
 });
 
 test('shouldPrompt: no install returns false (user has not opted in)', () => {
-  assert.equal(SHOULD_PROMPT({installed: null, bundled: 'B', dismissedToday: false, sessionFlag: false}), false);
+  assert.equal(SHOULD_PROMPT({installed: null, bundled: 'B', dismissedToday: false, sessionFlag: false, owned: false}), false);
 });
 
 test('shouldPrompt: dismissed today returns false (per-day snooze)', () => {
-  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: true, sessionFlag: false}), false);
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: true, sessionFlag: false, owned: true}), false);
 });
 
 test('shouldPrompt: session flag set returns false (per-page-load guard)', () => {
-  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: true}), false);
+  assert.equal(SHOULD_PROMPT({installed: 'A', bundled: 'B', dismissedToday: false, sessionFlag: true, owned: true}), false);
+});
+
+test('shouldPrompt: another backend owns the boot slot returns false (no ping-pong)', () => {
+  // The /twikki.boot.js slot holds the OTHER storage backend's script. This
+  // plugin must NOT offer to re-install — doing so reboots and hands the slot
+  // to us, then the other plugin re-claims it on the next load → infinite loop.
+  assert.equal(SHOULD_PROMPT({installed: 'OTHER-BACKEND', bundled: 'MINE', dismissedToday: false, sessionFlag: false, owned: false}), false);
+});
+
+test('BootScript carries the ownership marker the code checks for', () => {
+  // promptIfStale decides ownership by looking for this marker in the installed
+  // boot script. If the marker drifts out of either file, ownership detection
+  // silently breaks and the ping-pong loop returns.
+  const marker = 'twikki-storage-backend: indexeddb';
+  assert.ok(BOOT_SRC.includes(marker), 'IndexedDB BootScript must contain the ownership marker');
+  assert.ok(CODE_SRC.includes(marker), 'IndexedDBStorageCode must reference the same ownership marker');
 });
 

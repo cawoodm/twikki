@@ -13,7 +13,7 @@
   return {
     meta,
     init() {
-      const secs = parseInt(tw.run.getJSONObject('$Settings')?.backup?.backupInSeconds || 1800, 10);
+      const secs = parseInt(tw.core.common.getSetting('backup.backupInSeconds', 1800), 10) || 1800;
       timerId = setInterval(() => {
         tw.ui.notify('Remember to backup', 'I');
       }, secs * 1000);

@@ -39,12 +39,22 @@ export default function (tw) {
     importRaw(key, raw) {
       return tw.storage.setRaw(fullKey(key), raw);
     },
+    // Wipe a whole workspace's keys (delegated to the backend, which may drop a
+    // whole object store / folder rather than iterate). Stays inside `/ws/`.
+    clearWorkspace(workspace) {
+      return tw.storage.clearWorkspace(workspace);
+    },
+    // Cross-workspace ("global") keys — the workspace list, current workspace,
+    // user settings, secrets, baseUrl. They live under the `/ws/` ROOT (a single
+    // segment, e.g. `/ws/settings.json`) so EVERY persisted key is `/ws/`-prefixed
+    // and a backend that migrates `/ws/*` (FileSystemStoragePlugin) carries them
+    // too. `/ws/<name>/<key>` (two+ segments) is workspace-scoped data.
     global: {
       get(key) {
-        return tw.storage.get(key);
+        return tw.storage.get(globalKey(key));
       },
       set(key, value) {
-        return tw.storage.set(key, value);
+        return tw.storage.set(globalKey(key), value);
       },
     },
   };
@@ -85,6 +95,11 @@ export default function (tw) {
   function fullKey(key) {
     if (key[0] !== '/') key = '/' + key;
     return '/ws/' + (tw.workspace || 'default') + key;
+  }
+  // A global key sits directly under `/ws/` (one segment, no workspace name):
+  // `workspaces` → `/ws/workspaces`, `/settings.json` → `/ws/settings.json`.
+  function globalKey(key) {
+    return '/ws/' + String(key).replace(/^\//, '');
   }
 
   /* Persisting tw.tiddlers */

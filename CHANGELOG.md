@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+- **File System storage** — the new `FileSystemStoragePlugin` stores your wiki as real files in a folder on disk via the File System Access API: one file per tiddler, in its native format (`.tid`/`.md`/`.js`/`.css`/…), organised into a folder per package — so you can open, edit, `git`-track and sync your notes with ordinary tools. Connect a folder once; installed as an app (PWA), every later load opens it transparently. See [docs/FileSystem.md](docs/FileSystem.md).
+
 ## 24 Jun 2026 (v0.28.0)
 
 ### Features

@@ -1,0 +1,13 @@
+/* When a card carries `folded`, show only its title bar — hide body, fields, meta. */
+.tiddler.folded .modified,
+.tiddler.folded .text,
+.tiddler.folded .tags,
+.tiddler.folded .meta {
+  display: none;
+}
+
+/* Tighten the title bar when it is the only thing showing. */
+.tiddler.folded .title {
+  padding-bottom: 0;
+  border-bottom: none;
+}

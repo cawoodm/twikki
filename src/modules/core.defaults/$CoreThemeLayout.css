@@ -143,6 +143,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* The search box lives here; its #search-results dropdown is absolutely
+     positioned and overhangs #main below. #main follows the header in the DOM,
+     so without an explicit stacking context its #tab-strip would paint over the
+     dropdown. Elevate the whole header above #main so the results stay on top. */
+  position: relative;
+  z-index: 10;
 }
 
 #app.layout-header #header-col1 {

@@ -60,8 +60,9 @@
       '</div>';
 
     const panels = tabs.map((t, i) => `<div class="settings-tab-panel${i === 0 ? '' : ' is-hidden'}" data-tab="${esc(t.id)}">${t.body}</div>`).join('');
-
-    return `<div class="settings-form">${strip}${panels}</div>`;
+    let tips = '<div>Tip: Reference <a href="#$Secrets">secrets</a> with <code>${secret:nameOfSecret}</code></div>';
+    tips += '<div>See also: <a href="#$SettingsLinks">$SettingsLinks</a></div>';
+    return `<div class="settings-form">${strip}${panels}</div>${tips}`;
   }
 
   function renderTabBody(node, prefix) {

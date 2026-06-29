@@ -55,9 +55,19 @@
           await window.twikki.start();
           // Register the service worker for offline support. Generated into the
           // published build by workbox-cli (see ci/publish.ps1); absent under
-          // `npm run dev`, where the fetch simply 404s and registration is skipped.
+          // `npm run dev`, where Vite's SPA fallback serves index.html (text/html)
+          // for the missing sw.js. Probe the content type first and only register a
+          // genuine JS worker — registering the HTML shell would log an
+          // "unsupported MIME type ('text/html')" console error.
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
+            try {
+              const res = await fetch('./sw.js', {cache: 'no-store'});
+              if (res.ok && /javascript/i.test(res.headers.get('content-type') || '')) {
+                await navigator.serviceWorker.register('./sw.js');
+              }
+            } catch {
+              /* offline / no sw.js — skip */
+            }
           }
         });
       </script>
