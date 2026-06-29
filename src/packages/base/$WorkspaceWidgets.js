@@ -3,8 +3,8 @@ tw.extensions.registerMacro(
   'core',
   'WorkspaceSelect',
   () => {
-    let workspace = tw.workspace || tw.storage.get('workspace');
-    let items = (tw.storage.get('workspaces') || [])
+    let workspace = tw.workspace || tw.store.global.get('workspace');
+    let items = (tw.store.global.get('workspaces') || [])
       .map(n => `<a class="picker-item${n === workspace ? ' active' : ''}" href="?ws=${encodeURIComponent(n)}" rel="noopener" data-value="${n}">${n}</a>`)
       .join('');
     // Single-line output so the widget can live inside markdown table cells.
@@ -69,7 +69,7 @@ if (!tw.tmp.workspaceEvents) {
 // stored workspace (a provider so the list stays current).
 tw.extensions.registerCommand({label: 'Create workspace', event: 'workspace.create.prompt'});
 tw.extensions.registerCommandProvider('workspaces', () =>
-  (tw.storage.get('workspaces') || []).map(name => ({
+  (tw.store.global.get('workspaces') || []).map(name => ({
     label: `Switch workspace: ${name}`,
     event: 'workspace.load.prompt',
     payload: name,

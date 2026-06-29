@@ -1,3 +1,9 @@
+// twikki-storage-backend: indexeddb
+// ^ Ownership marker. `/twikki.boot.js` is a single global slot that other storage
+// backends (e.g. FileSystemStoragePlugin) also use; the plugin's code checks for
+// this exact line to know the installed script is ours before offering to
+// re-install — preventing a re-install ping-pong between backends.
+//
 // Pre-boot script: replaces tw.storage with an IndexedDB-backed wrapper that
 // exposes the same interface as initLocalStorage() (get/set/remove/keys/
 // getRaw/setRaw, plus auto-prefix on missing leading '/').
@@ -90,7 +96,9 @@
       if (m) set.add(m[1]);
     }
     try {
-      const list = JSON.parse(window.localStorage.getItem('/workspaces') || '[]');
+      // The workspace list is a `/ws/` root global now (legacy: bare `/workspaces`).
+      const raw = window.localStorage.getItem('/ws/workspaces') || window.localStorage.getItem('/workspaces') || '[]';
+      const list = JSON.parse(raw);
       if (Array.isArray(list)) list.forEach(n => typeof n === 'string' && set.add(n));
     } catch {}
     return [...set];

@@ -1,16 +1,3 @@
-// tags: $Plugin
-/**
- * Backup your data to a private GitHub Gist (https://gist.github.com).
- * Each tiddler is stored as a separate file so changes appear as diffs in
- * the gist's history. A sidecar `_twikki.meta.json` holds the visible/trashed
- * lists. On first save (when no gistId is configured) a new private gist is
- * created and its id is written back to [[$Settings]].
- *
- * Loading this plugin overrides any previously installed backup provider.
- *
- * The PAT must have the `gist` scope. GitHub enforces a 10 MB per-file limit;
- * oversized tiddlers will be rejected by the API.
- */
 (function () {
   const meta = {
     name: 'GistBackup',
@@ -25,14 +12,13 @@
 
   // Tiddlers tagged $NoBackup are never pushed and are preserved across restore.
   const isNoBackup = t => t.tags?.includes('$NoBackup');
-
+  function restoreButton() {
+    return tw.ui.button('{{$IconRestore}}', 'backup.restore', null, 'restore', 'title="Restore Backup Data"');
+  }
+  function backupButton() {
+    return tw.ui.button('{{$IconBackup}}', 'backup.save', null, 'backup', 'title="Backup Data"');
+  }
   const backup = {
-    restoreButton() {
-      return tw.ui.button('{{$IconRestore}}', 'backup.restore', null, 'restore', 'title="Restore Backup Data"');
-    },
-    backupButton() {
-      return tw.ui.button('{{$IconBackup}}', 'backup.save', null, 'backup', 'title="Backup Data"');
-    },
     async restore() {
       let cfg = readConfig();
       if (!cfg) return;
@@ -220,14 +206,15 @@
       'backup.Gist.gistId': {default: '', type: 'string', description: 'Id of the gist to back up to'},
     },
     init() {
+      console.log(111);
       // Expose the two button macros. `backup.save` / `backup.restore` are not
       // macros (they return promises, not HTML) — they are wired via
       // tw.events.override below.
-      tw.extensions.registerMacro('backup', 'restoreButton', backup.restoreButton, {
+      tw.extensions.registerMacro('backup', 'restoreButton', restoreButton, {
         description: 'Button: restore the workspace from the configured GitHub Gist.',
         example: '<<backup.restoreButton>>',
       });
-      tw.extensions.registerMacro('backup', 'backupButton', backup.backupButton, {
+      tw.extensions.registerMacro('backup', 'backupButton', backupButton, {
         description: 'Button: back up the workspace to the configured GitHub Gist.',
         example: '<<backup.backupButton>>',
       });

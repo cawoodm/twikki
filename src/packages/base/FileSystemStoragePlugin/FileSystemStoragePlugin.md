@@ -8,12 +8,7 @@ Each tiddler becomes its own file in its **native format** (`.tid`/`.md`/`.js`/`
 into a **folder per package** — so you can open, edit, `git`-track and sync your notes with ordinary
 tools.
 
-**How it works:** like the IndexedDBStorage plugin, this routes `tw.storage` through a pre-boot
-script at `/twikki.boot.js`. The difference is the gesture: the browser only hands a page a folder
-after a click, so you **Connect** a folder once. If you **install TWikki as an app (PWA)**, Chrome
-remembers that grant and every later load opens the folder silently — a transparent file backend. In
-a normal browser tab the grant may not persist, so you'll get a one-click **Reconnect** prompt per
-session; until you reconnect, nothing is saved to the wrong place.
+**Note:** file system is slower than both localStorage and the indexedDB stores.
 
 **Scope:** the boot script is global per origin — connecting reroutes ALL workspaces on this device.
 `/twikki.boot.js` and the module cache (`/modules/*`) stay in `localStorage` on purpose.

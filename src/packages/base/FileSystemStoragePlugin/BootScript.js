@@ -1,3 +1,9 @@
+// twikki-storage-backend: filesystem
+// ^ Ownership marker. `/twikki.boot.js` is a single global slot that other storage
+// backends (e.g. IndexedDBStoragePlugin) also use; the plugin's code checks for
+// this exact line to know the installed script is ours before offering to
+// re-install or reconnect — preventing a re-install ping-pong between backends.
+//
 // Pre-boot script: replaces tw.storage with a File System Access API backend that
 // exposes the same interface as initLocalStorage() (get/set/remove/keys/getRaw/
 // setRaw/flush/clearWorkspace, plus auto-prefix on a missing leading '/').
@@ -8,40 +14,45 @@
 // folder is a complete, self-contained backend:
 //
 //   <root>/
-//     _global.json            unscoped keys: {"/workspaces": "...", "/settings.json": "..."}
-//     .twikki-migrated        migration sentinel (presence = already migrated)
+//     settings.json           one file per GLOBAL key (the `/ws/` root: a single
+//     workspaces.txt          segment with no workspace name). `.txt` is appended
+//     secrets.txt             to segments with no extension; others keep theirs.
 //     <workspace>/            e.g. "default"
 //       <package>/            "base", "demo", … or "_user" when a tiddler has no package
 //         <SafeTitle>.<ext>   one content tiddler per file (.tid/.md/.js/.css/.json/.html)
 //       _meta.json            {"tiddlers-visible": "...", "tiddlers-trashed": "...", …}
 //
 // The in-memory Map keeps the SAME full prefixed keys callers already use
-// (`/ws/default/tiddlers`, `/workspaces`) so reads stay synchronous, exactly
+// (`/ws/default/tiddlers`, `/ws/workspaces`) so reads stay synchronous, exactly
 // like the IndexedDBStoragePlugin. The key↔file split is only at the FS boundary.
 //
-// Lifecycle:
+// This script ONLY initialises the store — it does NOT migrate. Getting an
+// existing wiki onto a freshly-connected folder is the plugin's job: connect()
+// stands this backend up against the folder and replays the old store through
+// it before installing the boot script, so by the time we run the folder is
+// already populated. Lifecycle:
 //   1. Retrieve the directory handle the plugin saved in IndexedDB (gesture-
 //      granted at Connect time). No handle, or permission not 'granted' (a non-
 //      installed tab where the grant didn't persist) → set tw.tmp.fsNeedsReconnect
 //      and return WITHOUT installing tw.storage, so the platform falls back to
 //      localStorage and the plugin can offer a one-click reconnect. Nothing is
 //      ever written to the wrong backend.
-//   2. First boot after Connect (no `.twikki-migrated` sentinel): copy the
-//      migration dump the plugin captured from the live store into the folder,
-//      then drop the sentinel. Subsequent boots hydrate the Map from the folder.
+//   2. Hydrate the in-memory Map by reading every file in the folder.
 //   3. Install tw.storage. Reads hit the Map; writes update the Map AND fire-and-
 //      forget the file write(s), serialised through one promise chain; flush()
 //      awaits them so a save()-then-reboot.hard can't race the reload.
-(async function (tw) {
+// `opts` is supplied only when the plugin's connect() invokes this directly: it
+// passes the freshly-picker-granted directory handle so the store initialises
+// against THAT handle (skipping the IndexedDB round-trip + permission re-query),
+// which is what lets connect() migrate and then reliably swap the boot script.
+(async function (tw, opts) {
   if (!('showDirectoryPicker' in window)) throw new Error('No File System Access API available in your browser!');
 
   const HANDLE_DB = 'twikki-fs-handle';
   const HANDLE_STORE = 'handles';
   const HANDLE_KEY = 'root';
-  const DUMP_KEY = 'migration';
-  const GLOBAL_FILE = '_global.json';
+  const BOOT_KEY = '/twikki.boot.js'; // the pre-boot slot this script lives in (for the reconnect gate's Disconnect)
   const META_FILE = '_meta.json';
-  const SENTINEL_FILE = '.twikki-migrated';
 
   /* BEGIN pure-helpers — extracted verbatim by test/unit/fs-storage.test.js.
      Keep PURE (no closure refs, no I/O); the test eval's the block in isolation. */
@@ -171,6 +182,23 @@
     if (m) return m[2] === 'tiddlers' ? {kind: 'tiddlers', ws: m[1]} : {kind: 'wsmeta', ws: m[1]};
     return {kind: 'global'};
   }
+  // Globals live at the `/ws/` ROOT — one segment, no workspace name
+  // (`/ws/settings.json`, `/ws/workspaces`, `/ws/secrets`). Each is its own file
+  // at the folder root. globalSeg() pulls the segment (null if not a root
+  // global); the segment IS the filename, with `.txt` appended only when it has
+  // no extension (so plain strings read as text and `.json` etc. stay readable).
+  // A segment must never itself end in `.txt` or the round-trip is ambiguous —
+  // none do (the secrets key is `secrets`, the file is `secrets.txt`).
+  function globalSeg(fullKey) {
+    const m = /^\/ws\/([^/]+)$/.exec(fullKey);
+    return m ? m[1] : null;
+  }
+  function globalFileName(seg) {
+    return /\.[^./]+$/.test(seg) ? seg : seg + '.txt';
+  }
+  function globalKeyFromFile(name) {
+    return '/ws/' + (name.endsWith('.txt') ? name.slice(0, -4) : name);
+  }
   // Plan the per-tiddler files for one workspace's tiddler array. Returns
   // [{title, dir, name, path, content, hash}], resolving case-insensitive
   // filename collisions within a package folder with a `~<hash>` suffix.
@@ -241,28 +269,18 @@
         }),
     );
   }
-  function idbDelete(key) {
-    return openHandleDb().then(
-      db =>
-        new Promise((resolve, reject) => {
-          const tx = db.transaction(HANDLE_STORE, 'readwrite');
-          tx.objectStore(HANDLE_STORE).delete(key);
-          tx.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          tx.onerror = () => {
-            db.close();
-            reject(tx.error);
-          };
-        }),
-    );
-  }
-
   /* ---- File System Access I/O ---- */
+  // Resolve (and cache) a directory handle by path segments. The cache avoids
+  // re-walking root → ws → pkg for every one of a workspace's files — the single
+  // biggest migration cost. clearWorkspace() purges affected entries.
   async function getDir(root, segs, create) {
+    if (!segs.length) return root;
+    const key = segs.join('/');
+    const cached = dirCache.get(key);
+    if (cached) return cached;
     let dir = root;
     for (const s of segs) dir = await dir.getDirectoryHandle(s, {create});
+    dirCache.set(key, dir);
     return dir;
   }
   async function writeFileAtPath(root, relPath, content) {
@@ -296,19 +314,21 @@
       return null;
     }
   }
-  async function hasSentinel(root) {
-    try {
-      await root.getFileHandle(SENTINEL_FILE);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   /* ---- in-memory state ---- */
   const map = new Map(); // full key → raw string (same shape as localStorage/IDB plugin)
   const indexByWs = new Map(); // ws → Map(title → {path, hash})
+  const dirCache = new Map(); // rel-path → FileSystemDirectoryHandle (avoids re-walking from root per file)
+  const WRITE_CONCURRENCY = 16; // overlap the File System Access createWritable/close latency
   let root = null;
+
+  // Run fn over items with at most `limit` in flight at once.
+  async function runPool(items, limit, fn) {
+    let i = 0;
+    const worker = async () => {
+      while (i < items.length) await fn(items[i++]);
+    };
+    await Promise.all(Array.from({length: Math.min(limit, items.length)}, worker));
+  }
 
   function ensureSlash(k) {
     return k[0] === '/' ? k : '/' + k;
@@ -326,7 +346,22 @@
     const prev = indexByWs.get(ws) || new Map();
     const {writes, deletes, index} = diffPlan(prev, plan);
     for (const del of deletes) await removeFileAtPath(root, ws + '/' + del);
-    for (const w of writes) await writeFileAtPath(root, ws + '/' + w.path, w.content);
+    // Pre-create each distinct package folder ONCE (sequentially, so concurrent
+    // writes below can't race on creating the same dir; getDir caches them).
+    const dirs = new Set(
+      writes.map(w => {
+        const p = (ws + '/' + w.path).split('/');
+        p.pop();
+        return p.join('/');
+      }),
+    );
+    for (const d of dirs) await getDir(root, d.split('/'), true);
+    // Write the files with bounded concurrency to overlap the per-file I/O latency.
+    await runPool(writes, WRITE_CONCURRENCY, async w => {
+      await writeFileAtPath(root, ws + '/' + w.path, w.content);
+      // One tick per tiddler file — lets connect()'s migration drive a progress bar.
+      if (opts && opts.onProgress) opts.onProgress();
+    });
     indexByWs.set(ws, index);
   }
   function writeMetaFile(ws) {
@@ -336,19 +371,23 @@
     if (Object.keys(obj).length === 0) return removeFileAtPath(root, ws + '/' + META_FILE);
     return writeFileAtPath(root, ws + '/' + META_FILE, JSON.stringify(obj, null, 2));
   }
-  function writeGlobalFile() {
-    const obj = {};
-    for (const [k, v] of map) if (!/^\/ws\//.test(k)) obj[k] = v;
-    return writeFileAtPath(root, GLOBAL_FILE, JSON.stringify(obj, null, 2));
+  // One file per global key at the folder root. Write on set, delete on remove.
+  function writeGlobalKey(key) {
+    const seg = globalSeg(key);
+    if (seg == null) return Promise.resolve();
+    if (map.has(key)) return writeFileAtPath(root, globalFileName(seg), map.get(key));
+    return removeFileAtPath(root, globalFileName(seg));
   }
 
   /* ---- hydrate the Map from the folder ---- */
   async function hydrateFromFolder() {
     for await (const [name, handle] of root.entries()) {
       if (handle.kind === 'file') {
-        if (name === GLOBAL_FILE) {
-          const obj = (await readJsonFile(root, GLOBAL_FILE)) || {};
-          for (const k of Object.keys(obj)) map.set(k, obj[k]);
+        // A non-hidden root file is a global key (one file per `/ws/<seg>` root
+        // key). Skip dot/underscore files (`.git`, `.DS_Store`, a legacy
+        // `_global.json`) so tool/VCS noise is never read as data.
+        if (!name.startsWith('.') && !name.startsWith('_')) {
+          map.set(globalKeyFromFile(name), await (await handle.getFile()).text());
         }
         continue;
       }
@@ -385,50 +424,66 @@
     }
   }
 
-  /* ---- one-shot migration: live-store dump (captured by the plugin) → folder ----
-     Runs only when the `.twikki-migrated` sentinel is absent, so it fires once per
-     folder. The dump is deleted after a successful migration; a dump left behind by
-     a connect() that crashed before the sentinel was written would be re-applied on
-     the next boot of that same (still-unmigrated) folder — acceptable, since it only
-     re-seeds the very data the user just chose to export. */
-  async function migrateFromDump() {
-    const dump = await idbGet(DUMP_KEY);
-    if (dump && typeof dump === 'object') {
-      for (const k of Object.keys(dump)) {
-        if (k === '/twikki.boot.js' || k.startsWith('/modules/')) continue;
-        map.set(k, dump[k]);
+  // Pre-boot reconnect gate: shown when the folder is connected but the browser
+  // hasn't granted access for this load. We render it ourselves (no tw.ui yet)
+  // and the platform halts on tw.tmp.bootAborted, so core never runs and nothing
+  // is written to localStorage. "Grant" supplies the user gesture requestPermission
+  // requires; "Disconnect" drops the boot script and reloads onto localStorage.
+  function showReconnectGate() {
+    if (typeof document === 'undefined' || !document.body) return;
+    const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]);
+    document.body.innerHTML =
+      '<div style="max-width:34rem;margin:14vh auto;padding:2rem;font-family:system-ui,sans-serif;line-height:1.5">' +
+      '<h1 style="font-size:1.3rem;margin:0 0 .5rem">Folder access needed</h1>' +
+      '<p id="fs-gate-msg">Your wiki is stored in a local folder. The browser needs your permission to open it again.</p>' +
+      '<button id="fs-gate-grant" style="margin:.5rem .5rem 0 0;padding:.5rem 1rem;cursor:pointer">Grant folder access</button>' +
+      '<button id="fs-gate-disconnect" style="margin:.5rem 0 0;padding:.5rem 1rem;cursor:pointer">Disconnect file storage</button>' +
+      '</div>';
+    const msg = document.getElementById('fs-gate-msg');
+    document.getElementById('fs-gate-grant').onclick = async () => {
+      try {
+        if ((await root.requestPermission({mode: 'readwrite'})) === 'granted') location.reload();
+        else msg.textContent = 'Access was not granted. Click “Grant folder access” again and choose Allow.';
+      } catch (e) {
+        msg.textContent = 'Could not reopen the folder (' + esc(e.message) + '). You can disconnect to use local storage instead.';
       }
-      const wss = new Set();
-      for (const k of map.keys()) {
-        const m = /^\/ws\/([^/]+)\//.exec(k);
-        if (m) wss.add(m[1]);
-      }
-      for (const ws of wss) {
-        await syncTiddlers(ws);
-        await writeMetaFile(ws);
-      }
-      await writeGlobalFile();
-    }
-    await writeFileAtPath(root, SENTINEL_FILE, new Date().toISOString());
-    await idbDelete(DUMP_KEY).catch(() => {});
+    };
+    document.getElementById('fs-gate-disconnect').onclick = () => {
+      window.localStorage.removeItem(BOOT_KEY);
+      location.reload();
+    };
   }
 
-  /* ---- boot ---- */
-  root = await idbGet(HANDLE_KEY);
+  /* ---- boot: load the saved handle, hydrate the Map from the folder, install
+     tw.storage ----
+     This script ONLY initialises the File System store. Migrating existing data
+     into a freshly-connected folder is the plugin's job (connect() replays the
+     old store through this backend before installing the boot script), so the
+     folder is always already populated by the time we get here — we just read
+     it. */
+  // connect() passes the just-granted handle directly; otherwise load the saved one.
+  root = (opts && opts.handle) || (await idbGet(HANDLE_KEY));
   if (!root) {
     tw.tmp = tw.tmp || {};
     tw.tmp.fsNeedsReconnect = true;
     return; // no folder connected yet → platform falls back to localStorage
   }
-  const perm = await root.queryPermission({mode: 'readwrite'});
-  if (perm !== 'granted') {
-    tw.tmp = tw.tmp || {};
-    tw.tmp.fsNeedsReconnect = true;
-    return; // permission did not persist (non-installed tab) → fall back, offer reconnect
+  // A caller-supplied handle already carries an in-session grant, so skip the
+  // re-query. On a normal load the grant often drops to 'prompt' (non-installed
+  // tab); rather than fall back to localStorage (which would write default
+  // /ws/* keys there and hide the on-disk wiki), HALT and ask to re-grant — the
+  // data is on disk and we just need permission to read it.
+  if (!(opts && opts.handle)) {
+    const perm = await root.queryPermission({mode: 'readwrite'});
+    if (perm !== 'granted') {
+      tw.tmp = tw.tmp || {};
+      tw.tmp.bootAborted = true; // platform: do NOT fall back to localStorage
+      showReconnectGate();
+      return;
+    }
   }
 
-  if (await hasSentinel(root)) await hydrateFromFolder();
-  else await migrateFromDump();
+  await hydrateFromFolder();
 
   /* ---- write queue: fire-and-forget, serialised, awaited by flush() ---- */
   const pending = new Set();
@@ -457,7 +512,7 @@
     const r = routeKey(key);
     if (r.kind === 'tiddlers') schedule(() => syncTiddlers(r.ws));
     else if (r.kind === 'wsmeta') schedule(() => writeMetaFile(r.ws));
-    else schedule(() => writeGlobalFile());
+    else schedule(() => writeGlobalKey(key));
   }
 
   tw.storage = {
@@ -504,6 +559,8 @@
       const prefix = '/ws/' + name + '/';
       for (const k of [...map.keys()]) if (k.startsWith(prefix)) map.delete(k);
       indexByWs.delete(name);
+      // Drop cached dir handles under this workspace — the folder is about to go.
+      for (const k of [...dirCache.keys()]) if (k === name || k.startsWith(name + '/')) dirCache.delete(k);
       schedule(async () => {
         try {
           await root.removeEntry(name, {recursive: true});

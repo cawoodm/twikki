@@ -109,7 +109,7 @@ export default function (tw) {
     // workspace stays recoverable. The default tw.storage implementation
     // (initLocalStorage) iterates and removes; the IndexedDBStoragePlugin
     // override drops the per-workspace object store via a version upgrade.
-    tw.storage.clearWorkspace(name);
+    tw.store.clearWorkspace(name);
     workspaces.splice(index, 1);
     tw.store.global.set('workspaces', workspaces);
   }

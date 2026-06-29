@@ -9,6 +9,16 @@
   const BOOT_KEY = '/twikki.boot.js';
   const DISMISS_KEY = '/twikki.fs.update-dismissed-on'; // value: 'YYYY-MM-DD'
   const SECTION = 'FileSystemStoragePlugin::BootScript';
+  // Ownership marker carried in our BootScript. `/twikki.boot.js` is a single
+  // global slot shared with other storage backends (e.g. IndexedDBStoragePlugin).
+  // We only manage the slot when the installed script is *ours* — otherwise two
+  // plugins would ping-pong, each re-installing its own script and rebooting on
+  // every load. Must stay byte-identical to the marker in BootScript.js.
+  const BOOT_MARKER = 'twikki-storage-backend: filesystem';
+  const ownsBoot = () => {
+    const s = window.localStorage.getItem(BOOT_KEY);
+    return !!s && s.includes(BOOT_MARKER);
+  };
   const HANDLE_DB = 'twikki-fs-handle';
   const HANDLE_STORE = 'handles';
   const HANDLE_KEY = 'root';
@@ -81,11 +91,13 @@
   // first run. Capturing from tw.storage — not raw localStorage — means a
   // switch from the IndexedDB backend carries that data across too.
   function dumpLiveStore() {
+    // Everything persistent now lives under `/ws/` (workspace data AND the
+    // globals at the `/ws/` root), so enumerating that prefix captures the whole
+    // wiki — including secrets — and nothing else. Device-local control keys
+    // (`/twikki.boot.js`, the dismiss dates, `/modules/*`) aren't `/ws/`-prefixed
+    // and are therefore excluded automatically.
     const dump = {};
-    for (const k of tw.storage.keys('/')) {
-      if (k === BOOT_KEY || k.startsWith('/modules/')) continue;
-      dump[k] = tw.storage.getRaw(k);
-    }
+    for (const k of tw.storage.keys('/ws/')) dump[k] = tw.storage.getRaw(k);
     return dump;
   }
 
@@ -99,8 +111,11 @@
     return true;
   }
 
-  // Connect (user gesture): pick a folder, persist its handle + a one-shot dump
-  // of the current store, install the boot script, reboot to activate.
+  // Connect (user gesture): pick a folder, migrate the ENTIRE current store into
+  // it while the existing backend is still live, save the handle, then install
+  // the boot script and reboot. Migrating up-front (rather than in the pre-boot
+  // script after the reload) means boot never blocks on thousands of file
+  // writes and the folder is never left half-migrated by the reload.
   async function connect() {
     if (!('showDirectoryPicker' in window)) {
       tw.ui.notify('Your browser does not support the File System Access API.', 'E');
@@ -113,10 +128,68 @@
       return; // user cancelled the picker
     }
     try {
-      await idbPut(HANDLE_KEY, handle);
-      await idbPut(DUMP_KEY, dumpLiveStore());
+      // Flush the workspace we're viewing into the store so the snapshot is
+      // current (its tiddlers live in tw.tiddlers until a save persists them).
+      tw.run.save?.();
+      await tw.storage.flush?.();
+      const snapshot = dumpLiveStore(); // capture the current backend up-front
+
+      // Stand up the File System backend against the chosen folder WITHOUT
+      // disturbing the live tw.storage: eval the boot script against a throwaway
+      // object so it assigns its store there. Passing the just-granted handle
+      // (opts.handle) skips the IDB round-trip / permission re-query. This only
+      // READS the folder (hydrates) — no writes yet — so we can inspect it and
+      // confirm before migrating.
+      const src = tw.run.getTiddlerTextRaw(SECTION);
+      const bootFn = (1, eval)(src);
+      if (typeof bootFn !== 'function') throw new Error('BootScript section did not evaluate to a function');
+      const fsTw = {tmp: {}, ui: tw.ui};
+      // The backend calls onProgress once per tiddler file it writes. We hand it a
+      // stable delegate now and point it at the live progress bar after the user
+      // confirms (so hydrate's own reads, and a declined connect, report nothing).
+      let progressTick = null;
+      await bootFn(fsTw, {handle, onProgress: () => progressTick && progressTick()});
+      if (!fsTw.storage) throw new Error('Could not initialise file storage for the chosen folder (permission denied?)');
+
+      // Confirm before writing any data into the folder (the migration). If the
+      // folder already holds a wiki, make clear it will be overwritten.
+      const folderHasWiki = fsTw.storage.keys('/ws/').length > 0;
+      const ok = window.confirm(
+        folderHasWiki
+          ? 'This folder already contains a wiki. Connecting will OVERWRITE its contents with your current wiki. Continue?'
+          : 'Copy your current wiki into this folder and switch to file storage?',
+      );
+      if (!ok) {
+        tw.ui.notify('File storage connection cancelled — nothing was written.', 'I');
+        return;
+      }
+
+      // Commit: replay every key through the FS backend (its writer explodes each
+      // tiddler into a file) and drive a progress bar by tiddler count — the unit
+      // the writer reports via onProgress. The bar stays put (no auto-hide) until
+      // the reboot reload clears it.
+      let total = 0;
+      for (const k of Object.keys(snapshot)) {
+        if (/^\/ws\/[^/]+\/tiddlers$/.test(k)) {
+          try {
+            total += JSON.parse(snapshot[k]).length;
+          } catch {
+            /* not an array */
+          }
+        }
+      }
+      total = total || 1;
+      const startProgress = tw.ui.notifyProgress || (() => ({update() {}}));
+      const prog = startProgress('Migrating your wiki to the folder…');
+      let written = 0;
+      progressTick = () => prog.update(++written / total, `Migrating your wiki to the folder… (${written}/${total})`);
+
+      for (const k of Object.keys(snapshot)) fsTw.storage.setRaw(k, snapshot[k]);
+      await fsTw.storage.flush();
+      progressTick = null;
+      await idbPut(HANDLE_KEY, handle); // persist the handle for future boots
       if (!writeBootScript()) return;
-      tw.ui.notify('Folder connected. Reloading to activate file storage…', 'I');
+      prog.update(1, 'Migration complete — reloading…'); // leave the bar at 100%; reboot clears it
       tw.events.send('reboot.hard');
     } catch (e) {
       tw.ui.notify('Could not connect folder: ' + e.message, 'E');
@@ -168,9 +241,10 @@
 
   /* BEGIN shouldPrompt — extracted verbatim by test/unit/fs-storage.test.js.
      Keep PURE (no closure refs, no I/O); the test eval's it in isolation. */
-  function shouldPrompt({installed, bundled, dismissedToday, sessionFlag}) {
+  function shouldPrompt({installed, bundled, dismissedToday, sessionFlag, owned}) {
     if (sessionFlag) return false; // already prompted in this page load
     if (!installed || !bundled) return false; // not installed / build broken
+    if (!owned) return false; // the boot slot holds another backend's script — leave it alone
     if (installed === bundled) return false; // up to date
     if (dismissedToday) return false; // snoozed today
     return true;
@@ -182,17 +256,18 @@
   // reconnect. Runs after first paint so a blocking dialog can't freeze boot.
   function offerReconnect() {
     if (!tw.tmp || !tw.tmp.fsNeedsReconnect || tw.tmp.fsReconnectOffered) return;
-    if (!window.localStorage.getItem(BOOT_KEY)) return; // not actually using FS storage
+    if (!ownsBoot()) return; // our boot script isn't the one installed
     tw.tmp.fsReconnectOffered = true;
-    if (window.confirm('Reconnect your storage folder to load and save your wiki?\n\nTip: install TWikki as an app to skip this prompt in future.')) reconnect();
+    // Non-blocking: re-granting folder access needs a user gesture, so point the
+    // user at the Reconnect button instead of firing a modal on every load.
+    tw.ui.notify('File storage: folder access needs re-granting — open FileSystemStoragePlugin and click “Reconnect”. (Install TWikki as an app to skip this.)', 'W');
   }
 
   function promptIfStale() {
     const installed = window.localStorage.getItem(BOOT_KEY);
-    if (!installed) return; // only when FS storage is installed
     const bundled = tw.run.getTiddlerTextRaw(SECTION);
     const dismissedToday = window.localStorage.getItem(DISMISS_KEY) === todayKey();
-    if (!shouldPrompt({installed, bundled, dismissedToday, sessionFlag: tw.tmp.fsBootPrompted})) return;
+    if (!shouldPrompt({installed, bundled, dismissedToday, sessionFlag: tw.tmp.fsBootPrompted, owned: ownsBoot()})) return;
     tw.tmp.fsBootPrompted = true;
     if (window.confirm('File storage boot script has changed. Re-install and reload now?\n\nClick Cancel to skip — you will be asked again tomorrow.')) {
       if (writeBootScript()) tw.events.send('reboot.hard');
