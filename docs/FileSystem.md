@@ -24,7 +24,7 @@ Everything else is a small JSON sidecar:
   <workspace>/            e.g. "default"
     <package>/            "base", "demo", … or "_user" when a tiddler has no package
       <SafeTitle>.<ext>   one content tiddler per file
-    _meta.json            {"tiddlers-visible": "…", "tiddlers-trashed": "…", "tiddlers-backup1": "…"}
+    _meta.json            {"tiddlers-visible": "…", "tiddlers-trashed": "…"}
 ```
 
 Each tiddler file is a `field: value` header block, a blank line, then the body (`text`):

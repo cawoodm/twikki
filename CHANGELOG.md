@@ -6,6 +6,10 @@
 
 - **File System storage** — the new `FileSystemStoragePlugin` stores your wiki as real files in a folder on disk via the File System Access API: one file per tiddler, in its native format (`.tid`/`.md`/`.js`/`.css`/…), organised into a folder per package — so you can open, edit, `git`-track and sync your notes with ordinary tools. Connect a folder once; installed as an app (PWA), every later load opens it transparently. See [docs/FileSystem.md](docs/FileSystem.md).
 
+### Bugs/Technical
+
+- **Saving** — dropped the per-save `tiddlers-backup1` write. Every save previously stored a full duplicate of the tiddler array (never read by any restore path); on the File System backend this rewrote a whole-wiki blob into `_meta.json` on every save. Removing it halves write volume; any lingering key is cleaned up on load. Use [[Dump]] or Gist backup for recovery.
+
 ## 24 Jun 2026 (v0.28.0)
 
 ### Features

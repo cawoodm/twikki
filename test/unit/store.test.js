@@ -133,3 +133,28 @@ test('tiddlersToSave filters doNotSave', () => {
   assert.equal(meta.exports.tiddlersToSave({title: 'a'}), true);
   assert.equal(meta.exports.tiddlersToSave({title: 'a', doNotSave: true}), false);
 });
+
+test('saveAll persists tiddlers/trashed/visible but writes no backup duplicate', () => {
+  const {tw, meta, backing} = freshStore('default');
+  tw.run.setDirty = () => {};
+  tw.tiddlers.all = [{title: 'A'}, {title: 'B', doNotSave: true}];
+  tw.tiddlers.trashed = [{title: 'T'}];
+  tw.tiddlers.visible = ['A'];
+  meta.exports.save();
+  assert.deepEqual(tw.store.get('tiddlers'), [{title: 'A'}], 'doNotSave filtered');
+  assert.deepEqual(tw.store.get('tiddlers-trashed'), [{title: 'T'}]);
+  assert.deepEqual(tw.store.get('tiddlers-visible'), ['A']);
+  assert.ok(!Object.hasOwn(backing, '/ws/default/tiddlers-backup1'), 'no per-save backup copy written');
+});
+
+test('loadStore drops a legacy tiddlers-backup1 key', () => {
+  const {tw, meta, backing} = freshStore('default');
+  tw.run.addTiddlerHard = () => {};
+  tw.shadowTiddlers = [];
+  tw.util = {tiddlerValidation: () => []};
+  tw.store.set('tiddlers', [{title: 'A'}]);
+  tw.store.set('tiddlers-backup1', [{title: 'A'}]); // a stale key from an older build
+  assert.ok(Object.hasOwn(backing, '/ws/default/tiddlers-backup1'));
+  meta.exports.loadStore();
+  assert.ok(!Object.hasOwn(backing, '/ws/default/tiddlers-backup1'), 'legacy backup key removed on load');
+});

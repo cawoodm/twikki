@@ -119,9 +119,6 @@ export default function (tw) {
     saveAll();
   }
   function saveAll() {
-    const oldTiddlers = tw.store.get('tiddlers');
-    // TODO: Better local backups/versioning
-    if (oldTiddlers?.length) tw.store.set('tiddlers-backup1', oldTiddlers);
     tw.store.set('tiddlers', tw.tiddlers.all.filter(tiddlersToSave));
     tw.store.set('tiddlers-trashed', tw.tiddlers.trashed);
     saveVisible();
@@ -138,6 +135,11 @@ export default function (tw) {
   /* Hydrating tw.tiddlers from the store */
   function loadStore(store) {
     if (!store) store = tw.store;
+    // Shed the legacy single-slot backup. saveAll() used to write a full copy of
+    // the tiddler array to `tiddlers-backup1` on every save; nothing ever read it
+    // and on the File System backend it bloated `_meta.json` with a whole-wiki
+    // duplicate rewritten on each save. Drop any lingering key once on load.
+    if (store.get('tiddlers-backup1') != null) store.delete?.('tiddlers-backup1');
     tw.tiddlers.all = storeLoadTiddlers('tiddlers');
     tw.shadowTiddlers.filter(t => !tw.util.tiddlerExists(t.title)).forEach(t => tw.run.addTiddlerHard(t));
     if (!tw.tiddlers.all.length) {
