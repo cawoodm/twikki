@@ -23,7 +23,7 @@ export default function (tw) {
   const WS_TIDDLER = '$Settings'; // per-workspace settings tiddler
   const USER_KEY = '/settings.json'; // cross-workspace user overrides (tw.store.global)
   // TODO: We have a "list" type and would need a unique extension for this
-  const SECRETS_KEY = 'secrets.txt'; // global secrets at /ws/secrets (tw.store.global)
+  const SECRETS_KEY = 'secrets'; // global secrets at /ws/secrets (tw.store.global); the FS backend stores it as the file secrets.txt
 
   // path -> {default, type?, description?, options?, secret?, owner}
   const registry = {};
@@ -177,6 +177,11 @@ export default function (tw) {
     else t = {...t};
     t.text = JSON.stringify(obj, null, 2);
     delete t.doNotSave;
+    // Local mutation via the raw upsert (which doesn't stamp `updated`). Stamp it
+    // so the File System backend's fingerprint detects the change — a same-length
+    // value edit (e.g. true→false) would otherwise leave it stale. See
+    // fingerprint() in BootScript.js / docs/FileSystem.md.
+    t.updated = new Date();
     tw.run.updateTiddlerHard(WS_TIDDLER, t);
   }
   function deleteFromWorkspace(path) {

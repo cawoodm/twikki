@@ -146,6 +146,12 @@ export default function (tw) {
     if (userEdit) delete existingTiddler.doNotSave;
     if (!forceSave && userEdit) validateTiddlerText(newTiddler);
     delete newTiddler.isRawShadow;
+    // Stamp the edit time. This is the local-edit funnel (form save, tag toggle,
+    // text update) — sync/import preserve their incoming `updated` via
+    // updateTiddlerHard, which this does NOT touch. A truthful `updated` drives
+    // sync conflict resolution and lets the File System backend skip re-hashing
+    // unchanged tiddlers (see fingerprint() in BootScript.js).
+    newTiddler.updated = new Date();
     updateTiddlerHard(currentTitle, newTiddler);
     // Move to top of story
     if (userEdit) replaceInArray(tw.tiddlers.visible, title => title === currentTitle, newTiddler.title);
@@ -159,6 +165,7 @@ export default function (tw) {
   // indicator reflects the edit and it persists on the next save. For programmatic
   // metadata edits (e.g. toggling a plugin's $CodeDisabled tag).
   function updateTiddlerSilent(currentTitle, newTiddler) {
+    newTiddler.updated = new Date(); // local metadata edit — keep `updated` truthful (see updateTiddler)
     updateTiddlerHard(currentTitle, newTiddler);
     tw.run.setDirty?.(true); // setDirty lives in core.ui (loads later); call lazily
   }

@@ -24,7 +24,7 @@ Everything else is a small JSON sidecar:
   <workspace>/            e.g. "default"
     <package>/            "base", "demo", … or "_user" when a tiddler has no package
       <SafeTitle>.<ext>   one content tiddler per file
-    _meta.json            {"tiddlers-visible": "…", "tiddlers-trashed": "…", "tiddlers-backup1": "…"}
+    _meta.json            {"tiddlers-visible": "…", "tiddlers-trashed": "…"}
 ```
 
 Each tiddler file is a `field: value` header block, a blank line, then the body (`text`):
@@ -88,6 +88,15 @@ serialised through a single promise chain; `tw.storage.flush()` awaits them, so 
 `rebootHard` (`await tw.storage.flush()`) can't reload before a save reaches disk. On each save of a
 workspace's tiddlers the backend **diffs against the current file set** (by content hash), so only
 changed files are written and removed/renamed tiddlers' files are deleted.
+
+To avoid re-serialising and re-hashing every tiddler on every save, the diff first computes a cheap
+**fingerprint** per tiddler — `updated` plus `type`/`package`/`tags`/text-length — and skips the
+serialise+hash entirely for any tiddler whose fingerprint and target path are unchanged since the last
+sync (its cached hash is reused). `updated` is the load-bearing field here: core bumps it on every
+local edit (`updateTiddler`/`updateTiddlerSilent` in `core.tiddlers`), and sync/import preserve the
+incoming value. The trade-off: an in-place edit that changes the body to the **same length** without
+bumping `updated` would not be detected — so any code that mutates a persisted tiddler must keep
+`updated` truthful (go through the core update functions, or set `updated` yourself).
 
 ## Editing files externally
 
