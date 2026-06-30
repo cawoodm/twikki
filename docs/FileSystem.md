@@ -89,6 +89,15 @@ serialised through a single promise chain; `tw.storage.flush()` awaits them, so 
 workspace's tiddlers the backend **diffs against the current file set** (by content hash), so only
 changed files are written and removed/renamed tiddlers' files are deleted.
 
+To avoid re-serialising and re-hashing every tiddler on every save, the diff first computes a cheap
+**fingerprint** per tiddler — `updated` plus `type`/`package`/`tags`/text-length — and skips the
+serialise+hash entirely for any tiddler whose fingerprint and target path are unchanged since the last
+sync (its cached hash is reused). `updated` is the load-bearing field here: core bumps it on every
+local edit (`updateTiddler`/`updateTiddlerSilent` in `core.tiddlers`), and sync/import preserve the
+incoming value. The trade-off: an in-place edit that changes the body to the **same length** without
+bumping `updated` would not be detected — so any code that mutates a persisted tiddler must keep
+`updated` truthful (go through the core update functions, or set `updated` yourself).
+
 ## Editing files externally
 
 Browsers can't watch a picked folder for outside changes, so after editing files in another editor use

@@ -199,10 +199,29 @@
   function globalKeyFromFile(name) {
     return '/ws/' + (name.endsWith('.txt') ? name.slice(0, -4) : name);
   }
+  // Cheap per-tiddler change signal that does NOT build the (possibly large)
+  // serialized body. `updated` is the primary marker — core bumps it on every
+  // local edit (see updateTiddler in core.tiddlers); type/package/tags/text-length
+  // guard the rare paths that bypass it (e.g. a whole-tiddler import carries new
+  // content). When this matches the previous sync, planFiles reuses the cached
+  // hash and skips serialize+hash. The trade: an in-place edit that changes the
+  // body to the SAME length without bumping `updated` would go undetected — so
+  // every persisted mutation must keep `updated` truthful. See docs/FileSystem.md.
+  function fingerprint(t) {
+    // Normalise `updated` to an ISO string so a Date and its serialized form
+    // fingerprint identically (stored tiddlers carry strings; a stray Date must
+    // not force a spurious re-serialize).
+    const u = t.updated instanceof Date ? t.updated.toISOString() : t.updated || '';
+    return u + '|' + (t.type || '') + '|' + (t.package || '') + '|' + (t.tags ? [].concat(t.tags).join(',') : '') + '|' + (t.text ? t.text.length : 0);
+  }
   // Plan the per-tiddler files for one workspace's tiddler array. Returns
-  // [{title, dir, name, path, content, hash}], resolving case-insensitive
-  // filename collisions within a package folder with a `~<hash>` suffix.
-  function planFiles(tiddlers) {
+  // [{title, dir, name, path, content, hash, fp}], resolving case-insensitive
+  // filename collisions within a package folder with a `~<hash>` suffix. When
+  // `prev` (the previous title→{path,hash,fp} index) is given, a tiddler whose
+  // fingerprint AND path are unchanged reuses its cached hash and is NOT
+  // re-serialized — `content` is null for those (they never reach a write, since
+  // their hash equals the previous one and diffPlan skips equal hashes).
+  function planFiles(tiddlers, prev) {
     const out = [];
     const usedPerDir = new Map();
     for (const t of tiddlers) {
@@ -215,8 +234,15 @@
       if (!used) usedPerDir.set(dir, (used = new Set()));
       if (used.has(name.toLowerCase())) name = base + '~' + hashStr(t.title) + ext;
       used.add(name.toLowerCase());
-      const content = serializeTiddler(t);
-      out.push({title: t.title, dir, name, path: dir + '/' + name, content, hash: hashStr(content)});
+      const path = dir + '/' + name;
+      const fp = fingerprint(t);
+      const old = prev && prev.get(t.title);
+      if (old && old.fp === fp && old.path === path) {
+        out.push({title: t.title, dir, name, path, content: null, hash: old.hash, fp});
+      } else {
+        const content = serializeTiddler(t);
+        out.push({title: t.title, dir, name, path, content, hash: hashStr(content), fp});
+      }
     }
     return out;
   }
@@ -229,7 +255,7 @@
     const planTitles = new Set();
     for (const p of plan) {
       planTitles.add(p.title);
-      index.set(p.title, {path: p.path, hash: p.hash});
+      index.set(p.title, {path: p.path, hash: p.hash, fp: p.fp});
       const old = prev.get(p.title);
       if (!old || old.hash !== p.hash || old.path !== p.path) writes.push(p);
     }
@@ -342,8 +368,8 @@
     } catch {
       arr = [];
     }
-    const plan = planFiles(arr);
     const prev = indexByWs.get(ws) || new Map();
+    const plan = planFiles(arr, prev);
     const {writes, deletes, index} = diffPlan(prev, plan);
     for (const del of deletes) await removeFileAtPath(root, ws + '/' + del);
     // Pre-create each distinct package folder ONCE (sequentially, so concurrent
@@ -416,7 +442,7 @@
           const t = parseTiddlerFile(text, dot === -1 ? fname : fname.slice(0, dot), typeForExt(ext));
           if (t.package === undefined && pkg !== '_user') t.package = pkg;
           tiddlers.push(t);
-          index.set(t.title, {path: pkg + '/' + fname, hash: hashStr(text)});
+          index.set(t.title, {path: pkg + '/' + fname, hash: hashStr(text), fp: fingerprint(t)});
         }
       }
       map.set('/ws/' + ws + '/tiddlers', JSON.stringify(tiddlers));

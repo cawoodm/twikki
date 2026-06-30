@@ -16,7 +16,7 @@ const H = (() => {
   const m = BOOT_SRC.match(/\/\* BEGIN pure-helpers[\s\S]*?\/\* END pure-helpers \*\//);
   if (!m) throw new Error('pure-helpers block not found — sentinel comments moved?');
   // eslint-disable-next-line no-new-func
-  return new Function(m[0] + '\nreturn {extForType, typeForExt, hashStr, safeBaseName, packageFolder, serializeTiddler, parseTiddlerFile, routeKey, planFiles, diffPlan, globalSeg, globalFileName, globalKeyFromFile};')();
+  return new Function(m[0] + '\nreturn {extForType, typeForExt, hashStr, safeBaseName, packageFolder, serializeTiddler, parseTiddlerFile, routeKey, fingerprint, planFiles, diffPlan, globalSeg, globalFileName, globalKeyFromFile};')();
 })();
 
 test('extForType / typeForExt: known types map both ways', () => {
@@ -133,6 +133,49 @@ test('planFiles: groups by package, picks extension by type, suffixes case-colli
   assert.equal(byTitle['_user/Note A.md'], '_user/Note A.md');
   assert.equal(byTitle.Foo, '_user/Foo.md');
   assert.ok(byTitle.foo.startsWith('_user/foo~') && byTitle.foo.endsWith('.md'), `collision suffixed: ${byTitle.foo}`);
+});
+
+test('fingerprint: changes on updated/type/tags/text-length, stable otherwise', () => {
+  const base = {title: 'X', type: 'markdown', package: 'demo', tags: ['a', 'b'], text: 'hello', updated: '2026-01-01T00:00:00.000Z'};
+  const fp = H.fingerprint(base);
+  assert.equal(H.fingerprint({...base}), fp, 'identical tiddler → identical fingerprint');
+  assert.notEqual(H.fingerprint({...base, updated: '2026-01-02T00:00:00.000Z'}), fp, 'updated change');
+  assert.notEqual(H.fingerprint({...base, type: 'x-twikki'}), fp, 'type change');
+  assert.notEqual(H.fingerprint({...base, package: 'base'}), fp, 'package change');
+  assert.notEqual(H.fingerprint({...base, tags: ['a']}), fp, 'tags change');
+  assert.notEqual(H.fingerprint({...base, text: 'hellos'}), fp, 'text-length change');
+  // A Date and its ISO string fingerprint identically (stored tiddlers carry strings).
+  assert.equal(H.fingerprint({...base, updated: new Date('2026-01-01T00:00:00.000Z')}), fp, 'Date ≡ ISO string');
+});
+
+test('planFiles: reuses cached hash and skips serialize for unchanged tiddlers', () => {
+  const t = {title: 'Note', type: 'markdown', package: 'demo', tags: ['a'], text: 'body', updated: '2026-01-01T00:00:00.000Z'};
+  const first = H.planFiles([t]); // no prev → serialized
+  assert.ok(first[0].content, 'first pass serializes content');
+  const prev = new Map([[t.title, {path: first[0].path, hash: first[0].hash, fp: first[0].fp}]]);
+
+  // Unchanged → reuse: content is null, hash matches the cached one.
+  const same = H.planFiles([{...t}], prev);
+  assert.equal(same[0].content, null, 'unchanged tiddler is not re-serialized');
+  assert.equal(same[0].hash, first[0].hash, 'cached hash reused');
+
+  // Edited (updated bumped) → re-serialized with a fresh hash.
+  const edited = H.planFiles([{...t, text: 'new body', updated: '2026-02-02T00:00:00.000Z'}], prev);
+  assert.ok(edited[0].content, 'changed tiddler is re-serialized');
+  assert.notEqual(edited[0].hash, first[0].hash, 'fresh hash for changed content');
+});
+
+test('planFiles + diffPlan: unchanged tiddler produces no write, changed one does', () => {
+  const a = {title: 'A', type: 'markdown', text: 'aaa', updated: '2026-01-01T00:00:00.000Z'};
+  const b = {title: 'B', type: 'markdown', text: 'bbb', updated: '2026-01-01T00:00:00.000Z'};
+  const plan1 = H.planFiles([a, b]);
+  const {index} = H.diffPlan(new Map(), plan1);
+
+  // Second sync: A unchanged, B edited.
+  const plan2 = H.planFiles([{...a}, {...b, text: 'bbbb', updated: '2026-03-03T00:00:00.000Z'}], index);
+  const {writes} = H.diffPlan(index, plan2);
+  assert.deepEqual(writes.map(w => w.title), ['B'], 'only the edited tiddler is written');
+  assert.ok(writes[0].content, 'the write carries serialized content');
 });
 
 test('diffPlan: writes new/changed/moved, deletes removed + moved-away', () => {
