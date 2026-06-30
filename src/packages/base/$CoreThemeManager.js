@@ -85,12 +85,16 @@
     let tiddler = tw.run.getTiddler('$Theme');
     tiddler.text = `[[${theme}]]`;
     delete tiddler.doNotSave;
+    // Stamp `updated` — the raw upsert doesn't, and a same-length theme-name swap
+    // would otherwise be invisible to the FS backend's fingerprint (docs/FileSystem.md).
+    tiddler.updated = new Date();
     tw.run.updateTiddlerHard('$Theme', tiddler);
     if (layoutChanges) {
       let lt = tw.run.getTiddler('$Layout');
       if (lt) {
         lt.text = `[[${newLayout}]]`;
         delete lt.doNotSave;
+        lt.updated = new Date(); // stamp for the FS fingerprint (raw upsert skips it) — see $Theme above
         tw.run.updateTiddlerHard('$Layout', lt);
       }
     }

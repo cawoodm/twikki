@@ -177,6 +177,11 @@ export default function (tw) {
     else t = {...t};
     t.text = JSON.stringify(obj, null, 2);
     delete t.doNotSave;
+    // Local mutation via the raw upsert (which doesn't stamp `updated`). Stamp it
+    // so the File System backend's fingerprint detects the change — a same-length
+    // value edit (e.g. true→false) would otherwise leave it stale. See
+    // fingerprint() in BootScript.js / docs/FileSystem.md.
+    t.updated = new Date();
     tw.run.updateTiddlerHard(WS_TIDDLER, t);
   }
   function deleteFromWorkspace(path) {
